@@ -2,6 +2,8 @@ package nps
 
 import (
 	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -46,15 +48,19 @@ type NpsApi interface {
 	GetWebcams(id string, parkCode, stateCode []string, q string, limit, start int) (*WebcamResponse, error)
 }
 
+const (
+	BASE_URL = "https://developer.nps.gov/api/v1"
+)
+
 // npsApi implements the NpsService interface.
 type npsApi struct {
 	BaseURL string
 	Client  *http.Client
 }
 
-func NewNpsApi(baseurl string) NpsApi {
+func NewNpsApi() NpsApi {
 	return &npsApi{
-		BaseURL: baseurl,
+		BaseURL: BASE_URL,
 		Client: &http.Client{
 			Timeout: time.Second * 30,
 		},
@@ -83,7 +89,13 @@ func (api *npsApi) GetActivities(id, q, sort string, limit, start int) (*Activit
 		return nil, err
 	}
 	defer resp.Body.Close()
-
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("unexpected status code: %d. Error reading body: %v", resp.StatusCode, err)
+		}
+		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
+	}
 	var activitiesResponse ActivityResponse
 	if err := json.NewDecoder(resp.Body).Decode(&activitiesResponse); err != nil {
 		return nil, err
@@ -122,7 +134,13 @@ func (api *npsApi) GetActivityParks(id []string, q, sort string, limit, start in
 		return nil, err
 	}
 	defer resp.Body.Close()
-
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("unexpected status code: %d. Error reading body: %v", resp.StatusCode, err)
+		}
+		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
+	}
 	var activityParkResponse ActivityParkResponse
 	if err := json.NewDecoder(resp.Body).Decode(&activityParkResponse); err != nil {
 		return nil, err
@@ -164,7 +182,13 @@ func (api *npsApi) GetAlerts(parkCode, stateCode []string, q string, limit, star
 		return nil, err
 	}
 	defer resp.Body.Close()
-
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("unexpected status code: %d. Error reading body: %v", resp.StatusCode, err)
+		}
+		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
+	}
 	var alertsResponse AlertResponse
 	if err := json.NewDecoder(resp.Body).Decode(&alertsResponse); err != nil {
 		return nil, err
@@ -195,7 +219,13 @@ func (api *npsApi) GetAmenities(id []string, q string, limit, start int) (*Ameni
 		return nil, err
 	}
 	defer resp.Body.Close()
-
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("unexpected status code: %d. Error reading body: %v", resp.StatusCode, err)
+		}
+		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
+	}
 	var amenitiesResponse AmenityResponse
 	if err := json.NewDecoder(resp.Body).Decode(&amenitiesResponse); err != nil {
 		return nil, err
@@ -270,7 +300,13 @@ func (api *npsApi) GetAmenitiesParksPlaces(parkCode, id []string, q, sort string
 		return nil, err
 	}
 	defer resp.Body.Close()
-
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("unexpected status code: %d. Error reading body: %v", resp.StatusCode, err)
+		}
+		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
+	}
 	var amenityParkPlaceResponse AmenityParkPlaceResponse
 	if err := json.NewDecoder(resp.Body).Decode(&amenityParkPlaceResponse); err != nil {
 		return nil, err
@@ -314,7 +350,13 @@ func (api *npsApi) GetAmenitiesParksVisitorCenters(parkCode, id, q string, sort 
 		return nil, err
 	}
 	defer resp.Body.Close()
-
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("unexpected status code: %d. Error reading body: %v", resp.StatusCode, err)
+		}
+		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
+	}
 	var amenityParkVisitorCenterResponse AmenityParkVisitorCenterResponse
 	if err := json.NewDecoder(resp.Body).Decode(&amenityParkVisitorCenterResponse); err != nil {
 		return nil, err
@@ -367,7 +409,13 @@ func (api *npsApi) GetArticles(parkCode, stateCode []string, q string, limit, st
 		return nil, err
 	}
 	defer resp.Body.Close()
-
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("unexpected status code: %d. Error reading body: %v", resp.StatusCode, err)
+		}
+		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
+	}
 	var articleData ArticleData
 	if err := json.NewDecoder(resp.Body).Decode(&articleData); err != nil {
 		return nil, err
@@ -468,7 +516,13 @@ func (api *npsApi) GetCampgrounds(parkCode, stateCode []string, q string, sort [
 		return nil, err
 	}
 	defer resp.Body.Close()
-
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("unexpected status code: %d. Error reading body: %v", resp.StatusCode, err)
+		}
+		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
+	}
 	var campgroundData CampgroundData
 	if err := json.NewDecoder(resp.Body).Decode(&campgroundData); err != nil {
 		return nil, err
@@ -513,7 +567,13 @@ func (api *npsApi) GetEvents(parkCode, stateCode, organization, subject, portal,
 		return nil, err
 	}
 	defer resp.Body.Close()
-
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("unexpected status code: %d. Error reading body: %v", resp.StatusCode, err)
+		}
+		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
+	}
 	var eventsResponse EventResponse
 	if err := json.NewDecoder(resp.Body).Decode(&eventsResponse); err != nil {
 		return nil, err
@@ -561,7 +621,13 @@ func (api *npsApi) GetFeesPasses(parkCode, stateCode []string, start, limit int,
 		return nil, err
 	}
 	defer resp.Body.Close()
-
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("unexpected status code: %d. Error reading body: %v", resp.StatusCode, err)
+		}
+		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
+	}
 	var feesPassesResponse FeePassResponse
 	if err := json.NewDecoder(resp.Body).Decode(&feesPassesResponse); err != nil {
 		return nil, err
@@ -605,7 +671,13 @@ func (api *npsApi) GetLessonPlans(parkCode, stateCode []string, start, limit int
 		return nil, err
 	}
 	defer resp.Body.Close()
-
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("unexpected status code: %d. Error reading body: %v", resp.StatusCode, err)
+		}
+		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
+	}
 	var lessonPlansResponse LessonPlanResponse
 	if err := json.NewDecoder(resp.Body).Decode(&lessonPlansResponse); err != nil {
 		return nil, err
@@ -646,7 +718,13 @@ func (api *npsApi) GetParkBoundaries(sitecode string) (*MapdataParkboundaryRespo
 		return nil, err
 	}
 	defer resp.Body.Close()
-
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("unexpected status code: %d. Error reading body: %v", resp.StatusCode, err)
+		}
+		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
+	}
 	var parkBoundariesResponse MapdataParkboundaryResponse
 	if err := json.NewDecoder(resp.Body).Decode(&parkBoundariesResponse); err != nil {
 		return nil, err
@@ -701,7 +779,13 @@ func (api *npsApi) GetMultimediaAudio(parkCode, stateCode []string, start, limit
 		return nil, err
 	}
 	defer resp.Body.Close()
-
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("unexpected status code: %d. Error reading body: %v", resp.StatusCode, err)
+		}
+		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
+	}
 	var multimediaAudioResponse MultimediaAudioResponse
 	if err := json.NewDecoder(resp.Body).Decode(&multimediaAudioResponse); err != nil {
 		return nil, err
@@ -755,7 +839,13 @@ func (api *npsApi) GetMultimediaGalleries(parkCode, stateCode []string, start, l
 		return nil, err
 	}
 	defer resp.Body.Close()
-
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("unexpected status code: %d. Error reading body: %v", resp.StatusCode, err)
+		}
+		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
+	}
 	var multimediaGalleriesResponse MultimediaGalleriesResponse
 	if err := json.NewDecoder(resp.Body).Decode(&multimediaGalleriesResponse); err != nil {
 		return nil, err
@@ -812,7 +902,13 @@ func (api *npsApi) GetMultimediaGalleriesAssets(id, galleryId string, parkCode, 
 		return nil, err
 	}
 	defer resp.Body.Close()
-
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("unexpected status code: %d. Error reading body: %v", resp.StatusCode, err)
+		}
+		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
+	}
 	var multimediaGalleriesAssetsResponse MultimediaGalleriesAssetsResponse
 	if err := json.NewDecoder(resp.Body).Decode(&multimediaGalleriesAssetsResponse); err != nil {
 		return nil, err
@@ -868,7 +964,13 @@ func (api *npsApi) GetMultimediaVideos(parkCode, stateCode []string, start, limi
 		return nil, err
 	}
 	defer resp.Body.Close()
-
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("unexpected status code: %d. Error reading body: %v", resp.StatusCode, err)
+		}
+		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
+	}
 	var multimediaVideosResponse MultimediaVideosResponse
 	if err := json.NewDecoder(resp.Body).Decode(&multimediaVideosResponse); err != nil {
 		return nil, err
@@ -926,7 +1028,13 @@ func (api *npsApi) GetNewsReleases(parkCode, stateCode []string, q string, limit
 		return nil, err
 	}
 	defer resp.Body.Close()
-
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("unexpected status code: %d. Error reading body: %v", resp.StatusCode, err)
+		}
+		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
+	}
 	var newsReleaseResponse NewsReleaseResponse
 	if err := json.NewDecoder(resp.Body).Decode(&newsReleaseResponse); err != nil {
 		return nil, err
@@ -1032,7 +1140,13 @@ func (api *npsApi) GetParkinglots(parkCode, stateCode []string, start, limit int
 		return nil, err
 	}
 	defer resp.Body.Close()
-
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("unexpected status code: %d. Error reading body: %v", resp.StatusCode, err)
+		}
+		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
+	}
 	var parkinglotResponse ParkinglotResponse
 	if err := json.NewDecoder(resp.Body).Decode(&parkinglotResponse); err != nil {
 		return nil, err
@@ -1157,7 +1271,13 @@ func (api *npsApi) GetParks(parkCode, stateCode []string, start, limit int, q st
 		return nil, err
 	}
 	defer resp.Body.Close()
-
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("unexpected status code: %d. Error reading body: %v", resp.StatusCode, err)
+		}
+		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
+	}
 	var parkResponse ParkResponse
 	if err := json.NewDecoder(resp.Body).Decode(&parkResponse); err != nil {
 		return nil, err
@@ -1196,7 +1316,13 @@ func (api *npsApi) GetPassportStampLocations(parkCode, stateCode []string, q str
 		return nil, err
 	}
 	defer resp.Body.Close()
-
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("unexpected status code: %d. Error reading body: %v", resp.StatusCode, err)
+		}
+		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
+	}
 	var passportStampLocationResponse PassportStampLocationResponse
 	if err := json.NewDecoder(resp.Body).Decode(&passportStampLocationResponse); err != nil {
 		return nil, err
@@ -1255,7 +1381,13 @@ func (api *npsApi) GetPeople(parkCode, stateCode []string, q string, limit, star
 		return nil, err
 	}
 	defer resp.Body.Close()
-
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("unexpected status code: %d. Error reading body: %v", resp.StatusCode, err)
+		}
+		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
+	}
 	var personResponse PersonResponse
 	if err := json.NewDecoder(resp.Body).Decode(&personResponse); err != nil {
 		return nil, err
@@ -1317,7 +1449,13 @@ func (api *npsApi) GetPlaces(parkCode, stateCode []string, q string, limit, star
 		return nil, err
 	}
 	defer resp.Body.Close()
-
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("unexpected status code: %d. Error reading body: %v", resp.StatusCode, err)
+		}
+		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
+	}
 	var placeResponse PlaceResponse
 	if err := json.NewDecoder(resp.Body).Decode(&placeResponse); err != nil {
 		return nil, err
@@ -1371,7 +1509,13 @@ func (api *npsApi) GetRoadEvents(parkCode, eventType string) (*RoadEventResponse
 		return nil, err
 	}
 	defer resp.Body.Close()
-
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("unexpected status code: %d. Error reading body: %v", resp.StatusCode, err)
+		}
+		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
+	}
 	var roadEventResponse RoadEventResponse
 	if err := json.NewDecoder(resp.Body).Decode(&roadEventResponse); err != nil {
 		return nil, err
@@ -1454,7 +1598,13 @@ func (api *npsApi) GetThingsToDo(id, parkCode, stateCode, q string, limit, start
 		return nil, err
 	}
 	defer resp.Body.Close()
-
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("unexpected status code: %d. Error reading body: %v", resp.StatusCode, err)
+		}
+		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
+	}
 	var thingsToDoResponse ThingsToDoResponse
 	if err := json.NewDecoder(resp.Body).Decode(&thingsToDoResponse); err != nil {
 		return nil, err
@@ -1483,7 +1633,13 @@ func (api *npsApi) GetTopics(id, q string, limit, start int, sort string) (*Topi
 		return nil, err
 	}
 	defer resp.Body.Close()
-
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("unexpected status code: %d. Error reading body: %v", resp.StatusCode, err)
+		}
+		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
+	}
 	var topicResponse TopicResponse
 	if err := json.NewDecoder(resp.Body).Decode(&topicResponse); err != nil {
 		return nil, err
@@ -1520,7 +1676,13 @@ func (api *npsApi) GetTopicParks(id []string, q string, limit, start int, sort s
 		return nil, err
 	}
 	defer resp.Body.Close()
-
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("unexpected status code: %d. Error reading body: %v", resp.StatusCode, err)
+		}
+		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
+	}
 	var topicParkResponse TopicParkResponse
 	if err := json.NewDecoder(resp.Body).Decode(&topicParkResponse); err != nil {
 		return nil, err
@@ -1590,7 +1752,13 @@ func (api *npsApi) GetTours(id, parkCode, stateCode []string, q string, limit, s
 		return nil, err
 	}
 	defer resp.Body.Close()
-
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("unexpected status code: %d. Error reading body: %v", resp.StatusCode, err)
+		}
+		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
+	}
 	var tourResponse TourResponse
 	if err := json.NewDecoder(resp.Body).Decode(&tourResponse); err != nil {
 		return nil, err
@@ -1689,7 +1857,13 @@ func (api *npsApi) GetVisitorCenters(parkCode, stateCode []string, q string, lim
 		return nil, err
 	}
 	defer resp.Body.Close()
-
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("unexpected status code: %d. Error reading body: %v", resp.StatusCode, err)
+		}
+		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
+	}
 	var visitorCenterResponse VisitorCenterResponse
 	if err := json.NewDecoder(resp.Body).Decode(&visitorCenterResponse); err != nil {
 		return nil, err
@@ -1745,7 +1919,13 @@ func (api *npsApi) GetWebcams(id string, parkCode, stateCode []string, q string,
 		return nil, err
 	}
 	defer resp.Body.Close()
-
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("unexpected status code: %d. Error reading body: %v", resp.StatusCode, err)
+		}
+		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
+	}
 	var webcamResponse WebcamResponse
 	if err := json.NewDecoder(resp.Body).Decode(&webcamResponse); err != nil {
 		return nil, err
