@@ -1,5 +1,5 @@
 package main
 
 func main() {
-	// npsAPI := nps.NewNpsApi()
+	// 	nps := NewNpsApi(os.Getenv("NPS_API_KEY"))
 }

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strconv"
+	"reflect"
 	"strings"
 	"time"
 )
@@ -55,16 +55,51 @@ const (
 // npsApi implements the NpsService interface.
 type npsApi struct {
 	BaseURL string
+	ApiKey  string
 	Client  *http.Client
 }
 
-func NewNpsApi() NpsApi {
+func NewNpsApi(apiKey string) NpsApi {
 	return &npsApi{
+		ApiKey:  apiKey,
 		BaseURL: BASE_URL,
 		Client: &http.Client{
 			Timeout: time.Second * 30,
 		},
 	}
+}
+
+func (api *npsApi) BuildRequestURL(endpoint string, params map[string]interface{}) string {
+	var sb strings.Builder
+	sb.WriteString(api.BaseURL)
+	sb.WriteString(endpoint)
+
+	first := true
+	for key, value := range params {
+		if (reflect.ValueOf(value).Kind() == reflect.String && value != "") ||
+			(reflect.ValueOf(value).Kind() == reflect.Int && value != 0) {
+			if first {
+				sb.WriteString("?")
+				first = false
+			} else {
+				sb.WriteString("&")
+			}
+			sb.WriteString(key)
+			sb.WriteString("=")
+			sb.WriteString(fmt.Sprintf("%v", value))
+		}
+	}
+
+	if api.ApiKey != "" {
+		if first {
+			sb.WriteString("?")
+		} else {
+			sb.WriteString("&")
+		}
+		sb.WriteString("api_key=")
+		sb.WriteString(api.ApiKey)
+	}
+	return sb.String()
 }
 
 // Activity represents an activity in the National Park Service.
@@ -75,15 +110,22 @@ type Activity struct {
 
 // ActivityResponse represents the response from the /activities endpoint.
 type ActivityResponse struct {
-	Total string       `json:"total"`
-	Data  [][]Activity `json:"data"`
-	Limit string       `json:"limit"`
-	Start string       `json:"start"`
+	Total string     `json:"total"`
+	Data  []Activity `json:"data"`
+	Limit string     `json:"limit"`
+	Start string     `json:"start"`
 }
 
 // GetActivities makes a GET request to the /activities endpoint and returns the activities.
 func (api *npsApi) GetActivities(id, q, sort string, limit, start int) (*ActivityResponse, error) {
-	url := api.BaseURL + "/activities?id=" + id + "&q=" + q + "&sort=" + sort + "&limit=" + strconv.Itoa(limit) + "&start=" + strconv.Itoa(start)
+	params := map[string]interface{}{
+		"id":    id,
+		"q":     q,
+		"sort":  sort,
+		"limit": limit,
+		"start": start,
+	}
+	url := api.BuildRequestURL("/activities", params)
 	resp, err := api.Client.Get(url)
 	if err != nil {
 		return nil, err
@@ -96,11 +138,11 @@ func (api *npsApi) GetActivities(id, q, sort string, limit, start int) (*Activit
 		}
 		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
 	}
+
 	var activitiesResponse ActivityResponse
 	if err := json.NewDecoder(resp.Body).Decode(&activitiesResponse); err != nil {
 		return nil, err
 	}
-
 	return &activitiesResponse, nil
 }
 
@@ -128,7 +170,14 @@ type ActivityParkResponse struct {
 
 // GetActivityParks makes a GET request to the /activities/parks endpoint and returns the parks related to the activities.
 func (api *npsApi) GetActivityParks(id []string, q, sort string, limit, start int) (*ActivityParkResponse, error) {
-	url := api.BaseURL + "/activities/parks?id=" + strings.Join(id, ",") + "&q=" + q + "&sort=" + sort + "&limit=" + strconv.Itoa(limit) + "&start=" + strconv.Itoa(start)
+	params := map[string]interface{}{
+		"id":    strings.Join(id, ","),
+		"q":     q,
+		"sort":  sort,
+		"limit": limit,
+		"start": start,
+	}
+	url := api.BuildRequestURL("/activities/parks", params)
 	resp, err := api.Client.Get(url)
 	if err != nil {
 		return nil, err
@@ -141,6 +190,7 @@ func (api *npsApi) GetActivityParks(id []string, q, sort string, limit, start in
 		}
 		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
 	}
+
 	var activityParkResponse ActivityParkResponse
 	if err := json.NewDecoder(resp.Body).Decode(&activityParkResponse); err != nil {
 		return nil, err
@@ -168,15 +218,22 @@ type Alert struct {
 
 // AlertResponse represents the response from the /alerts endpoint.
 type AlertResponse struct {
-	Total string    `json:"total"`
-	Data  [][]Alert `json:"data"`
-	Limit string    `json:"limit"`
-	Start string    `json:"start"`
+	Total string  `json:"total"`
+	Data  []Alert `json:"data"`
+	Limit string  `json:"limit"`
+	Start string  `json:"start"`
 }
 
 // GetAlerts makes a GET request to the /alerts endpoint and returns the alerts.
 func (api *npsApi) GetAlerts(parkCode, stateCode []string, q string, limit, start int) (*AlertResponse, error) {
-	url := api.BaseURL + "/alerts?parkCode=" + strings.Join(parkCode, ",") + "&stateCode=" + strings.Join(stateCode, ",") + "&q=" + q + "&limit=" + strconv.Itoa(limit) + "&start=" + strconv.Itoa(start)
+	params := map[string]interface{}{
+		"parkCode":  strings.Join(parkCode, ","),
+		"stateCode": strings.Join(stateCode, ","),
+		"q":         q,
+		"limit":     limit,
+		"start":     start,
+	}
+	url := api.BuildRequestURL("/alerts", params)
 	resp, err := api.Client.Get(url)
 	if err != nil {
 		return nil, err
@@ -189,6 +246,7 @@ func (api *npsApi) GetAlerts(parkCode, stateCode []string, q string, limit, star
 		}
 		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
 	}
+
 	var alertsResponse AlertResponse
 	if err := json.NewDecoder(resp.Body).Decode(&alertsResponse); err != nil {
 		return nil, err
@@ -213,7 +271,13 @@ type AmenityResponse struct {
 
 // GetAmenities makes a GET request to the /amenities endpoint and returns the amenities.
 func (api *npsApi) GetAmenities(id []string, q string, limit, start int) (*AmenityResponse, error) {
-	url := api.BaseURL + "/amenities?id=" + strings.Join(id, ",") + "&q=" + q + "&limit=" + strconv.Itoa(limit) + "&start=" + strconv.Itoa(start)
+	params := map[string]interface{}{
+		"id":    strings.Join(id, ","),
+		"q":     q,
+		"limit": limit,
+		"start": start,
+	}
+	url := api.BuildRequestURL("/amenities", params)
 	resp, err := api.Client.Get(url)
 	if err != nil {
 		return nil, err
@@ -226,6 +290,7 @@ func (api *npsApi) GetAmenities(id []string, q string, limit, start int) (*Ameni
 		}
 		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
 	}
+
 	var amenitiesResponse AmenityResponse
 	if err := json.NewDecoder(resp.Body).Decode(&amenitiesResponse); err != nil {
 		return nil, err
@@ -267,7 +332,7 @@ type AmenityParkPlace struct {
 			IsOpenToPublic       string   `json:"isOpenToPublic"`
 			Tags                 []string `json:"tags"`
 			ManagedByUrl         string   `json:"managedByUrl"`
-			QuickFacts           string   `json:"quickFacts"`
+			QuickFacts           []string `json:"quickFacts"`
 			LatLong              string   `json:"latLong"`
 			ID                   string   `json:"id"`
 			RelatedParks         []struct {
@@ -286,15 +351,23 @@ type AmenityParkPlace struct {
 
 // AmenityParkPlaceResponse represents the response from the /amenities/parksplaces endpoint.
 type AmenityParkPlaceResponse struct {
-	Total string             `json:"total"`
-	Data  []AmenityParkPlace `json:"data"`
-	Limit string             `json:"limit"`
-	Start string             `json:"start"`
+	Total string               `json:"total"`
+	Data  [][]AmenityParkPlace `json:"data"`
+	Limit string               `json:"limit"`
+	Start string               `json:"start"`
 }
 
 // GetAmenitiesParksPlaces makes a GET request to the /amenities/parksplaces endpoint and returns the parks with places related to the amenities.
 func (api *npsApi) GetAmenitiesParksPlaces(parkCode, id []string, q, sort string, limit, start int) (*AmenityParkPlaceResponse, error) {
-	url := api.BaseURL + "/amenities/parksplaces?parkCode=" + strings.Join(parkCode, ",") + "&id=" + strings.Join(id, ",") + "&q=" + q + "&sort=" + sort + "&limit=" + strconv.Itoa(limit) + "&start=" + strconv.Itoa(start)
+	params := map[string]interface{}{
+		"parkCode": strings.Join(parkCode, ","),
+		"id":       strings.Join(id, ","),
+		"q":        q,
+		"sort":     sort,
+		"limit":    limit,
+		"start":    start,
+	}
+	url := api.BuildRequestURL("/amenities/parksplaces", params)
 	resp, err := api.Client.Get(url)
 	if err != nil {
 		return nil, err
@@ -307,6 +380,7 @@ func (api *npsApi) GetAmenitiesParksPlaces(parkCode, id []string, q, sort string
 		}
 		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
 	}
+
 	var amenityParkPlaceResponse AmenityParkPlaceResponse
 	if err := json.NewDecoder(resp.Body).Decode(&amenityParkPlaceResponse); err != nil {
 		return nil, err
@@ -336,15 +410,23 @@ type AmenityParkVisitorCenterData struct {
 
 // AmenityParkVisitorCenterResponse represents the response from the /amenities/parksvisitorcenters endpoint.
 type AmenityParkVisitorCenterResponse struct {
-	Total string                         `json:"total"`
-	Data  []AmenityParkVisitorCenterData `json:"data"`
-	Limit string                         `json:"limit"`
-	Start string                         `json:"start"`
+	Total string                           `json:"total"`
+	Data  [][]AmenityParkVisitorCenterData `json:"data"`
+	Limit string                           `json:"limit"`
+	Start string                           `json:"start"`
 }
 
 // GetAmenitiesParksVisitorCenters makes a GET request to the /amenities/parksvisitorcenters endpoint and returns the parks with visitor centers related to the amenities.
 func (api *npsApi) GetAmenitiesParksVisitorCenters(parkCode, id, q string, sort []string, limit, start int) (*AmenityParkVisitorCenterResponse, error) {
-	url := api.BaseURL + "/amenities/parksvisitorcenters?parkCode=" + parkCode + "&id=" + id + "&q=" + q + "&sort=" + strings.Join(sort, ",") + "&limit=" + strconv.Itoa(limit) + "&start=" + strconv.Itoa(start)
+	params := map[string]interface{}{
+		"parkCode": parkCode,
+		"id":       id,
+		"q":        q,
+		"sort":     strings.Join(sort, ","),
+		"limit":    limit,
+		"start":    start,
+	}
+	url := api.BuildRequestURL("/amenities/parksvisitorcenters", params)
 	resp, err := api.Client.Get(url)
 	if err != nil {
 		return nil, err
@@ -357,6 +439,7 @@ func (api *npsApi) GetAmenitiesParksVisitorCenters(parkCode, id, q string, sort 
 		}
 		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
 	}
+
 	var amenityParkVisitorCenterResponse AmenityParkVisitorCenterResponse
 	if err := json.NewDecoder(resp.Body).Decode(&amenityParkVisitorCenterResponse); err != nil {
 		return nil, err
@@ -403,7 +486,14 @@ type ArticleData struct {
 
 // GetArticles makes a GET request to the /articles endpoint and returns the articles.
 func (api *npsApi) GetArticles(parkCode, stateCode []string, q string, limit, start int) (*ArticleData, error) {
-	url := api.BaseURL + "/articles?parkCode=" + strings.Join(parkCode, ",") + "&stateCode=" + strings.Join(stateCode, ",") + "&q=" + q + "&limit=" + strconv.Itoa(limit) + "&start=" + strconv.Itoa(start)
+	params := map[string]interface{}{
+		"parkCode":  strings.Join(parkCode, ","),
+		"stateCode": strings.Join(stateCode, ","),
+		"q":         q,
+		"limit":     limit,
+		"start":     start,
+	}
+	url := api.BuildRequestURL("/articles", params)
 	resp, err := api.Client.Get(url)
 	if err != nil {
 		return nil, err
@@ -416,6 +506,7 @@ func (api *npsApi) GetArticles(parkCode, stateCode []string, q string, limit, st
 		}
 		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
 	}
+
 	var articleData ArticleData
 	if err := json.NewDecoder(resp.Body).Decode(&articleData); err != nil {
 		return nil, err
@@ -426,78 +517,107 @@ func (api *npsApi) GetArticles(parkCode, stateCode []string, q string, limit, st
 
 // Campground represents a campground in the National Park Service.
 type Campground struct {
-	Accessibility []struct {
-		Wheelchairaccess string   `json:"wheelchairaccess"`
-		Internetinfo     string   `json:"internetinfo"`
-		Rvallowed        int      `json:"rvallowed"`
-		Cellphoneinfo    string   `json:"cellphoneinfo"`
-		Firestovepolicy  string   `json:"firestovepolicy"`
-		Rvmaxlength      int      `json:"rvmaxlength"`
-		Additionalinfo   string   `json:"additionalinfo"`
-		Trailermaxlength int      `json:"trailermaxlength"`
-		Adainfo          string   `json:"adainfo"`
-		Rvinfo           string   `json:"rvinfo"`
-		Accessroads      []string `json:"accessroads"`
-		Trailerallowed   int      `json:"trailerallowed"`
-		Classifications  []string `json:"classifications"`
-	} `json:"accessibility"`
-	Addresses []struct {
-		PostalCode  string `json:"postalCode"`
-		City        string `json:"city"`
-		StateCode   string `json:"stateCode"`
-		CountryCode string `json:"countryCode"`
-		Line1       string `json:"line1"`
-		Line2       string `json:"line2"`
-		Line3       string `json:"line3"`
-		Type        string `json:"type"`
-	} `json:"addresses"`
-	Amenities []struct {
-		Trashrecyclingcollection   string   `json:"trashrecyclingcollection"`
+	ID                               string        `json:"id"`
+	URL                              string        `json:"url"`
+	Name                             string        `json:"name"`
+	ParkCode                         string        `json:"parkCode"`
+	Description                      string        `json:"description"`
+	Latitude                         string        `json:"latitude"`
+	Longitude                        string        `json:"longitude"`
+	LatLong                          string        `json:"latLong"`
+	AudioDescription                 string        `json:"audioDescription"`
+	IsPassportStampLocation          string        `json:"isPassportStampLocation"`
+	PassportStampLocationDescription string        `json:"passportStampLocationDescription"`
+	PassportStampImages              []interface{} `json:"passportStampImages"`
+	GeometryPoiId                    string        `json:"geometryPoiId"`
+	ReservationInfo                  string        `json:"reservationInfo"`
+	ReservationUrl                   string        `json:"reservationUrl"`
+	Regulationsurl                   string        `json:"regulationsurl"`
+	RegulationsOverview              string        `json:"regulationsOverview"`
+	Amenities                        struct {
+		TrashRecyclingCollection   string   `json:"trashRecyclingCollection"`
 		Toilets                    []string `json:"toilets"`
-		Internetconnectivity       bool     `json:"internetconnectivity"`
+		InternetConnectivity       string   `json:"internetConnectivity"`
 		Showers                    []string `json:"showers"`
-		Cellphonereception         bool     `json:"cellphonereception"`
-		Laundry                    bool     `json:"laundry"`
+		CellPhoneReception         string   `json:"cellPhoneReception"`
+		Laundry                    string   `json:"laundry"`
 		Amphitheater               string   `json:"amphitheater"`
-		Dumpstation                bool     `json:"dumpstation"`
-		Campstore                  bool     `json:"campstore"`
-		Stafforvolunteerhostonsite string   `json:"stafforvolunteerhostonsite"`
-		Potablewater               []string `json:"potablewater"`
-		Iceavailableforsale        bool     `json:"iceavailableforsale"`
-		Firewoodforsale            bool     `json:"firewoodforsale"`
-		Ampitheater                string   `json:"ampitheater"`
-		Foodstoragelockers         string   `json:"foodstoragelockers"`
+		DumpStation                string   `json:"dumpStation"`
+		CampStore                  string   `json:"campStore"`
+		StaffOrVolunteerHostOnsite string   `json:"staffOrVolunteerHostOnsite"`
+		PotableWater               []string `json:"potableWater"`
+		IceAvailableForSale        string   `json:"iceAvailableForSale"`
+		FirewoodForSale            string   `json:"firewoodForSale"`
+		FoodStorageLockers         string   `json:"foodStorageLockers"`
 	} `json:"amenities"`
-	Campsites []struct {
-		Other             int `json:"other"`
-		Group             int `json:"group"`
-		Horse             int `json:"horse"`
-		Totalsites        int `json:"totalsites"`
-		Tentonly          int `json:"tentonly"`
-		Electricalhookups int `json:"electricalhookups"`
-		Rvonly            int `json:"rvonly"`
-		Walkboatto        int `json:"walkboatto"`
-	} `json:"campsites"`
-	Contacts []struct {
-		PhoneNumbers []struct {
-			PhoneNumber string `json:"phoneNumber"`
-			Description string `json:"description"`
-			Extension   string `json:"extension"`
-			Type        string `json:"type"`
-		} `json:"phoneNumbers"`
+	Contacts struct {
+		PhoneNumbers   []interface{} `json:"phoneNumbers"`
 		EmailAddresses []struct {
-			EmailAddress string `json:"emailAddress"`
 			Description  string `json:"description"`
+			EmailAddress string `json:"emailAddress"`
 		} `json:"emailAddresses"`
 	} `json:"contacts"`
-	Description        string `json:"description"`
-	Directionsoverview string `json:"directionsoverview"`
+	Fees []struct {
+		Cost        string `json:"cost"`
+		Description string `json:"description"`
+		Title       string `json:"title"`
+	} `json:"fees"`
+	DirectionsOverview string `json:"directionsOverview"`
 	DirectionsUrl      string `json:"directionsUrl"`
-	Id                 int    `json:"id"`
-	LatLong            string `json:"latLong"`
-	Name               string `json:"name"`
-	ParkCode           string `json:"parkCode"`
-	Weatheroverview    string `json:"weatheroverview"`
+	OperatingHours     []struct {
+		Exceptions    []interface{} `json:"exceptions"`
+		Description   string        `json:"description"`
+		StandardHours struct {
+			Wednesday string `json:"wednesday"`
+			Monday    string `json:"monday"`
+			Thursday  string `json:"thursday"`
+			Sunday    string `json:"sunday"`
+			Tuesday   string `json:"tuesday"`
+			Friday    string `json:"friday"`
+			Saturday  string `json:"saturday"`
+		} `json:"standardHours"`
+		Name string `json:"name"`
+	} `json:"operatingHours"`
+	Addresses []interface{} `json:"addresses"`
+	Images    []struct {
+		Credit  string        `json:"credit"`
+		Crops   []interface{} `json:"crops"`
+		Title   string        `json:"title"`
+		AltText string        `json:"altText"`
+		Caption string        `json:"caption"`
+		URL     string        `json:"url"`
+	} `json:"images"`
+	WeatherOverview                  string `json:"weatherOverview"`
+	NumberOfSitesReservable          string `json:"numberOfSitesReservable"`
+	NumberOfSitesFirstComeFirstServe string `json:"numberOfSitesFirstComeFirstServe"`
+	Campsites                        struct {
+		TotalSites        string `json:"totalSites"`
+		Group             string `json:"group"`
+		Horse             string `json:"horse"`
+		TentOnly          string `json:"tentOnly"`
+		ElectricalHookups string `json:"electricalHookups"`
+		RvOnly            string `json:"rvOnly"`
+		WalkBoatTo        string `json:"walkBoatTo"`
+		Other             string `json:"other"`
+	} `json:"campsites"`
+	Accessibility struct {
+		WheelchairAccess string   `json:"wheelchairAccess"`
+		InternetInfo     string   `json:"internetInfo"`
+		CellPhoneInfo    string   `json:"cellPhoneInfo"`
+		FireStovePolicy  string   `json:"fireStovePolicy"`
+		RvAllowed        string   `json:"rvAllowed"`
+		RvInfo           string   `json:"rvInfo"`
+		RvMaxLength      string   `json:"rvMaxLength"`
+		AdditionalInfo   string   `json:"additionalInfo"`
+		TrailerMaxLength string   `json:"trailerMaxLength"`
+		AdaInfo          string   `json:"adaInfo"`
+		TrailerAllowed   string   `json:"trailerAllowed"`
+		AccessRoads      []string `json:"accessRoads"`
+		Classifications  []string `json:"classifications"`
+	} `json:"accessibility"`
+	Multimedia      []interface{} `json:"multimedia"`
+	RelevanceScore  float64       `json:"relevanceScore"`
+	LastIndexedDate string        `json:"lastIndexedDate"`
 }
 
 // CampgroundData represents the data in the response from the /campgrounds endpoint.
@@ -510,7 +630,15 @@ type CampgroundData struct {
 
 // GetCampgrounds makes a GET request to the /campgrounds endpoint and returns the campgrounds.
 func (api *npsApi) GetCampgrounds(parkCode, stateCode []string, q string, sort []string, limit, start int) (*CampgroundData, error) {
-	url := api.BaseURL + "/campgrounds?parkCode=" + strings.Join(parkCode, ",") + "&stateCode=" + strings.Join(stateCode, ",") + "&q=" + q + "&sort=" + strings.Join(sort, ",") + "&limit=" + strconv.Itoa(limit) + "&start=" + strconv.Itoa(start)
+	params := map[string]interface{}{
+		"parkCode":  strings.Join(parkCode, ","),
+		"stateCode": strings.Join(stateCode, ","),
+		"q":         q,
+		"sort":      strings.Join(sort, ","),
+		"limit":     limit,
+		"start":     start,
+	}
+	url := api.BuildRequestURL("/campgrounds", params)
 	resp, err := api.Client.Get(url)
 	if err != nil {
 		return nil, err
@@ -523,11 +651,11 @@ func (api *npsApi) GetCampgrounds(parkCode, stateCode []string, q string, sort [
 		}
 		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
 	}
+
 	var campgroundData CampgroundData
 	if err := json.NewDecoder(resp.Body).Decode(&campgroundData); err != nil {
 		return nil, err
 	}
-
 	return &campgroundData, nil
 }
 
@@ -542,26 +670,44 @@ type Event struct {
 	Description string   `json:"description"`
 	EventID     string   `json:"eventid"`
 	ID          string   `json:"id"`
-	IsAllDay    bool     `json:"isallday"`
-	IsFree      bool     `json:"isfree"`
-	IsRecurring bool     `json:"isrecurring"`
+	IsAllDay    string   `json:"isallday"`
+	IsFree      string   `json:"isfree"`
+	IsRecurring string   `json:"isrecurring"`
 	Location    string   `json:"location"`
 	Title       string   `json:"title"`
 }
 
 // EventResponse represents the response from the /events endpoint.
 type EventResponse struct {
-	Total      string    `json:"total"`
-	Errors     []string  `json:"errors"` // Assuming errors are strings.
-	Data       [][]Event `json:"data"`
-	Dates      string    `json:"dates"`
-	PageNumber string    `json:"pagenumber"`
-	PageSize   string    `json:"pagesize"`
+	Total      string   `json:"total"`
+	Errors     []string `json:"errors"` // Assuming errors are strings.
+	Data       []Event  `json:"data"`
+	Dates      string   `json:"dates"`
+	PageNumber string   `json:"pagenumber"`
+	PageSize   string   `json:"pagesize"`
 }
 
 // GetEvents makes a GET request to the /events endpoint and returns the events.
 func (api *npsApi) GetEvents(parkCode, stateCode, organization, subject, portal, tagsAll, tagsOne, tagsNone []string, dateStart, dateEnd string, eventType []string, id, q string, pageSize, pageNumber int, expandRecurring bool) (*EventResponse, error) {
-	url := api.BaseURL + "/events?parkCode=" + strings.Join(parkCode, ",") + "&organization=" + strings.Join(organization, ",") + "&subject=" + strings.Join(subject, ",") + "&portal=" + strings.Join(portal, ",") + "&tagsAll=" + strings.Join(tagsAll, ",") + "&tagsOne=" + strings.Join(tagsOne, ",") + "&tagsNone=" + strings.Join(tagsNone, ",") + "&stateCode=" + strings.Join(stateCode, ",") + "&dateStart=" + dateStart + "&dateEnd=" + dateEnd + "&eventType=" + strings.Join(eventType, ",") + "&id=" + id + "&q=" + q + "&pageSize=" + strconv.Itoa(pageSize) + "&pageNumber=" + strconv.Itoa(pageNumber) + "&expandRecurring=" + strconv.FormatBool(expandRecurring)
+	params := map[string]interface{}{
+		"parkCode":        strings.Join(parkCode, ","),
+		"stateCode":       strings.Join(stateCode, ","),
+		"organization":    strings.Join(organization, ","),
+		"subject":         strings.Join(subject, ","),
+		"portal":          strings.Join(portal, ","),
+		"tagsAll":         strings.Join(tagsAll, ","),
+		"tagsOne":         strings.Join(tagsOne, ","),
+		"tagsNone":        strings.Join(tagsNone, ","),
+		"dateStart":       dateStart,
+		"dateEnd":         dateEnd,
+		"eventType":       strings.Join(eventType, ","),
+		"id":              id,
+		"q":               q,
+		"pageSize":        pageSize,
+		"pageNumber":      pageNumber,
+		"expandRecurring": expandRecurring,
+	}
+	url := api.BuildRequestURL("/events", params)
 	resp, err := api.Client.Get(url)
 	if err != nil {
 		return nil, err
@@ -574,6 +720,7 @@ func (api *npsApi) GetEvents(parkCode, stateCode, organization, subject, portal,
 		}
 		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
 	}
+
 	var eventsResponse EventResponse
 	if err := json.NewDecoder(resp.Body).Decode(&eventsResponse); err != nil {
 		return nil, err
@@ -584,22 +731,27 @@ func (api *npsApi) GetEvents(parkCode, stateCode, organization, subject, portal,
 
 // FeePass represents a fee or pass in the National Park Service.
 type FeePass struct {
-	CustomFeeLinkUrl                     string `json:"customFeeLinkUrl"`
-	TimedEntryDescription                string `json:"timedEntryDescription"`
-	ParkingDetailsUrl                    string `json:"parkingDetailsUrl"`
-	EntrancePassesDescription            string `json:"entrancePassesDescription"`
-	TimedEntryHeading                    string `json:"timedEntryHeading"`
-	CustomFeeDescription                 string `json:"customFeeDescription"`
-	IsParkingFeePossible                 bool   `json:"isParkingFeePossible"`
-	EntranceFeeDescription               string `json:"entranceFeeDescription"`
-	Cashless                             string `json:"cashless"`
-	CustomFeeHeading                     string `json:"customFeeHeading"`
-	IsInteragencyPassAccepted            bool   `json:"isInteragencyPassAccepted"`
-	PaidParkingDescription               string `json:"paidParkingDescription"`
-	IsFeeFreePark                        bool   `json:"isFeeFreePark"`
-	PaidParkingHeading                   string `json:"paidParkingHeading"`
-	ParkCode                             string `json:"parkCode"`
-	ContentOrderOrdinals                 []int  `json:"contentOrderOrdinals"`
+	CustomFeeLinkUrl          string `json:"customFeeLinkUrl"`
+	TimedEntryDescription     string `json:"timedEntryDescription"`
+	ParkingDetailsUrl         string `json:"parkingDetailsUrl"`
+	EntrancePassesDescription string `json:"entrancePassesDescription"`
+	TimedEntryHeading         string `json:"timedEntryHeading"`
+	CustomFeeDescription      string `json:"customFeeDescription"`
+	IsParkingFeePossible      bool   `json:"isParkingFeePossible"`
+	EntranceFeeDescription    string `json:"entranceFeeDescription"`
+	Cashless                  string `json:"cashless"`
+	CustomFeeHeading          string `json:"customFeeHeading"`
+	IsInteragencyPassAccepted bool   `json:"isInteragencyPassAccepted"`
+	PaidParkingDescription    string `json:"paidParkingDescription"`
+	IsFeeFreePark             bool   `json:"isFeeFreePark"`
+	PaidParkingHeading        string `json:"paidParkingHeading"`
+	ParkCode                  string `json:"parkCode"`
+	ContentOrderOrdinals      struct {
+		EntranceFee int `json:"entranceFee"`
+		TimedEntry  int `json:"timedEntry"`
+		PaidParking int `json:"paidParking"`
+		CustomFee   int `json:"customFee"`
+	} `json:"contentOrderOrdinals"`
 	IsParkingOrTransportationFeePossible bool   `json:"isParkingOrTransportationFeePossible"`
 	CustomFeeLinkText                    string `json:"customFeeLinkText"`
 	FeesAtWorkUrl                        string `json:"feesAtWorkUrl"`
@@ -607,15 +759,23 @@ type FeePass struct {
 
 // FeePassResponse represents the response from the /feespasses endpoint.
 type FeePassResponse struct {
-	Total string      `json:"total"`
-	Data  [][]FeePass `json:"data"`
-	Start string      `json:"start"`
-	Limit string      `json:"limit"`
+	Total string    `json:"total"`
+	Data  []FeePass `json:"data"`
+	Start string    `json:"start"`
+	Limit string    `json:"limit"`
 }
 
 // GetFeesPasses makes a GET request to the /feespasses endpoint and returns the fees and passes.
 func (api *npsApi) GetFeesPasses(parkCode, stateCode []string, start, limit int, q string, sort []string) (*FeePassResponse, error) {
-	url := api.BaseURL + "/feespasses?parkCode=" + strings.Join(parkCode, ",") + "&start=" + strconv.Itoa(start) + "&limit=" + strconv.Itoa(limit) + "&q=" + q + "&sort=" + strings.Join(sort, ",") + "&stateCode=" + strings.Join(stateCode, ",")
+	params := map[string]interface{}{
+		"parkCode":  strings.Join(parkCode, ","),
+		"stateCode": strings.Join(stateCode, ","),
+		"start":     start,
+		"limit":     limit,
+		"q":         q,
+		"sort":      strings.Join(sort, ","),
+	}
+	url := api.BuildRequestURL("/feespasses", params)
 	resp, err := api.Client.Get(url)
 	if err != nil {
 		return nil, err
@@ -628,6 +788,7 @@ func (api *npsApi) GetFeesPasses(parkCode, stateCode []string, start, limit int,
 		}
 		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
 	}
+
 	var feesPassesResponse FeePassResponse
 	if err := json.NewDecoder(resp.Body).Decode(&feesPassesResponse); err != nil {
 		return nil, err
@@ -646,26 +807,34 @@ type LessonPlan struct {
 		AdditionalStandards string   `json:"additionalstandards"`
 		ElaStandards        []string `json:"elastandards"`
 	} `json:"commoncore"`
-	Subject           string `json:"subject"`
-	GradeLevel        string `json:"gradelevel"`
-	Url               string `json:"url"`
-	QuestionObjective string `json:"questionobjective"`
-	Duration          string `json:"duration"`
-	Title             string `json:"title"`
-	ID                string `json:"id"`
+	Subject           []string `json:"subject"`
+	GradeLevel        string   `json:"gradelevel"`
+	Url               string   `json:"url"`
+	QuestionObjective string   `json:"questionobjective"`
+	Duration          string   `json:"duration"`
+	Title             string   `json:"title"`
+	ID                string   `json:"id"`
 }
 
 // LessonPlanResponse represents the response from the /lessonplans endpoint.
 type LessonPlanResponse struct {
-	Total string         `json:"total"`
-	Data  [][]LessonPlan `json:"data"`
-	Start string         `json:"start"`
-	Limit string         `json:"limit"`
+	Total string       `json:"total"`
+	Data  []LessonPlan `json:"data"`
+	Start string       `json:"start"`
+	Limit string       `json:"limit"`
 }
 
 // GetLessonPlans makes a GET request to the /lessonplans endpoint and returns the lesson plans.
 func (api *npsApi) GetLessonPlans(parkCode, stateCode []string, start, limit int, q string, sort []string) (*LessonPlanResponse, error) {
-	url := api.BaseURL + "/lessonplans?parkCode=" + strings.Join(parkCode, ",") + "&start=" + strconv.Itoa(start) + "&limit=" + strconv.Itoa(limit) + "&q=" + q + "&sort=" + strings.Join(sort, ",") + "&stateCode=" + strings.Join(stateCode, ",")
+	params := map[string]interface{}{
+		"parkCode":  strings.Join(parkCode, ","),
+		"stateCode": strings.Join(stateCode, ","),
+		"start":     start,
+		"limit":     limit,
+		"q":         q,
+		"sort":      strings.Join(sort, ","),
+	}
+	url := api.BuildRequestURL("/lessonplans", params)
 	resp, err := api.Client.Get(url)
 	if err != nil {
 		return nil, err
@@ -678,6 +847,7 @@ func (api *npsApi) GetLessonPlans(parkCode, stateCode []string, start, limit int
 		}
 		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
 	}
+
 	var lessonPlansResponse LessonPlanResponse
 	if err := json.NewDecoder(resp.Body).Decode(&lessonPlansResponse); err != nil {
 		return nil, err
@@ -686,33 +856,36 @@ func (api *npsApi) GetLessonPlans(parkCode, stateCode []string, start, limit int
 	return &lessonPlansResponse, nil
 }
 
-// MapdataParkboundary represents a park boundary in the National Park Service.
-type MapdataParkboundary struct {
+// MapdataParkboundaryResponse represents the response from the /mapdata/parkboundaries/{sitecode} endpoint.
+type MapdataParkboundaryResponse struct {
 	Type       string `json:"type"`
 	ID         string `json:"id"`
 	Properties struct {
-		ParkClass string `json:"parkClass"`
+		TypeID string `json:"typeId"`
+		Type   struct {
+			Name string `json:"name"`
+			ID   string `json:"id"`
+		} `json:"type"`
+		Aliases []struct {
+			ParkID  string `json:"parkId"`
+			Current bool   `json:"current"`
+			Name    string `json:"name"`
+			ID      string `json:"id"`
+		} `json:"aliases"`
+		Name string `json:"name"`
 	} `json:"properties"`
 	Geometry struct {
-		Coordinates [][][]struct {
-			Longitude float64 `json:"0"`
-			Latitude  float64 `json:"1"`
-		} `json:"coordinates"`
-		Type string `json:"type"`
+		Coordinates [][][][]float64 `json:"coordinates"`
+		Type        string          `json:"type"`
 	} `json:"geometry"`
-}
-
-// MapdataParkboundaryResponse represents the response from the /mapdata/parkboundaries/{sitecode} endpoint.
-type MapdataParkboundaryResponse struct {
-	Total string            `json:"total"`
-	Data  []MultimediaAudio `json:"data"`
-	Start string            `json:"start"`
-	Limit string            `json:"limit"`
 }
 
 // GetParkBoundaries makes a GET request to the /mapdata/parkboundaries/{sitecode} endpoint and returns the park boundaries.
 func (api *npsApi) GetParkBoundaries(sitecode string) (*MapdataParkboundaryResponse, error) {
-	url := api.BaseURL + "/mapdata/parkboundaries/" + sitecode
+	if sitecode == "" {
+		return nil, fmt.Errorf("sitecode cannot be empty")
+	}
+	url := api.BaseURL + "/mapdata/parkboundaries/" + sitecode + "?api_key=" + api.ApiKey
 	resp, err := api.Client.Get(url)
 	if err != nil {
 		return nil, err
@@ -725,6 +898,7 @@ func (api *npsApi) GetParkBoundaries(sitecode string) (*MapdataParkboundaryRespo
 		}
 		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
 	}
+
 	var parkBoundariesResponse MapdataParkboundaryResponse
 	if err := json.NewDecoder(resp.Body).Decode(&parkBoundariesResponse); err != nil {
 		return nil, err
@@ -750,10 +924,10 @@ type MultimediaAudio struct {
 	Credit     string   `json:"credit"`
 	DurationMs int64    `json:"durationMs"`
 	ID         string   `json:"id"`
-	Versions   struct {
-		FileSize int64  `json:"fileSize"`
-		FileType string `json:"fileType"`
-		Url      string `json:"url"`
+	Versions   []struct {
+		FileSize float64 `json:"fileSize"`
+		FileType string  `json:"fileType"`
+		Url      string  `json:"url"`
 	} `json:"versions"`
 	Description  string `json:"description"`
 	RelatedParks []struct {
@@ -773,7 +947,14 @@ type MultimediaAudioResponse struct {
 
 // GetMultimediaAudio makes a GET request to the /multimedia/audio endpoint and returns the audio files.
 func (api *npsApi) GetMultimediaAudio(parkCode, stateCode []string, start, limit int, q string) (*MultimediaAudioResponse, error) {
-	url := api.BaseURL + "/multimedia/audio?parkCode=" + strings.Join(parkCode, ",") + "&start=" + strconv.Itoa(start) + "&limit=" + strconv.Itoa(limit) + "&q=" + q + "&stateCode=" + strings.Join(stateCode, ",")
+	params := map[string]interface{}{
+		"parkCode":  strings.Join(parkCode, ","),
+		"stateCode": strings.Join(stateCode, ","),
+		"start":     start,
+		"limit":     limit,
+		"q":         q,
+	}
+	url := api.BuildRequestURL("/multimedia/audio", params)
 	resp, err := api.Client.Get(url)
 	if err != nil {
 		return nil, err
@@ -786,6 +967,7 @@ func (api *npsApi) GetMultimediaAudio(parkCode, stateCode []string, start, limit
 		}
 		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
 	}
+
 	var multimediaAudioResponse MultimediaAudioResponse
 	if err := json.NewDecoder(resp.Body).Decode(&multimediaAudioResponse); err != nil {
 		return nil, err
@@ -820,7 +1002,7 @@ type MultimediaGalleries struct {
 		Url         string `json:"url"`
 		Name        string `json:"name"`
 	} `json:"relatedParks"`
-	AssetCount string `json:"assetCount"`
+	AssetCount int `json:"assetCount"`
 }
 
 // MultimediaGalleriesResponse represents the response from the /multimedia/galleries endpoint.
@@ -833,7 +1015,14 @@ type MultimediaGalleriesResponse struct {
 
 // GetMultimediaGalleries makes a GET request to the /multimedia/galleries endpoint and returns the galleries.
 func (api *npsApi) GetMultimediaGalleries(parkCode, stateCode []string, start, limit int, q string) (*MultimediaGalleriesResponse, error) {
-	url := api.BaseURL + "/multimedia/galleries?parkCode=" + strings.Join(parkCode, ",") + "&start=" + strconv.Itoa(start) + "&limit=" + strconv.Itoa(limit) + "&q=" + q + "&stateCode=" + strings.Join(stateCode, ",")
+	params := map[string]interface{}{
+		"parkCode":  strings.Join(parkCode, ","),
+		"stateCode": strings.Join(stateCode, ","),
+		"start":     start,
+		"limit":     limit,
+		"q":         q,
+	}
+	url := api.BuildRequestURL("/multimedia/galleries", params)
 	resp, err := api.Client.Get(url)
 	if err != nil {
 		return nil, err
@@ -846,6 +1035,7 @@ func (api *npsApi) GetMultimediaGalleries(parkCode, stateCode []string, start, l
 		}
 		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
 	}
+
 	var multimediaGalleriesResponse MultimediaGalleriesResponse
 	if err := json.NewDecoder(resp.Body).Decode(&multimediaGalleriesResponse); err != nil {
 		return nil, err
@@ -865,11 +1055,11 @@ type MultimediaGalleriesAssets struct {
 	FileInfo     struct {
 		Url          string `json:"url"`
 		FileType     string `json:"fileType"`
-		WidthPixels  string `json:"widthPixels"`
-		HeightPixels string `json:"heightPixels"`
-		FileSizeKb   string `json:"fileSizeKb"`
+		WidthPixels  int    `json:"widthPixels"`
+		HeightPixels int    `json:"heightPixels"`
+		FileSizeKb   int    `json:"fileSizeKb"`
 	} `json:"fileInfo"`
-	Ordinal      string   `json:"ordinal"`
+	Ordinal      int      `json:"ordinal"`
 	AltText      string   `json:"altText"`
 	Title        string   `json:"title"`
 	Tags         []string `json:"tags"`
@@ -896,7 +1086,16 @@ type MultimediaGalleriesAssetsResponse struct {
 
 // GetMultimediaGalleriesAssets makes a GET request to the /multimedia/galleries/assets endpoint and returns the gallery assets.
 func (api *npsApi) GetMultimediaGalleriesAssets(id, galleryId string, parkCode, stateCode []string, start, limit int, q string) (*MultimediaGalleriesAssetsResponse, error) {
-	url := api.BaseURL + "/multimedia/galleries/assets?id=" + id + "&galleryId=" + galleryId + "&parkCode=" + strings.Join(parkCode, ",") + "&start=" + strconv.Itoa(start) + "&limit=" + strconv.Itoa(limit) + "&q=" + q + "&stateCode=" + strings.Join(stateCode, ",")
+	params := map[string]interface{}{
+		"id":        id,
+		"galleryId": galleryId,
+		"parkCode":  strings.Join(parkCode, ","),
+		"stateCode": strings.Join(stateCode, ","),
+		"start":     start,
+		"limit":     limit,
+		"q":         q,
+	}
+	url := api.BuildRequestURL("/multimedia/galleries/assets", params)
 	resp, err := api.Client.Get(url)
 	if err != nil {
 		return nil, err
@@ -909,6 +1108,7 @@ func (api *npsApi) GetMultimediaGalleriesAssets(id, galleryId string, parkCode, 
 		}
 		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
 	}
+
 	var multimediaGalleriesAssetsResponse MultimediaGalleriesAssetsResponse
 	if err := json.NewDecoder(resp.Body).Decode(&multimediaGalleriesAssetsResponse); err != nil {
 		return nil, err
@@ -958,7 +1158,14 @@ type MultimediaVideosResponse struct {
 
 // GetMultimediaVideos makes a GET request to the /multimedia/videos endpoint and returns the videos.
 func (api *npsApi) GetMultimediaVideos(parkCode, stateCode []string, start, limit int, q string) (*MultimediaVideosResponse, error) {
-	url := api.BaseURL + "/multimedia/videos?parkCode=" + strings.Join(parkCode, ",") + "&stateCode=" + strings.Join(stateCode, ",") + "&start=" + strconv.Itoa(start) + "&limit=" + strconv.Itoa(limit) + "&q=" + q
+	params := map[string]interface{}{
+		"parkCode":  strings.Join(parkCode, ","),
+		"stateCode": strings.Join(stateCode, ","),
+		"start":     start,
+		"limit":     limit,
+		"q":         q,
+	}
+	url := api.BuildRequestURL("/multimedia/videos", params)
 	resp, err := api.Client.Get(url)
 	if err != nil {
 		return nil, err
@@ -971,6 +1178,7 @@ func (api *npsApi) GetMultimediaVideos(parkCode, stateCode []string, start, limi
 		}
 		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
 	}
+
 	var multimediaVideosResponse MultimediaVideosResponse
 	if err := json.NewDecoder(resp.Body).Decode(&multimediaVideosResponse); err != nil {
 		return nil, err
@@ -1022,7 +1230,15 @@ type NewsReleaseResponse struct {
 
 // GetNewsReleases makes a GET request to the /newsreleases endpoint and returns the news releases.
 func (api *npsApi) GetNewsReleases(parkCode, stateCode []string, q string, limit, start int, sort []string) (*NewsReleaseResponse, error) {
-	url := api.BaseURL + "/newsreleases?parkCode=" + strings.Join(parkCode, ",") + "&stateCode=" + strings.Join(stateCode, ",") + "&start=" + strconv.Itoa(start) + "&limit=" + strconv.Itoa(limit) + "&q=" + q + "&sort=" + strings.Join(sort, ",")
+	params := map[string]interface{}{
+		"parkCode":  strings.Join(parkCode, ","),
+		"stateCode": strings.Join(stateCode, ","),
+		"start":     start,
+		"limit":     limit,
+		"q":         q,
+		"sort":      strings.Join(sort, ","),
+	}
+	url := api.BuildRequestURL("/newsreleases", params)
 	resp, err := api.Client.Get(url)
 	if err != nil {
 		return nil, err
@@ -1035,6 +1251,7 @@ func (api *npsApi) GetNewsReleases(parkCode, stateCode []string, q string, limit
 		}
 		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
 	}
+
 	var newsReleaseResponse NewsReleaseResponse
 	if err := json.NewDecoder(resp.Body).Decode(&newsReleaseResponse); err != nil {
 		return nil, err
@@ -1045,9 +1262,10 @@ func (api *npsApi) GetNewsReleases(parkCode, stateCode []string, q string, limit
 
 // Parkinglot represents a parking lot in the National Park Service.
 type Parkinglot struct {
-	ManagedByOrganization string `json:"managedByOrganization"`
-	Name                  string `json:"name"`
-	Latitude              string `json:"latitude"`
+	ManagedByOrganization string  `json:"managedByOrganization"`
+	Name                  string  `json:"name"`
+	Longitude             float64 `json:"longitude"`
+	Latitude              float64 `json:"latitude"`
 	Fees                  []struct {
 		Cost        string `json:"cost"`
 		Description string `json:"description"`
@@ -1088,8 +1306,7 @@ type Parkinglot struct {
 			} `json:"exceptionHours"`
 		} `json:"exceptions"`
 	} `json:"operatingHours"`
-	Longitude string `json:"longitude"`
-	Contacts  struct {
+	Contacts struct {
 		PhoneNumbers []struct {
 			PhoneNumber string `json:"phoneNumber"`
 			Description string `json:"description"`
@@ -1134,7 +1351,14 @@ type ParkinglotResponse struct {
 
 // GetParkinglots makes a GET request to the /parkinglots endpoint and returns the parking lots.
 func (api *npsApi) GetParkinglots(parkCode, stateCode []string, start, limit int, q string) (*ParkinglotResponse, error) {
-	url := api.BaseURL + "/parkinglots?parkCode=" + strings.Join(parkCode, ",") + "&stateCode=" + strings.Join(stateCode, ",") + "&start=" + strconv.Itoa(start) + "&limit=" + strconv.Itoa(limit) + "&q=" + q
+	params := map[string]interface{}{
+		"parkCode":  strings.Join(parkCode, ","),
+		"stateCode": strings.Join(stateCode, ","),
+		"start":     start,
+		"limit":     limit,
+		"q":         q,
+	}
+	url := api.BuildRequestURL("/parkinglots", params)
 	resp, err := api.Client.Get(url)
 	if err != nil {
 		return nil, err
@@ -1147,6 +1371,7 @@ func (api *npsApi) GetParkinglots(parkCode, stateCode []string, start, limit int
 		}
 		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
 	}
+
 	var parkinglotResponse ParkinglotResponse
 	if err := json.NewDecoder(resp.Body).Decode(&parkinglotResponse); err != nil {
 		return nil, err
@@ -1247,12 +1472,12 @@ type Park struct {
 		Caption string `json:"caption"`
 		Url     string `json:"url"`
 	} `json:"images"`
-	RelevanceScore int    `json:"relevanceScore"`
-	FullName       string `json:"fullName"`
-	LatLong        string `json:"latLong"`
-	ID             string `json:"id"`
-	DirectionsUrl  string `json:"directionsUrl"`
-	Description    string `json:"description"`
+	RelevanceScore float64 `json:"relevanceScore"`
+	FullName       string  `json:"fullName"`
+	LatLong        string  `json:"latLong"`
+	ID             string  `json:"id"`
+	DirectionsUrl  string  `json:"directionsUrl"`
+	Description    string  `json:"description"`
 }
 
 // ParkResponse represents the response from the /parks endpoint.
@@ -1265,7 +1490,15 @@ type ParkResponse struct {
 
 // GetParks makes a GET request to the /parks endpoint and returns the parks.
 func (api *npsApi) GetParks(parkCode, stateCode []string, start, limit int, q string, sort []string) (*ParkResponse, error) {
-	url := api.BaseURL + "/parks?parkCode=" + strings.Join(parkCode, ",") + "&stateCode=" + strings.Join(stateCode, ",") + "&start=" + strconv.Itoa(start) + "&limit=" + strconv.Itoa(limit) + "&q=" + q + "&sort=" + strings.Join(sort, ",")
+	params := map[string]interface{}{
+		"parkCode":  strings.Join(parkCode, ","),
+		"stateCode": strings.Join(stateCode, ","),
+		"start":     start,
+		"limit":     limit,
+		"q":         q,
+		"sort":      strings.Join(sort, ","),
+	}
+	url := api.BuildRequestURL("/parks", params)
 	resp, err := api.Client.Get(url)
 	if err != nil {
 		return nil, err
@@ -1278,6 +1511,7 @@ func (api *npsApi) GetParks(parkCode, stateCode []string, start, limit int, q st
 		}
 		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
 	}
+
 	var parkResponse ParkResponse
 	if err := json.NewDecoder(resp.Body).Decode(&parkResponse); err != nil {
 		return nil, err
@@ -1310,7 +1544,14 @@ type PassportStampLocationResponse struct {
 
 // GetPassportStampLocations makes a GET request to the /passportstamplocations endpoint and returns the passport stamp locations.
 func (api *npsApi) GetPassportStampLocations(parkCode, stateCode []string, q string, limit, start int) (*PassportStampLocationResponse, error) {
-	url := api.BaseURL + "/passportstamplocations?parkCode=" + strings.Join(parkCode, ",") + "&stateCode=" + strings.Join(stateCode, ",") + "&start=" + strconv.Itoa(start) + "&limit=" + strconv.Itoa(limit) + "&q=" + q
+	params := map[string]interface{}{
+		"parkCode":  strings.Join(parkCode, ","),
+		"stateCode": strings.Join(stateCode, ","),
+		"start":     start,
+		"limit":     limit,
+		"q":         q,
+	}
+	url := api.BuildRequestURL("/passportstamplocations", params)
 	resp, err := api.Client.Get(url)
 	if err != nil {
 		return nil, err
@@ -1323,6 +1564,7 @@ func (api *npsApi) GetPassportStampLocations(parkCode, stateCode []string, q str
 		}
 		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
 	}
+
 	var passportStampLocationResponse PassportStampLocationResponse
 	if err := json.NewDecoder(resp.Body).Decode(&passportStampLocationResponse); err != nil {
 		return nil, err
@@ -1345,7 +1587,7 @@ type Person struct {
 	Images               []struct {
 		Credit string `json:"credit"`
 		Crops  []struct {
-			AspectRatio int    `json:"aspectratio"`
+			AspectRatio string `json:"aspectratio"`
 			URL         string `json:"url"`
 		} `json:"crops"`
 		AltText string `json:"altText"`
@@ -1375,7 +1617,14 @@ type PersonResponse struct {
 
 // GetPeople makes a GET request to the /people endpoint and returns the people.
 func (api *npsApi) GetPeople(parkCode, stateCode []string, q string, limit, start int) (*PersonResponse, error) {
-	url := api.BaseURL + "/people?parkCode=" + strings.Join(parkCode, ",") + "&stateCode=" + strings.Join(stateCode, ",") + "&start=" + strconv.Itoa(start) + "&limit=" + strconv.Itoa(limit) + "&q=" + q
+	params := map[string]interface{}{
+		"parkCode":  strings.Join(parkCode, ","),
+		"stateCode": strings.Join(stateCode, ","),
+		"start":     start,
+		"limit":     limit,
+		"q":         q,
+	}
+	url := api.BuildRequestURL("/people", params)
 	resp, err := api.Client.Get(url)
 	if err != nil {
 		return nil, err
@@ -1388,6 +1637,7 @@ func (api *npsApi) GetPeople(parkCode, stateCode []string, q string, limit, star
 		}
 		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
 	}
+
 	var personResponse PersonResponse
 	if err := json.NewDecoder(resp.Body).Decode(&personResponse); err != nil {
 		return nil, err
@@ -1415,15 +1665,29 @@ type Place struct {
 	RelatedOrganizations []string `json:"relatedOrganizations"`
 	Amenities            []string `json:"amenities"`
 	Title                string   `json:"title"`
-	Images               []string `json:"images"`
-	ListingDescription   string   `json:"listingDescription"`
-	IsOpenToPublic       string   `json:"isOpenToPublic"`
-	Tags                 []string `json:"tags"`
-	ManagedByUrl         string   `json:"managedByUrl"`
-	QuickFacts           string   `json:"quickFacts"`
-	LatLong              string   `json:"latLong"`
-	ID                   string   `json:"id"`
-	RelatedParks         []struct {
+	Images               []struct {
+		Credit string `json:"credit"`
+		Crops  []struct {
+			AspectRatio string `json:"aspectratio"`
+			URL         string `json:"url"`
+		} `json:"crops"`
+		AltText string `json:"altText"`
+		Title   string `json:"title"`
+		Caption string `json:"caption"`
+		URL     string `json:"url"`
+	} `json:"images"`
+	ListingDescription string   `json:"listingDescription"`
+	IsOpenToPublic     string   `json:"isOpenToPublic"`
+	Tags               []string `json:"tags"`
+	ManagedByUrl       string   `json:"managedByUrl"`
+	QuickFacts         []struct {
+		ID    string `json:"id"`
+		Value string `json:"value"`
+		Name  string `json:"name"`
+	} `json:"quickFacts"`
+	LatLong      string `json:"latLong"`
+	ID           string `json:"id"`
+	RelatedParks []struct {
 		States      string `json:"states"`
 		ParkCode    string `json:"parkCode"`
 		Designation string `json:"designation"`
@@ -1443,7 +1707,14 @@ type PlaceResponse struct {
 
 // GetPlaces makes a GET request to the /places endpoint and returns the places.
 func (api *npsApi) GetPlaces(parkCode, stateCode []string, q string, limit, start int) (*PlaceResponse, error) {
-	url := api.BaseURL + "/places?parkCode=" + strings.Join(parkCode, ",") + "&stateCode=" + strings.Join(stateCode, ",") + "&start=" + strconv.Itoa(start) + "&limit=" + strconv.Itoa(limit) + "&q=" + q
+	params := map[string]interface{}{
+		"parkCode":  strings.Join(parkCode, ","),
+		"stateCode": strings.Join(stateCode, ","),
+		"start":     start,
+		"limit":     limit,
+		"q":         q,
+	}
+	url := api.BuildRequestURL("/places", params)
 	resp, err := api.Client.Get(url)
 	if err != nil {
 		return nil, err
@@ -1456,11 +1727,11 @@ func (api *npsApi) GetPlaces(parkCode, stateCode []string, q string, limit, star
 		}
 		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
 	}
+
 	var placeResponse PlaceResponse
 	if err := json.NewDecoder(resp.Body).Decode(&placeResponse); err != nil {
 		return nil, err
 	}
-
 	return &placeResponse, nil
 }
 
@@ -1503,7 +1774,11 @@ type RoadEventResponse struct {
 
 // GetRoadEvents makes a GET request to the /roadevents endpoint and returns the road events.
 func (api *npsApi) GetRoadEvents(parkCode, eventType string) (*RoadEventResponse, error) {
-	url := api.BaseURL + "/roadevents?parkCode=" + parkCode + "&type=" + eventType
+	params := map[string]interface{}{
+		"parkCode": parkCode,
+		"type":     eventType,
+	}
+	url := api.BuildRequestURL("/roadevents", params)
 	resp, err := api.Client.Get(url)
 	if err != nil {
 		return nil, err
@@ -1516,6 +1791,7 @@ func (api *npsApi) GetRoadEvents(parkCode, eventType string) (*RoadEventResponse
 		}
 		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
 	}
+
 	var roadEventResponse RoadEventResponse
 	if err := json.NewDecoder(resp.Body).Decode(&roadEventResponse); err != nil {
 		return nil, err
@@ -1556,7 +1832,7 @@ type ThingsToDo struct {
 	Images                 []struct {
 		Credit string `json:"credit"`
 		Crops  []struct {
-			AspectRatio int    `json:"aspectratio"`
+			AspectRatio string `json:"aspectratio"`
 			URL         string `json:"url"`
 		} `json:"crops"`
 		AltText string `json:"altText"`
@@ -1592,7 +1868,16 @@ type ThingsToDoResponse struct {
 
 // GetThingsToDo makes a GET request to the /thingstodo endpoint and returns the suggested things to do.
 func (api *npsApi) GetThingsToDo(id, parkCode, stateCode, q string, limit, start int, sort []string) (*ThingsToDoResponse, error) {
-	url := api.BaseURL + "/thingstodo?parkCode=" + parkCode + "&stateCode=" + stateCode + "&q=" + q + "&limit=" + strconv.Itoa(limit) + "&start=" + strconv.Itoa(start) + "&sort=" + strings.Join(sort, ",")
+	params := map[string]interface{}{
+		"id":        id,
+		"parkCode":  parkCode,
+		"stateCode": stateCode,
+		"start":     start,
+		"limit":     limit,
+		"q":         q,
+		"sort":      strings.Join(sort, ","),
+	}
+	url := api.BuildRequestURL("/thingstodo", params)
 	resp, err := api.Client.Get(url)
 	if err != nil {
 		return nil, err
@@ -1605,6 +1890,7 @@ func (api *npsApi) GetThingsToDo(id, parkCode, stateCode, q string, limit, start
 		}
 		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
 	}
+
 	var thingsToDoResponse ThingsToDoResponse
 	if err := json.NewDecoder(resp.Body).Decode(&thingsToDoResponse); err != nil {
 		return nil, err
@@ -1627,7 +1913,14 @@ type TopicResponse struct {
 
 // GetTopics makes a GET request to the /topics endpoint and returns the topics.
 func (api *npsApi) GetTopics(id, q string, limit, start int, sort string) (*TopicResponse, error) {
-	url := api.BaseURL + "/topics?id=" + id + "&q=" + q + "&limit=" + strconv.Itoa(limit) + "&start=" + strconv.Itoa(start) + "&sort=" + sort
+	params := map[string]interface{}{
+		"id":    id,
+		"start": start,
+		"limit": limit,
+		"q":     q,
+		"sort":  sort,
+	}
+	url := api.BuildRequestURL("/topics", params)
 	resp, err := api.Client.Get(url)
 	if err != nil {
 		return nil, err
@@ -1640,6 +1933,7 @@ func (api *npsApi) GetTopics(id, q string, limit, start int, sort string) (*Topi
 		}
 		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
 	}
+
 	var topicResponse TopicResponse
 	if err := json.NewDecoder(resp.Body).Decode(&topicResponse); err != nil {
 		return nil, err
@@ -1670,7 +1964,14 @@ type TopicParkResponse struct {
 
 // GetTopicParks makes a GET request to the /topics/parks endpoint and returns the topic parks.
 func (api *npsApi) GetTopicParks(id []string, q string, limit, start int, sort string) (*TopicParkResponse, error) {
-	url := api.BaseURL + "/topics/parks?id=" + strings.Join(id, ",") + "&q=" + q + "&limit=" + strconv.Itoa(limit) + "&start=" + strconv.Itoa(start) + "&sort=" + sort
+	params := map[string]interface{}{
+		"id":    strings.Join(id, ","),
+		"start": start,
+		"limit": limit,
+		"q":     q,
+		"sort":  sort,
+	}
+	url := api.BuildRequestURL("/topics/parks", params)
 	resp, err := api.Client.Get(url)
 	if err != nil {
 		return nil, err
@@ -1683,6 +1984,7 @@ func (api *npsApi) GetTopicParks(id []string, q string, limit, start int, sort s
 		}
 		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
 	}
+
 	var topicParkResponse TopicParkResponse
 	if err := json.NewDecoder(resp.Body).Decode(&topicParkResponse); err != nil {
 		return nil, err
@@ -1727,8 +2029,8 @@ type Tour struct {
 	Images []struct {
 		Credit string `json:"credit"`
 		Crops  []struct {
-			AspectRatio string `json:"aspectratio"`
-			URL         string `json:"url"`
+			AspectRatio float64 `json:"aspectratio"`
+			URL         string  `json:"url"`
 		} `json:"crops"`
 		AltText string `json:"altText"`
 		Title   string `json:"title"`
@@ -1746,7 +2048,16 @@ type TourResponse struct {
 
 // GetTours makes a GET request to the /tours endpoint and returns the tours.
 func (api *npsApi) GetTours(id, parkCode, stateCode []string, q string, limit, start int, sort []string) (*TourResponse, error) {
-	url := api.BaseURL + "/tours?id=" + strings.Join(id, ",") + "&parkCode=" + strings.Join(parkCode, ",") + "&stateCode=" + strings.Join(stateCode, ",") + "&q=" + q + "&limit=" + strconv.Itoa(limit) + "&start=" + strconv.Itoa(start) + "&sort=" + strings.Join(sort, ",")
+	params := map[string]interface{}{
+		"id":        strings.Join(id, ","),
+		"parkCode":  strings.Join(parkCode, ","),
+		"stateCode": strings.Join(stateCode, ","),
+		"start":     start,
+		"limit":     limit,
+		"q":         q,
+		"sort":      strings.Join(sort, ","),
+	}
+	url := api.BuildRequestURL("/tours", params)
 	resp, err := api.Client.Get(url)
 	if err != nil {
 		return nil, err
@@ -1759,6 +2070,7 @@ func (api *npsApi) GetTours(id, parkCode, stateCode []string, q string, limit, s
 		}
 		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
 	}
+
 	var tourResponse TourResponse
 	if err := json.NewDecoder(resp.Body).Decode(&tourResponse); err != nil {
 		return nil, err
@@ -1851,7 +2163,15 @@ type VisitorCenterResponse struct {
 
 // GetVisitorCenters makes a GET request to the /visitorcenters endpoint and returns the visitor centers.
 func (api *npsApi) GetVisitorCenters(parkCode, stateCode []string, q string, limit, start int, sort []string) (*VisitorCenterResponse, error) {
-	url := api.BaseURL + "/visitorcenters?parkCode=" + strings.Join(parkCode, ",") + "&stateCode=" + strings.Join(stateCode, ",") + "&q=" + q + "&limit=" + strconv.Itoa(limit) + "&start=" + strconv.Itoa(start) + "&sort=" + strings.Join(sort, ",")
+	params := map[string]interface{}{
+		"parkCode":  strings.Join(parkCode, ","),
+		"stateCode": strings.Join(stateCode, ","),
+		"start":     start,
+		"limit":     limit,
+		"q":         q,
+		"sort":      strings.Join(sort, ","),
+	}
+	url := api.BuildRequestURL("/visitorcenters", params)
 	resp, err := api.Client.Get(url)
 	if err != nil {
 		return nil, err
@@ -1864,6 +2184,7 @@ func (api *npsApi) GetVisitorCenters(parkCode, stateCode []string, q string, lim
 		}
 		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
 	}
+
 	var visitorCenterResponse VisitorCenterResponse
 	if err := json.NewDecoder(resp.Body).Decode(&visitorCenterResponse); err != nil {
 		return nil, err
@@ -1913,7 +2234,15 @@ type WebcamResponse struct {
 
 // GetWebcams makes a GET request to the /webcams endpoint and returns the webcams.
 func (api *npsApi) GetWebcams(id string, parkCode, stateCode []string, q string, limit, start int) (*WebcamResponse, error) {
-	url := api.BaseURL + "/webcams?parkCode=" + strings.Join(parkCode, ",") + "&stateCode=" + strings.Join(stateCode, ",") + "&id=" + id + "&limit=" + strconv.Itoa(limit) + "&start=" + strconv.Itoa(start) + "&q=" + q
+	params := map[string]interface{}{
+		"id":        id,
+		"parkCode":  strings.Join(parkCode, ","),
+		"stateCode": strings.Join(stateCode, ","),
+		"start":     start,
+		"limit":     limit,
+		"q":         q,
+	}
+	url := api.BuildRequestURL("/webcams", params)
 	resp, err := api.Client.Get(url)
 	if err != nil {
 		return nil, err
@@ -1926,6 +2255,7 @@ func (api *npsApi) GetWebcams(id string, parkCode, stateCode []string, q string,
 		}
 		return nil, fmt.Errorf("unexpected status code: %d. Response body: %s", resp.StatusCode, string(bodyBytes))
 	}
+
 	var webcamResponse WebcamResponse
 	if err := json.NewDecoder(resp.Body).Decode(&webcamResponse); err != nil {
 		return nil, err
