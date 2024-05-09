@@ -15,6 +15,17 @@ go get github.com/ztkent/go-nps
 ```
 
 ### Example
+```go
+// Create a new NPS API client
+nps := NewNpsApi(os.Getenv("NPS_API_KEY"))
+
+// Get a list of all national parks, starting from the 5th park and returning 10 parks
+parks, err := nps.GetParks(nil, nil, 5, 10, "", nil)
+
+// Get a list of all activities available at Acadia National Park
+activities, err := nps.GetActivityParks([]string{"acad"}, "", "", 0, 0)
+
+```
 
 ### Endpoints
 | Method | Description |

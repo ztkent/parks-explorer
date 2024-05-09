@@ -17,24 +17,24 @@ import (
 
 // NpsService describes the methods for interacting with the National Park Service API.
 type NpsApi interface {
-	GetActivities(id, q, sort string, limit, start int) (*ActivityResponse, error)
-	GetActivityParks(id []string, q, sort string, limit, start int) (*ActivityParkResponse, error)
+	GetActivities(id, q string, limit, start int, sort string) (*ActivityResponse, error)
+	GetActivityParks(id []string, q string, limit, start int, sort string) (*ActivityParkResponse, error)
 	GetAlerts(parkCode, stateCode []string, q string, limit, start int) (*AlertResponse, error)
 	GetAmenities(id []string, q string, limit, start int) (*AmenityResponse, error)
-	GetAmenitiesParksPlaces(parkCode, id []string, q, sort string, limit, start int) (*AmenityParkPlaceResponse, error)
-	GetAmenitiesParksVisitorCenters(parkCode, id, q string, sort []string, limit, start int) (*AmenityParkVisitorCenterResponse, error)
+	GetAmenitiesParksPlaces(parkCode, id []string, q string, limit, start int, sort string) (*AmenityParkPlaceResponse, error)
+	GetAmenitiesParksVisitorCenters(parkCode, id, q string, limit, start int, sort []string) (*AmenityParkVisitorCenterResponse, error)
 	GetArticles(parkCode, stateCode []string, q string, limit, start int) (*ArticleData, error)
-	GetCampgrounds(parkCode, stateCode []string, q string, sort []string, limit, start int) (*CampgroundData, error)
+	GetCampgrounds(parkCode, stateCode []string, q string, limit, start int, sort []string) (*CampgroundData, error)
 	GetEvents(parkCode, stateCode, organization, subject, portal, tagsAll, tagsOne, tagsNone []string, dateStart, dateEnd string, eventType []string, id, q string, pageSize, pageNumber int, expandRecurring bool) (*EventResponse, error)
-	GetFeesPasses(parkCode, stateCode []string, start, limit int, q string, sort []string) (*FeePassResponse, error)
-	GetLessonPlans(parkCode, stateCode []string, start, limit int, q string, sort []string) (*LessonPlanResponse, error)
+	GetFeesPasses(parkCode, stateCode []string, q string, start, limit int, sort []string) (*FeePassResponse, error)
+	GetLessonPlans(parkCode, stateCode []string, q string, start, limit int, sort []string) (*LessonPlanResponse, error)
 	GetParkBoundaries(sitecode string) (*MapdataParkboundaryResponse, error)
-	GetMultimediaAudio(parkCode, stateCode []string, start, limit int, q string) (*MultimediaAudioResponse, error)
-	GetMultimediaGalleries(parkCode, stateCode []string, start, limit int, q string) (*MultimediaGalleriesResponse, error)
-	GetMultimediaGalleriesAssets(id, galleryId string, parkCode, stateCode []string, start, limit int, q string) (*MultimediaGalleriesAssetsResponse, error)
-	GetMultimediaVideos(parkCode, stateCode []string, start, limit int, q string) (*MultimediaVideosResponse, error)
+	GetMultimediaAudio(parkCode, stateCode []string, q string, start, limit int) (*MultimediaAudioResponse, error)
+	GetMultimediaGalleries(parkCode, stateCode []string, q string, start, limit int) (*MultimediaGalleriesResponse, error)
+	GetMultimediaGalleriesAssets(id, galleryId string, parkCode, stateCode []string, q string, start, limit int) (*MultimediaGalleriesAssetsResponse, error)
+	GetMultimediaVideos(parkCode, stateCode []string, q string, start, limit int) (*MultimediaVideosResponse, error)
 	GetNewsReleases(parkCode, stateCode []string, q string, limit, start int, sort []string) (*NewsReleaseResponse, error)
-	GetParkinglots(parkCode, stateCode []string, start, limit int, q string) (*ParkinglotResponse, error)
+	GetParkinglots(parkCode, stateCode []string, q string, start, limit int) (*ParkinglotResponse, error)
 	GetParks(parkCode, stateCode []string, start, limit int, q string, sort []string) (*ParkResponse, error)
 	GetPassportStampLocations(parkCode, stateCode []string, q string, limit, start int) (*PassportStampLocationResponse, error)
 	GetPeople(parkCode, stateCode []string, q string, limit, start int) (*PersonResponse, error)
@@ -117,7 +117,7 @@ type ActivityResponse struct {
 }
 
 // GetActivities makes a GET request to the /activities endpoint and returns the activities.
-func (api *npsApi) GetActivities(id, q, sort string, limit, start int) (*ActivityResponse, error) {
+func (api *npsApi) GetActivities(id, q string, limit, start int, sort string) (*ActivityResponse, error) {
 	params := map[string]interface{}{
 		"id":    id,
 		"q":     q,
@@ -169,7 +169,7 @@ type ActivityParkResponse struct {
 }
 
 // GetActivityParks makes a GET request to the /activities/parks endpoint and returns the parks related to the activities.
-func (api *npsApi) GetActivityParks(id []string, q, sort string, limit, start int) (*ActivityParkResponse, error) {
+func (api *npsApi) GetActivityParks(id []string, q string, limit, start int, sort string) (*ActivityParkResponse, error) {
 	params := map[string]interface{}{
 		"id":    strings.Join(id, ","),
 		"q":     q,
@@ -358,7 +358,7 @@ type AmenityParkPlaceResponse struct {
 }
 
 // GetAmenitiesParksPlaces makes a GET request to the /amenities/parksplaces endpoint and returns the parks with places related to the amenities.
-func (api *npsApi) GetAmenitiesParksPlaces(parkCode, id []string, q, sort string, limit, start int) (*AmenityParkPlaceResponse, error) {
+func (api *npsApi) GetAmenitiesParksPlaces(parkCode, id []string, q string, limit, start int, sort string) (*AmenityParkPlaceResponse, error) {
 	params := map[string]interface{}{
 		"parkCode": strings.Join(parkCode, ","),
 		"id":       strings.Join(id, ","),
@@ -417,7 +417,7 @@ type AmenityParkVisitorCenterResponse struct {
 }
 
 // GetAmenitiesParksVisitorCenters makes a GET request to the /amenities/parksvisitorcenters endpoint and returns the parks with visitor centers related to the amenities.
-func (api *npsApi) GetAmenitiesParksVisitorCenters(parkCode, id, q string, sort []string, limit, start int) (*AmenityParkVisitorCenterResponse, error) {
+func (api *npsApi) GetAmenitiesParksVisitorCenters(parkCode, id, q string, limit, start int, sort []string) (*AmenityParkVisitorCenterResponse, error) {
 	params := map[string]interface{}{
 		"parkCode": parkCode,
 		"id":       id,
@@ -629,7 +629,7 @@ type CampgroundData struct {
 }
 
 // GetCampgrounds makes a GET request to the /campgrounds endpoint and returns the campgrounds.
-func (api *npsApi) GetCampgrounds(parkCode, stateCode []string, q string, sort []string, limit, start int) (*CampgroundData, error) {
+func (api *npsApi) GetCampgrounds(parkCode, stateCode []string, q string, limit, start int, sort []string) (*CampgroundData, error) {
 	params := map[string]interface{}{
 		"parkCode":  strings.Join(parkCode, ","),
 		"stateCode": strings.Join(stateCode, ","),
@@ -766,7 +766,7 @@ type FeePassResponse struct {
 }
 
 // GetFeesPasses makes a GET request to the /feespasses endpoint and returns the fees and passes.
-func (api *npsApi) GetFeesPasses(parkCode, stateCode []string, start, limit int, q string, sort []string) (*FeePassResponse, error) {
+func (api *npsApi) GetFeesPasses(parkCode, stateCode []string, q string, start, limit int, sort []string) (*FeePassResponse, error) {
 	params := map[string]interface{}{
 		"parkCode":  strings.Join(parkCode, ","),
 		"stateCode": strings.Join(stateCode, ","),
@@ -825,7 +825,7 @@ type LessonPlanResponse struct {
 }
 
 // GetLessonPlans makes a GET request to the /lessonplans endpoint and returns the lesson plans.
-func (api *npsApi) GetLessonPlans(parkCode, stateCode []string, start, limit int, q string, sort []string) (*LessonPlanResponse, error) {
+func (api *npsApi) GetLessonPlans(parkCode, stateCode []string, q string, start, limit int, sort []string) (*LessonPlanResponse, error) {
 	params := map[string]interface{}{
 		"parkCode":  strings.Join(parkCode, ","),
 		"stateCode": strings.Join(stateCode, ","),
@@ -946,7 +946,7 @@ type MultimediaAudioResponse struct {
 }
 
 // GetMultimediaAudio makes a GET request to the /multimedia/audio endpoint and returns the audio files.
-func (api *npsApi) GetMultimediaAudio(parkCode, stateCode []string, start, limit int, q string) (*MultimediaAudioResponse, error) {
+func (api *npsApi) GetMultimediaAudio(parkCode, stateCode []string, q string, start, limit int) (*MultimediaAudioResponse, error) {
 	params := map[string]interface{}{
 		"parkCode":  strings.Join(parkCode, ","),
 		"stateCode": strings.Join(stateCode, ","),
@@ -1014,7 +1014,7 @@ type MultimediaGalleriesResponse struct {
 }
 
 // GetMultimediaGalleries makes a GET request to the /multimedia/galleries endpoint and returns the galleries.
-func (api *npsApi) GetMultimediaGalleries(parkCode, stateCode []string, start, limit int, q string) (*MultimediaGalleriesResponse, error) {
+func (api *npsApi) GetMultimediaGalleries(parkCode, stateCode []string, q string, start, limit int) (*MultimediaGalleriesResponse, error) {
 	params := map[string]interface{}{
 		"parkCode":  strings.Join(parkCode, ","),
 		"stateCode": strings.Join(stateCode, ","),
@@ -1085,7 +1085,7 @@ type MultimediaGalleriesAssetsResponse struct {
 }
 
 // GetMultimediaGalleriesAssets makes a GET request to the /multimedia/galleries/assets endpoint and returns the gallery assets.
-func (api *npsApi) GetMultimediaGalleriesAssets(id, galleryId string, parkCode, stateCode []string, start, limit int, q string) (*MultimediaGalleriesAssetsResponse, error) {
+func (api *npsApi) GetMultimediaGalleriesAssets(id, galleryId string, parkCode, stateCode []string, q string, start, limit int) (*MultimediaGalleriesAssetsResponse, error) {
 	params := map[string]interface{}{
 		"id":        id,
 		"galleryId": galleryId,
@@ -1157,7 +1157,7 @@ type MultimediaVideosResponse struct {
 }
 
 // GetMultimediaVideos makes a GET request to the /multimedia/videos endpoint and returns the videos.
-func (api *npsApi) GetMultimediaVideos(parkCode, stateCode []string, start, limit int, q string) (*MultimediaVideosResponse, error) {
+func (api *npsApi) GetMultimediaVideos(parkCode, stateCode []string, q string, start, limit int) (*MultimediaVideosResponse, error) {
 	params := map[string]interface{}{
 		"parkCode":  strings.Join(parkCode, ","),
 		"stateCode": strings.Join(stateCode, ","),
@@ -1350,7 +1350,7 @@ type ParkinglotResponse struct {
 }
 
 // GetParkinglots makes a GET request to the /parkinglots endpoint and returns the parking lots.
-func (api *npsApi) GetParkinglots(parkCode, stateCode []string, start, limit int, q string) (*ParkinglotResponse, error) {
+func (api *npsApi) GetParkinglots(parkCode, stateCode []string, q string, start, limit int) (*ParkinglotResponse, error) {
 	params := map[string]interface{}{
 		"parkCode":  strings.Join(parkCode, ","),
 		"stateCode": strings.Join(stateCode, ","),
