@@ -12,7 +12,8 @@ const (
 	testStart    = 0
 	testLimit    = 10
 	testString   = ""
-	testSiteCode = "abli"
+	testSiteCode = "ACAD"
+	testState    = "CA"
 )
 
 func TestApiEndpoints(t *testing.T) {
@@ -154,7 +155,7 @@ func TestApiEndpoints(t *testing.T) {
 	})
 
 	t.Run("GetVisitorCenters", func(t *testing.T) {
-		res, err := api.GetVisitorCenters([]string{testString}, []string{testString}, testString, testLimit, testStart, []string{testString})
+		res, err := api.GetVisitorCenters([]string{testString}, []string{testState}, testString, testLimit, testStart, []string{testString})
 		checkResponse(t, res, err)
 	})
 

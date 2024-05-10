@@ -1,5 +1,5 @@
 # Go NPS
-Go wrapper for the [National Park Service API](https://www.nps.gov/subjects/developer/index.htm).   
+Go client for the [National Park Service API](https://www.nps.gov/subjects/developer/index.htm).   
 Handles HTTP requests to the NPS API, provides a structured response.  
 
 https://www.nps.gov/subjects/developer/api-documentation.htm
@@ -9,13 +9,12 @@ The National Park Service API is designed to provide authoritative NPS data and 
 [Content Policy](https://www.nps.gov/aboutus/disclaimer.htm)
 
 ## Usage 
-### Installation
-```bash
-go get github.com/ztkent/go-nps
-```
+Visit the [NPS Developer Portal](https://www.nps.gov/subjects/developer/get-started.htm) to request an API key.   
 
 ### Example
 ```go
+import "github.com/ztkent/go-nps"
+
 // Create a new NPS API client
 nps := NewNpsApi(os.Getenv("NPS_API_KEY"))
 
@@ -25,9 +24,13 @@ parks, err := nps.GetParks(nil, nil, 5, 10, "", nil)
 // Get a list of all activities available at Acadia National Park
 activities, err := nps.GetActivityParks([]string{"acad"}, "", "", 0, 0)
 
+// Get a single visitor center in a given state
+vistorCenters, err := npsApi.GetVisitorCenters(nil, []string{"me"}, "", 0, 1, nil)
 ```
 
-### Endpoints
+## Endpoints
+This client is a complete handler for the NPS API. It provides methods for all available endpoints.
+
 | Method | Description |
 | --- | --- |
 | `GetActivities` | Retrieves a list of activities available in the parks. |

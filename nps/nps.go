@@ -11,11 +11,10 @@ import (
 )
 
 /*
- Go wrapper for the National Park Service API.
+ Go client for the National Park Service API.
  https://www.nps.gov/subjects/developer/api-documentation.htm
 */
 
-// NpsService describes the methods for interacting with the National Park Service API.
 type NpsApi interface {
 	GetActivities(id, q string, limit, start int, sort string) (*ActivityResponse, error)
 	GetActivityParks(id []string, q string, limit, start int, sort string) (*ActivityParkResponse, error)
@@ -52,7 +51,6 @@ const (
 	BASE_URL = "https://developer.nps.gov/api/v1"
 )
 
-// npsApi implements the NpsService interface.
 type npsApi struct {
 	BaseURL string
 	ApiKey  string
@@ -2080,78 +2078,79 @@ func (api *npsApi) GetTours(id, parkCode, stateCode []string, q string, limit, s
 }
 
 type VisitorCenter struct {
-	Total string `json:"total"`
-	Data  []struct {
-		DirectionsInfo string `json:"directionsInfo"`
-		Addresses      []struct {
-			CountryCode           string `json:"countryCode"`
-			City                  string `json:"city"`
-			ProvinceTerritoryCode string `json:"provinceTerritoryCode"`
-			PostalCode            string `json:"postalCode"`
-			Type                  string `json:"type"`
-			Line1                 string `json:"line1"`
-			StateCode             string `json:"stateCode"`
-			Line2                 string `json:"line2"`
-			Line3                 string `json:"line3"`
-		} `json:"addresses"`
-		AudioDescription    string `json:"audioDescription"`
-		PassportStampImages []struct {
-			Credit      string `json:"credit"`
-			Description string `json:"description"`
-			Crops       []struct {
-				AspectRatio float64 `json:"aspectRatio"`
-				URL         string  `json:"url"`
-			} `json:"crops"`
-			AltText string `json:"altText"`
-			Title   string `json:"title"`
-			Caption string `json:"caption"`
-			URL     string `json:"url"`
-		} `json:"passportStampImages"`
-		LastIndexedDate string `json:"lastIndexedDate"`
-		Multimedia      []struct {
-			Title string `json:"title"`
-			ID    string `json:"id"`
-			Type  string `json:"type"`
-			URL   string `json:"url"`
-		} `json:"multimedia"`
-		Name           string `json:"name"`
-		Latitude       string `json:"latitude"`
-		OperatingHours []struct {
-			Name          string            `json:"name"`
-			Description   string            `json:"description"`
-			StandardHours map[string]string `json:"standardHours"`
-			Exceptions    []struct {
-				Name           string            `json:"name"`
-				StartDate      string            `json:"startDate"`
-				EndDate        string            `json:"endDate"`
-				ExceptionHours map[string]string `json:"exceptionHours"`
-			} `json:"exceptions"`
-		} `json:"operatingHours"`
-		URL                              string   `json:"url"`
-		Longitude                        string   `json:"longitude"`
-		Contacts                         []string `json:"contacts"`
-		GeometryPoiId                    string   `json:"geometryPoiId"`
-		PassportStampLocationDescription string   `json:"passportStampLocationDescription"`
-		ParkCode                         string   `json:"parkCode"`
-		Amenities                        []string `json:"amenities"`
-		Images                           []struct {
-			Credit string `json:"credit"`
-			Crops  []struct {
-			} `json:"crops"`
-			Title   string `json:"title"`
-			AltText string `json:"altText"`
-			Caption string `json:"caption"`
-			URL     string `json:"url"`
-		} `json:"images"`
-		RelevanceScore          float64 `json:"relevanceScore"`
-		LatLong                 string  `json:"latLong"`
-		ID                      string  `json:"id"`
-		DirectionsURL           string  `json:"directionsUrl"`
-		IsPassportStampLocation bool    `json:"isPassportStampLocation"`
-		Description             string  `json:"description"`
-	} `json:"data"`
-	Limit string `json:"limit"`
-	Start string `json:"start"`
+	DirectionsInfo string `json:"directionsInfo"`
+	Addresses      []struct {
+		CountryCode           string `json:"countryCode"`
+		City                  string `json:"city"`
+		ProvinceTerritoryCode string `json:"provinceTerritoryCode"`
+		PostalCode            string `json:"postalCode"`
+		Type                  string `json:"type"`
+		Line1                 string `json:"line1"`
+		StateCode             string `json:"stateCode"`
+		Line2                 string `json:"line2"`
+		Line3                 string `json:"line3"`
+	} `json:"addresses"`
+	AudioDescription    string `json:"audioDescription"`
+	PassportStampImages []struct {
+		Credit      string `json:"credit"`
+		Description string `json:"description"`
+		Crops       []struct {
+			AspectRatio float64 `json:"aspectRatio"`
+			URL         string  `json:"url"`
+		} `json:"crops"`
+		AltText string `json:"altText"`
+		Title   string `json:"title"`
+		Caption string `json:"caption"`
+		URL     string `json:"url"`
+	} `json:"passportStampImages"`
+	LastIndexedDate string `json:"lastIndexedDate"`
+	Multimedia      []struct {
+		Title string `json:"title"`
+		ID    string `json:"id"`
+		Type  string `json:"type"`
+		URL   string `json:"url"`
+	} `json:"multimedia"`
+	Name           string `json:"name"`
+	Latitude       string `json:"latitude"`
+	OperatingHours []struct {
+		Name          string            `json:"name"`
+		Description   string            `json:"description"`
+		StandardHours map[string]string `json:"standardHours"`
+		Exceptions    []struct {
+			Name           string            `json:"name"`
+			StartDate      string            `json:"startDate"`
+			EndDate        string            `json:"endDate"`
+			ExceptionHours map[string]string `json:"exceptionHours"`
+		} `json:"exceptions"`
+	} `json:"operatingHours"`
+	URL       string `json:"url"`
+	Longitude string `json:"longitude"`
+	Contacts  struct {
+		PhoneNumbers   []interface{} `json:"phoneNumbers"`
+		EmailAddresses []struct {
+			Description  string `json:"description"`
+			EmailAddress string `json:"emailAddress"`
+		} `json:"emailAddresses"`
+	} `json:"contacts"`
+	GeometryPoiId                    string   `json:"geometryPoiId"`
+	PassportStampLocationDescription string   `json:"passportStampLocationDescription"`
+	ParkCode                         string   `json:"parkCode"`
+	Amenities                        []string `json:"amenities"`
+	Images                           []struct {
+		Credit string `json:"credit"`
+		Crops  []struct {
+		} `json:"crops"`
+		Title   string `json:"title"`
+		AltText string `json:"altText"`
+		Caption string `json:"caption"`
+		URL     string `json:"url"`
+	} `json:"images"`
+	RelevanceScore          float64 `json:"relevanceScore"`
+	LatLong                 string  `json:"latLong"`
+	ID                      string  `json:"id"`
+	DirectionsURL           string  `json:"directionsUrl"`
+	IsPassportStampLocation string  `json:"isPassportStampLocation"`
+	Description             string  `json:"description"`
 }
 
 type VisitorCenterResponse struct {
