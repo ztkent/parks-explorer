@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/Ztkent/nps-dashboard/nps"
+	"github.com/Ztkent/go-nps"
 )
 
 func main() {
