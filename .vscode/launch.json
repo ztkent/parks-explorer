@@ -5,7 +5,7 @@
       "name": "🌲 NPS Dashboard ⛰️",
       "type": "go",
       "request": "launch",
-      "program": "${workspaceFolder}/main.go",
+      "program": "${workspaceFolder}/server/main.go",
       "args": [],
       "envFile": "${workspaceFolder}/.env",
       "console": "integratedTerminal",
