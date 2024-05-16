@@ -67,6 +67,10 @@ function MainContent() {
     sortColumnData(option);
   };
 
+  const onSearch = (inputValues) => {
+    console.log('Search:', inputValues);
+  }
+
   const sortColumnData = (option) => {
     let sortedData = [...columnData];
     switch (option) {
@@ -92,6 +96,7 @@ function MainContent() {
         handleDropdownClose={handleDropdownClose}
         handleSelectOption={handleSelectOption}
         anchorEl={anchorEl}
+        onSearch={onSearch}
       />
 
       <Divider />
