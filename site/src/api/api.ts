@@ -14,7 +14,7 @@ export function FetchParkCams(): Promise<ParkCam[]> {
       return response.json();
     })
     .then(data => {
-      return data as ParkCam[];
+      return data;
     });
 }
 
@@ -27,6 +27,6 @@ export function FetchParkList(): Promise<string[]> {
       return response.json();
     })
     .then(data => {
-      return data as string[];
+      return data.parks;
     });
 }

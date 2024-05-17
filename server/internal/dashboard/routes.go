@@ -28,7 +28,6 @@ func (dm *Dashboard) LiveParkCamsHandler() http.HandlerFunc {
 				Link:  "#",
 			},
 		}
-
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(parkCams)
 	}
@@ -48,7 +47,6 @@ func (dm *Dashboard) ParkListHandler() http.HandlerFunc {
 				"Grand Canyon",
 			},
 		}
-
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(parkList)
 	}

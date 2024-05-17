@@ -2,13 +2,29 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "🌲 NPS Dashboard ⛰️",
+      "name": "server",
       "type": "go",
       "request": "launch",
       "program": "${workspaceFolder}/server/main.go",
       "args": [],
       "envFile": "${workspaceFolder}/.env",
       "console": "integratedTerminal",
+    },
+    {
+      "name": "site",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["start"],
+      "cwd": "${workspaceFolder}/site",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
     }
-    ]
+  ],
+  "compounds": [
+    {
+      "name": "🌲 NPS Dashboard ⛰️",
+      "configurations": ["site", "server"]
+    }
+  ]
 }

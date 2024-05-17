@@ -23,10 +23,10 @@ function MainContent() {
   const [liveParkCamsData, setLiveParkCamsData] = React.useState([]);
 
   React.useEffect(() => {
-    FetchParkList().then(({ parkListData }) => {
+    FetchParkList().then(parkListData => {
       setParkListData(parkListData);
     });
-    FetchParkCams().then(({ liveParkCams }) => {
+    FetchParkCams().then(liveParkCams => {
       setLiveParkCamsData(liveParkCams);
     });
   }, []);
