@@ -11,6 +11,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/httprate"
+	"github.com/rs/cors"
 )
 
 func main() {
@@ -27,7 +28,7 @@ func main() {
 	// Start server
 	fmt.Println("Server is running on port " + os.Getenv("SERVER_PORT"))
 	if os.Getenv("ENV") == "dev" {
-		log.Fatal(http.ListenAndServe(":"+os.Getenv("SERVER_PORT"), r))
+		log.Fatal(http.ListenAndServe(":"+os.Getenv("SERVER_PORT"), cors.Default().Handler(r)))
 	}
 	log.Fatal(http.ListenAndServeTLS(":"+os.Getenv("SERVER_PORT"), os.Getenv("CERT_PATH"), os.Getenv("CERT_KEY_PATH"), r))
 	return
@@ -40,4 +41,6 @@ func DefineRoutes(r *chi.Mux, dashManager *dashboard.Dashboard) {
 		60*time.Second, // per durations
 		httprate.WithKeyFuncs(httprate.KeyByIP, httprate.KeyByEndpoint),
 	))
+	r.Get("/park-cams", dashManager.LiveParkCamsHandler())
+	r.Get("/park-list", dashManager.ParkListHandler())
 }

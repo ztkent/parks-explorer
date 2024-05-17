@@ -1,19 +1,56 @@
 package dashboard
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/google/uuid"
 )
 
-func (dm *Dashboard) EmptyResponse() http.HandlerFunc {
+// LiveParkCamsHandler returns a list of live park cameras.
+type ParkCam struct {
+	Title string `json:"title"`
+	Image string `json:"image"`
+	Link  string `json:"link"`
+}
+
+func (dm *Dashboard) LiveParkCamsHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		parkCams := []ParkCam{
+			{
+				Title: "Park Cam 1",
+				Image: "https://via.placeholder.com/100",
+				Link:  "#",
+			},
+			{
+				Title: "Park Cam 2",
+				Image: "https://via.placeholder.com/100",
+				Link:  "#",
+			},
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(parkCams)
 	}
 }
 
-func (dm *Dashboard) ServeHome() http.HandlerFunc {
+// ParkListHandler returns a list of parks.
+type ParkList struct {
+	Parks []string `json:"parks"`
+}
+
+func (dm *Dashboard) ParkListHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "internal/html/home.html")
+		parkList := ParkList{
+			Parks: []string{
+				"Yellowstone",
+				"Yosemite",
+				"Grand Canyon",
+			},
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(parkList)
 	}
 }
 

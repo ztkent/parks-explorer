@@ -1,7 +1,7 @@
 import React from 'react';
 import { Grid, Box, Typography, Button, ButtonGroup, useTheme } from '@mui/material';
 
-function ParkList({ columnData, visibleEntries, loadMoreEntries, handleSortChange, sortOption }) {
+function ParkList({ parkListData, visibleEntries, loadMoreEntries, handleSortChange, sortOption }) {
   const sortOptions = ['Alphabetical', 'Most Popular', 'Recently Added'];
   const theme = useTheme();
 
@@ -41,7 +41,7 @@ function ParkList({ columnData, visibleEntries, loadMoreEntries, handleSortChang
         {[0, 1, 2].map((col) => (
           <Grid item xs={12} sm={4} key={col}>
             <Box>
-              {columnData.slice(col * visibleEntries/3, (col + 1) * visibleEntries/3).map((entry, idx) => (
+              {parkListData.slice(col * visibleEntries/3, (col + 1) * visibleEntries/3).map((entry, idx) => (
                 <Typography variant="body2" key={idx}>
                   {entry}
                 </Typography>
@@ -50,7 +50,7 @@ function ParkList({ columnData, visibleEntries, loadMoreEntries, handleSortChang
           </Grid>
         ))}
       </Grid>
-      {visibleEntries < columnData.length && (
+      {visibleEntries < parkListData.length && (
         <Button variant="contained" color="secondary" onClick={loadMoreEntries} style={{ marginTop: '16px' }}>
           Load More
         </Button>

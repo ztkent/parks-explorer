@@ -5,22 +5,7 @@ import {
 import SearchBox from './SearchBox';
 import LiveParks from './LiveParks';
 import ParkList from './ParkList';
-
-// Dummy Data
-function fetchData() {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const displayComponentsData = Array.from({ length: 9 }, (_, idx) => ({
-        title: `Item ${idx + 1}`,
-        image: 'https://via.placeholder.com/150',
-        link: '#',
-      }));
-      const columnData = Array.from({ length: 400 }, (_, idx) => `Entry ${idx + 1}`);
-
-      resolve({ displayComponentsData, columnData });
-    }, 2000); // Simulate 2 seconds network latency
-  });
-}
+import { FetchParkCams, FetchParkList } from '../api/api.ts';
 
 function MainContent() {
   // [state variable, handler function] = React.useState(initialValue)
@@ -32,15 +17,17 @@ function MainContent() {
   const [sortOption, setSortOption] = React.useState(null);
   // State for the number of visible entries in the 'All of our Parks' section
   const [visibleEntries, setVisibleEntries] = React.useState(30);
-  // State for the display components data
-  const [displayComponentsData, setDisplayComponentsData] = React.useState([]);
-  // State for the column data
-  const [columnData, setColumnData] = React.useState([]);
+  // State for the park cams data
+  const [parkListData, setParkListData] = React.useState([]);
+  // State for the park list data
+  const [liveParkCamsData, setLiveParkCamsData] = React.useState([]);
 
   React.useEffect(() => {
-    fetchData().then(({ displayComponentsData, columnData }) => {
-      setDisplayComponentsData(displayComponentsData);
-      setColumnData(columnData);
+    FetchParkList().then(({ parkListData }) => {
+      setParkListData(parkListData);
+    });
+    FetchParkCams().then(({ liveParkCams }) => {
+      setLiveParkCamsData(liveParkCams);
     });
   }, []);
 
@@ -64,15 +51,15 @@ function MainContent() {
 
   const handleSortChange = (option) => {
     setSortOption(option);
-    sortColumnData(option);
+    sortParkListData(option);
   };
 
   const onSearch = (inputValues) => {
     console.log('Search:', inputValues);
   }
 
-  const sortColumnData = (option) => {
-    let sortedData = [...columnData];
+  const sortParkListData = (option) => {
+    let sortedData = [...parkListData];
     switch (option) {
       case 'Alphabetical':
         sortedData.sort();
@@ -85,7 +72,7 @@ function MainContent() {
       default:
         break;
     }
-    setColumnData(sortedData);
+    setParkListData(sortedData);
   };
 
   return (
@@ -101,12 +88,12 @@ function MainContent() {
 
       <Divider />
 
-      <LiveParks displayComponentsData={displayComponentsData} />
+      <LiveParks liveParkCamsData={liveParkCamsData} />
 
       <Divider />
 
       <ParkList 
-        columnData={columnData}
+        parkListData={parkListData}
         visibleEntries={visibleEntries}
         loadMoreEntries={loadMoreEntries}
         handleSortChange={handleSortChange}
