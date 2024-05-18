@@ -40,12 +40,14 @@ type ParkList struct {
 
 func (dm *Dashboard) ParkListHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		parkList := ParkList{
-			Parks: []string{
-				"Yellowstone",
-				"Yosemite",
-				"Grand Canyon",
-			},
+		res, err := dm.npsApi.GetParks(nil, nil, 0, 500, "", nil)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		parkList := ParkList{}
+		for _, park := range res.Data {
+			parkList.Parks = append(parkList.Parks, park.Name)
 		}
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(parkList)

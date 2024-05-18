@@ -8,7 +8,7 @@ function ParkList({ parkListData, visibleEntries, loadMoreEntries, handleSortCha
   return (
     <Box my={4} textAlign="center">
       <Typography variant="h5" component="h2" gutterBottom>
-        All of our Parks
+        All of our National Parks
       </Typography>
 
       <Box mb={2}>
