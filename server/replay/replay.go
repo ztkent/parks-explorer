@@ -6,18 +6,18 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"os"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
 )
 
-// TODO: Regularly clean up expired cache entries.
-
-// Configurable request caching middleware for Go servers
+// Cache represents the configurable in-memory request cache
 type Cache struct {
 	maxSize        int
+	maxMemory      uint64
 	evictionPolicy string
+	evictionTimer  time.Duration
 	ttl            time.Duration
 	cacheMap       map[string]*list.Element
 	cacheList      *list.List
@@ -28,14 +28,17 @@ type Cache struct {
 
 // CacheEntry stores a single cache item
 type CacheEntry struct {
-	key        string
-	value      *http.Response
-	expiration time.Time
+	key          string
+	value        *http.Response
+	expiration   time.Time
+	lastAccessed time.Time
 }
 
 const (
-	DefaultMaxSize        = 100
+	DefaultMaxSize        = 5
+	DefaultMaxMemory      = 10 * 1024 * 1024 // 10 MB
 	DefaultEvictionPolicy = "FIFO"
+	DefaultEvictionTimer  = 1 * time.Minute
 	DefaultTTL            = 5 * time.Minute
 	DefaultFilter         = "URL"
 )
@@ -46,18 +49,19 @@ type CacheOption func(*Cache)
 func NewCache(options ...CacheOption) *Cache {
 	c := &Cache{
 		maxSize:        DefaultMaxSize,
+		maxMemory:      DefaultMaxMemory,
 		evictionPolicy: DefaultEvictionPolicy,
 		ttl:            DefaultTTL,
 		cacheMap:       make(map[string]*list.Element),
 		cacheList:      list.New(),
 		cacheFilters:   []string{DefaultFilter},
-		l:              log.New(os.Stdout, "replay: ", log.LstdFlags),
+		evictionTimer:  DefaultEvictionTimer,
+		l:              log.New(io.Discard, "", 0),
 	}
-
 	for _, option := range options {
 		option(c)
 	}
-
+	go c.clearExpiredEntries()
 	return c
 }
 
@@ -69,10 +73,26 @@ func WithMaxSize(maxSize int) CacheOption {
 	}
 }
 
+func WithMaxMemory(maxMemory uint64) CacheOption {
+	return func(c *Cache) {
+		if maxMemory != 0 {
+			c.maxMemory = maxMemory
+		}
+	}
+}
+
 func WithEvictionPolicy(evictionPolicy string) CacheOption {
 	return func(c *Cache) {
 		if evictionPolicy != "" {
 			c.evictionPolicy = evictionPolicy
+		}
+	}
+}
+
+func WithEvictionTimer(evictionTimer time.Duration) CacheOption {
+	return func(c *Cache) {
+		if evictionTimer > time.Minute {
+			c.evictionTimer = evictionTimer
 		}
 	}
 }
@@ -102,7 +122,13 @@ func WithLogger(l *log.Logger) CacheOption {
 // Middleware function to intercept HTTP requests and interact with the cache
 func (c *Cache) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
 		key := c.generateKey(r)
+		wasCached := false
+		defer func() {
+			c.l.Printf("Request: %s, Cached: %v, Duration: %v", key, wasCached, time.Since(start))
+		}()
+
 		c.mut.Lock()
 		if ele, found := c.cacheMap[key]; found {
 			entry := ele.Value.(*CacheEntry)
@@ -111,6 +137,7 @@ func (c *Cache) Middleware(next http.Handler) http.Handler {
 				c.l.Printf("Serving from cache: %s", key)
 				c.serveFromCache(w, entry)
 				c.mut.Unlock()
+				wasCached = true
 				return
 			}
 			// Expired, remove the item
@@ -119,7 +146,6 @@ func (c *Cache) Middleware(next http.Handler) http.Handler {
 			delete(c.cacheMap, key)
 		}
 		c.mut.Unlock()
-
 		// Not in cache or expired, serve from next handler and cache the response
 		c.l.Printf("Cache miss: %s", key)
 		responseRecorder := &responseRecorder{ResponseWriter: w, statusCode: http.StatusOK}
@@ -133,16 +159,27 @@ func (c *Cache) Middleware(next http.Handler) http.Handler {
 	})
 }
 
+func (c *Cache) clearExpiredEntries() {
+	timer := time.NewTicker(c.evictionTimer)
+	for range timer.C {
+		c.mut.Lock()
+		for ele := c.cacheList.Front(); ele != nil; ele = ele.Next() {
+			entry := ele.Value.(*CacheEntry)
+			if entry.expiration.Before(time.Now()) {
+				c.l.Printf("Cache entry expired: %s, removing from cache", entry.key)
+				delete(c.cacheMap, entry.key)
+				c.cacheList.Remove(ele)
+			}
+		}
+		c.mut.Unlock()
+	}
+}
+
 // Creates the cache key based on the request and cache filters
 func (c *Cache) generateKey(r *http.Request) string {
-	if len(c.cacheFilters) == 0 {
-		return r.URL.String()
-	}
-	var keyParts []string
+	keyParts := []string{r.URL.String()}
 	for _, filter := range c.cacheFilters {
 		switch filter {
-		case "URL":
-			keyParts = append(keyParts, r.URL.String())
 		case "Method":
 			keyParts = append(keyParts, r.Method)
 		case "Header":
@@ -156,6 +193,10 @@ func (c *Cache) generateKey(r *http.Request) string {
 
 // Serve the response from cache
 func (c *Cache) serveFromCache(w http.ResponseWriter, entry *CacheEntry) {
+	// Update last accessed time
+	entry.lastAccessed = time.Now()
+
+	// Write cached response to the client
 	for k, v := range entry.value.Header {
 		for _, hv := range v {
 			w.Header().Add(k, hv)
@@ -169,37 +210,58 @@ func (c *Cache) serveFromCache(w http.ResponseWriter, entry *CacheEntry) {
 func (c *Cache) addToCache(key string, resp *http.Response) {
 	c.checkNecessaryEvictions()
 	entry := &CacheEntry{
-		key:        key,
-		value:      cloneResponse(resp),
-		expiration: time.Now().Add(c.ttl),
+		key:          key,
+		value:        cloneResponse(resp),
+		expiration:   time.Now().Add(c.ttl),
+		lastAccessed: time.Now(),
 	}
-	ele := c.cacheList.PushFront(entry)
-	c.cacheMap[key] = ele
+	c.cacheList.PushFront(entry)
+	c.cacheMap[key] = c.cacheList.Front()
 }
 
-// // Check if we need to evict an item before inserting a new one
+// stay in bounds of cache size and memory limits
 func (c *Cache) checkNecessaryEvictions() {
-	// TODO: Support evictions based on memory usage
-	if c.cacheList.Len() >= c.maxSize {
+	for c.cacheList.Len() >= c.maxSize {
 		c.l.Printf("Cache is full, evicting an item")
 		c.evict()
+	}
+	c.checkMemoryLimit()
+}
+
+// checkMemoryLimit ensures cache memory usage is within the specified maxMemory limit
+func (c *Cache) checkMemoryLimit() {
+	var m runtime.MemStats
+	runtime.ReadMemStats(&m)
+	currentMemory := m.Alloc
+
+	for currentMemory > c.maxMemory {
+		c.l.Printf("Cache exceeds max memory, evicting an item")
+		c.evict()
+		runtime.ReadMemStats(&m)
+		currentMemory = m.Alloc
 	}
 }
 
 // Evict based on policy
-// Manages a doubly linked list to keep track of the order of cache entries
 func (c *Cache) evict() {
 	var ele *list.Element
-
 	if c.evictionPolicy == "FIFO" {
 		ele = c.cacheList.Back()
 	} else if c.evictionPolicy == "LRU" {
-		ele = c.cacheList.Front()
+		var oldest time.Time
+		for e := c.cacheList.Front(); e != nil; e = e.Next() {
+			entry := e.Value.(*CacheEntry)
+			if oldest.IsZero() || entry.lastAccessed.Before(oldest) {
+				oldest = entry.lastAccessed
+				ele = e
+			}
+		}
 	}
 	if ele != nil {
-		c.l.Printf("Evicting: %v", ele.Value.(*CacheEntry).key)
+		entry := ele.Value.(*CacheEntry)
+		c.l.Printf("Evicting: %v", entry.key)
 		c.cacheList.Remove(ele)
-		delete(c.cacheMap, ele.Value.(*CacheEntry).key)
+		delete(c.cacheMap, entry.key)
 	}
 }
 
