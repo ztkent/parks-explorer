@@ -12,13 +12,17 @@ import (
 	"time"
 )
 
-// Cache represents the configurable in-memory request cache
+/*
+Configurable request caching middleware for Go servers.
+*/
+
 type Cache struct {
 	maxSize        int
 	maxMemory      uint64
 	evictionPolicy string
 	evictionTimer  time.Duration
 	ttl            time.Duration
+	maxTtl         time.Duration
 	cacheMap       map[string]*list.Element
 	cacheList      *list.List
 	cacheFilters   []string
@@ -29,18 +33,26 @@ type Cache struct {
 // CacheEntry stores a single cache item
 type CacheEntry struct {
 	key          string
-	value        *http.Response
-	expiration   time.Time
+	value        *CacheResponse
+	created      time.Time
 	lastAccessed time.Time
 }
 
+// CacheResponse stores the response info to be cached
+type CacheResponse struct {
+	StatusCode int
+	Header     http.Header
+	Body       []byte
+}
+
 const (
-	DefaultMaxSize        = 5
-	DefaultMaxMemory      = 10 * 1024 * 1024 // 10 MB
-	DefaultEvictionPolicy = "FIFO"
-	DefaultEvictionTimer  = 1 * time.Minute
-	DefaultTTL            = 5 * time.Minute
-	DefaultFilter         = "URL"
+	DefaultMaxSize        = 25                // Maximum number of entries in the cache
+	DefaultMaxMemory      = 100 * 1024 * 1024 // 100 MB
+	DefaultEvictionPolicy = "FIFO"            // First In First Out
+	DefaultEvictionTimer  = 1 * time.Minute   // The time between cache eviction checks
+	DefaultTTL            = 5 * time.Minute   // The time a cache entry can live without being accessed
+	DefaultMaxTTL         = 10 * time.Minute  // The maximum time a cache entry can live, including renewals
+	DefaultFilter         = "URL"             // Cache requests based on URL
 )
 
 type CacheOption func(*Cache)
@@ -52,6 +64,7 @@ func NewCache(options ...CacheOption) *Cache {
 		maxMemory:      DefaultMaxMemory,
 		evictionPolicy: DefaultEvictionPolicy,
 		ttl:            DefaultTTL,
+		maxTtl:         DefaultMaxTTL,
 		cacheMap:       make(map[string]*list.Element),
 		cacheList:      list.New(),
 		cacheFilters:   []string{DefaultFilter},
@@ -65,6 +78,7 @@ func NewCache(options ...CacheOption) *Cache {
 	return c
 }
 
+// Set the maximum number of entries in the cache
 func WithMaxSize(maxSize int) CacheOption {
 	return func(c *Cache) {
 		if maxSize != 0 {
@@ -73,6 +87,7 @@ func WithMaxSize(maxSize int) CacheOption {
 	}
 }
 
+// Set the maximum memory usage of the cache
 func WithMaxMemory(maxMemory uint64) CacheOption {
 	return func(c *Cache) {
 		if maxMemory != 0 {
@@ -81,6 +96,7 @@ func WithMaxMemory(maxMemory uint64) CacheOption {
 	}
 }
 
+// Set the eviction policy for the cache [FIFO, LRU]
 func WithEvictionPolicy(evictionPolicy string) CacheOption {
 	return func(c *Cache) {
 		if evictionPolicy != "" {
@@ -89,6 +105,7 @@ func WithEvictionPolicy(evictionPolicy string) CacheOption {
 	}
 }
 
+// Set the time between cache eviction checks
 func WithEvictionTimer(evictionTimer time.Duration) CacheOption {
 	return func(c *Cache) {
 		if evictionTimer > time.Minute {
@@ -97,14 +114,25 @@ func WithEvictionTimer(evictionTimer time.Duration) CacheOption {
 	}
 }
 
+// Set the time a cache entry can live without being accessed
 func WithTTL(ttl time.Duration) CacheOption {
 	return func(c *Cache) {
-		if ttl != 0 {
+		if ttl > 0 {
 			c.ttl = ttl
 		}
 	}
 }
 
+// Set the maximum time a cache entry can live, including renewals
+func WithMaxTTL(maxTtl time.Duration) CacheOption {
+	return func(c *Cache) {
+		if maxTtl > c.ttl {
+			c.maxTtl = maxTtl
+		}
+	}
+}
+
+// Set the cache filters to use for generating cache keys
 func WithCacheFilters(cacheFilters []string) CacheOption {
 	return func(c *Cache) {
 		if len(cacheFilters) != 0 {
@@ -113,6 +141,7 @@ func WithCacheFilters(cacheFilters []string) CacheOption {
 	}
 }
 
+// Set the logger to use for cache logging
 func WithLogger(l *log.Logger) CacheOption {
 	return func(c *Cache) {
 		c.l = l
@@ -120,7 +149,7 @@ func WithLogger(l *log.Logger) CacheOption {
 }
 
 // Middleware function to intercept HTTP requests and interact with the cache
-func (c *Cache) Middleware(next http.Handler) http.Handler {
+func (c *Cache) Middleware(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		key := c.generateKey(r)
@@ -132,40 +161,41 @@ func (c *Cache) Middleware(next http.Handler) http.Handler {
 		c.mut.Lock()
 		if ele, found := c.cacheMap[key]; found {
 			entry := ele.Value.(*CacheEntry)
-			if entry.expiration.After(time.Now()) {
-				// Serve from cache
+			if entry.lastAccessed.Add(c.ttl).After(time.Now()) {
+				// valid, not expired
 				c.l.Printf("Serving from cache: %s", key)
 				c.serveFromCache(w, entry)
 				c.mut.Unlock()
 				wasCached = true
 				return
 			}
-			// Expired, remove the item
+			// accessed expired item, remove the item
 			c.l.Printf("Cache entry expired: %s, removing from cache", key)
 			c.cacheList.Remove(ele)
 			delete(c.cacheMap, key)
+		} else {
+			c.l.Printf("Cache miss: %s", key)
 		}
 		c.mut.Unlock()
-		// Not in cache or expired, serve from next handler and cache the response
-		c.l.Printf("Cache miss: %s", key)
-		responseRecorder := &responseRecorder{ResponseWriter: w, statusCode: http.StatusOK}
-		next.ServeHTTP(responseRecorder, r)
-		if responseRecorder.statusCode == http.StatusOK { // Cache only successful responses
-			c.mut.Lock()
-			c.l.Printf("Adding to cache: %s", key)
-			c.addToCache(key, responseRecorder.Result())
-			c.mut.Unlock()
+		// not in cache or expired, serve then cache the response
+		wr := &writerRecorder{ResponseWriter: w, statusCode: http.StatusOK}
+		next(wr, r)
+		if wr.statusCode == http.StatusOK {
+			// cache only the successful responses to prevent chaos
+			go c.addToCache(key, wr.Result())
 		}
 	})
 }
 
+// clear expired cache entries that have not been accessed
 func (c *Cache) clearExpiredEntries() {
 	timer := time.NewTicker(c.evictionTimer)
 	for range timer.C {
 		c.mut.Lock()
 		for ele := c.cacheList.Front(); ele != nil; ele = ele.Next() {
 			entry := ele.Value.(*CacheEntry)
-			if entry.expiration.Before(time.Now()) {
+			if entry.lastAccessed.Add(c.ttl).Before(time.Now()) ||
+				entry.created.Add(c.maxTtl).Before(time.Now()) {
 				c.l.Printf("Cache entry expired: %s, removing from cache", entry.key)
 				delete(c.cacheMap, entry.key)
 				c.cacheList.Remove(ele)
@@ -175,7 +205,7 @@ func (c *Cache) clearExpiredEntries() {
 	}
 }
 
-// Creates the cache key based on the request and cache filters
+// generate cache key based on request + selected filters
 func (c *Cache) generateKey(r *http.Request) string {
 	keyParts := []string{r.URL.String()}
 	for _, filter := range c.cacheFilters {
@@ -191,28 +221,27 @@ func (c *Cache) generateKey(r *http.Request) string {
 	return strings.Join(keyParts, "|")
 }
 
-// Serve the response from cache
+// serve the response from cache
 func (c *Cache) serveFromCache(w http.ResponseWriter, entry *CacheEntry) {
-	// Update last accessed time
 	entry.lastAccessed = time.Now()
-
-	// Write cached response to the client
 	for k, v := range entry.value.Header {
 		for _, hv := range v {
 			w.Header().Add(k, hv)
 		}
 	}
 	w.WriteHeader(entry.value.StatusCode)
-	io.Copy(w, io.NopCloser(entry.value.Body))
+	w.Write(entry.value.Body)
 }
 
-// Add a new response to the cache
+// add a new response to the cache
 func (c *Cache) addToCache(key string, resp *http.Response) {
+	c.mut.Lock()
+	defer c.mut.Unlock()
 	c.checkNecessaryEvictions()
 	entry := &CacheEntry{
 		key:          key,
 		value:        cloneResponse(resp),
-		expiration:   time.Now().Add(c.ttl),
+		created:      time.Now(),
 		lastAccessed: time.Now(),
 	}
 	c.cacheList.PushFront(entry)
@@ -228,13 +257,13 @@ func (c *Cache) checkNecessaryEvictions() {
 	c.checkMemoryLimit()
 }
 
-// checkMemoryLimit ensures cache memory usage is within the specified maxMemory limit
+// validate cache memory usage is within the specified maxMemory limit
 func (c *Cache) checkMemoryLimit() {
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
 	currentMemory := m.Alloc
 
-	for currentMemory > c.maxMemory {
+	for currentMemory > c.maxMemory && c.cacheList.Len() != 0 {
 		c.l.Printf("Cache exceeds max memory, evicting an item")
 		c.evict()
 		runtime.ReadMemStats(&m)
@@ -242,7 +271,7 @@ func (c *Cache) checkMemoryLimit() {
 	}
 }
 
-// Evict based on policy
+// evict from cache based on policy
 func (c *Cache) evict() {
 	var ele *list.Element
 	if c.evictionPolicy == "FIFO" {
@@ -265,55 +294,53 @@ func (c *Cache) evict() {
 	}
 }
 
-// Clone an HTTP response for caching
-func cloneResponse(resp *http.Response) *http.Response {
+// copy the response for caching
+func cloneResponse(resp *http.Response) *CacheResponse {
 	var buf bytes.Buffer
 	if resp.Body != nil {
 		io.Copy(&buf, resp.Body)
 		resp.Body.Close()
 	}
-	return &http.Response{
-		Status:        resp.Status,
-		StatusCode:    resp.StatusCode,
-		Header:        resp.Header,
-		Body:          io.NopCloser(&buf),
-		ContentLength: int64(buf.Len()),
+	return &CacheResponse{
+		StatusCode: resp.StatusCode,
+		Header:     resp.Header,
+		Body:       buf.Bytes(),
 	}
 }
 
 // Capture our response on the fly, lets us cache it.
-type responseRecorder struct {
+type writerRecorder struct {
 	http.ResponseWriter
 	statusCode int
 	headers    http.Header
 	body       io.ReadWriter
 }
 
-func (r *responseRecorder) WriteHeader(statusCode int) {
-	r.statusCode = statusCode
-	r.ResponseWriter.WriteHeader(statusCode)
+func (wr *writerRecorder) WriteHeader(statusCode int) {
+	wr.statusCode = statusCode
+	wr.ResponseWriter.WriteHeader(statusCode)
 }
 
-func (r *responseRecorder) Write(body []byte) (int, error) {
-	if r.body == nil {
-		r.body = new(bytes.Buffer)
+func (wr *writerRecorder) Write(body []byte) (int, error) {
+	if wr.body == nil {
+		wr.body = new(bytes.Buffer)
 	}
-	r.body.Write(body)
-	return r.ResponseWriter.Write(body)
+	wr.body.Write(body)
+	return wr.ResponseWriter.Write(body)
 }
 
-func (r *responseRecorder) Header() http.Header {
-	if r.headers == nil {
-		r.headers = make(http.Header)
+func (wr *writerRecorder) Header() http.Header {
+	if wr.headers == nil {
+		wr.headers = make(http.Header)
 	}
-	return r.headers
+	return wr.headers
 }
 
-func (r *responseRecorder) Result() *http.Response {
+func (wr *writerRecorder) Result() *http.Response {
 	return &http.Response{
-		StatusCode:    r.statusCode,
-		Header:        r.headers,
-		Body:          io.NopCloser(bytes.NewBuffer(r.body.(*bytes.Buffer).Bytes())),
-		ContentLength: int64(r.body.(*bytes.Buffer).Len()),
+		StatusCode:    wr.statusCode,
+		Header:        wr.headers,
+		Body:          io.NopCloser(bytes.NewBuffer(wr.body.(*bytes.Buffer).Bytes())),
+		ContentLength: int64(wr.body.(*bytes.Buffer).Len()),
 	}
 }

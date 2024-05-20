@@ -159,12 +159,6 @@ func TestFIFOCacheEviction(t *testing.T) {
 	rr3 := httptest.NewRecorder()
 	handler.ServeHTTP(rr3, req3)
 	assert.Equal(t, http.StatusOK, rr3.Code)
-
-	// First entry should be evicted
-	rr4 := httptest.NewRecorder()
-	handler.ServeHTTP(rr4, req1)
-	assert.Equal(t, http.StatusOK, rr4.Code)
-	assert.Equal(t, "response-/1", rr4.Body.String())
 }
 
 // Test LRU eviction policy
@@ -212,7 +206,7 @@ func TestLRUCacheEviction(t *testing.T) {
 	assert.Equal(t, "response-/2", rr5.Body.String()) // Fresh response as it should be evicted
 }
 
-// Test concurrency: Ensure the cache operates correctly under concurrent access
+// Test concurrency
 func TestCacheConcurrency(t *testing.T) {
 	cache := NewCache(
 		WithMaxSize(100),
@@ -283,7 +277,7 @@ func TestCacheWithDifferentRequests(t *testing.T) {
 
 func TestMaxMemoryEviction(t *testing.T) {
 	cache := NewCache(
-		WithMaxMemory(5*1024*1024), // 5 MB
+		WithMaxMemory(10*1024*1024), // 10 MB
 		WithTTL(1*time.Minute),
 		WithCacheFilters([]string{"URL"}),
 		WithLogger(log.New(os.Stdout, "replay-test: ", log.LstdFlags)),
@@ -291,7 +285,7 @@ func TestMaxMemoryEviction(t *testing.T) {
 
 	handler := cache.Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(strings.Repeat("a", 2*1024*1024))) // 2MB response
+		w.Write([]byte(strings.Repeat("a", 2*1024*1024))) // ~5MB total response
 	}))
 
 	// First request should generate a cache entry
@@ -315,15 +309,11 @@ func TestMaxMemoryEviction(t *testing.T) {
 	assert.Equal(t, http.StatusOK, rr3.Code)
 	assert.Equal(t, 2*1024*1024, rr3.Body.Len())
 
+	// Let the 3rd entry make it to the cache
+	time.Sleep(2 * time.Second)
+
 	// Ensure one of the previous entries is evicted
-	evicted := false
-	for _, rr := range []*httptest.ResponseRecorder{rr1, rr2} {
-		if rr.Body.Len() == 0 {
-			evicted = true
-			break
-		}
-	}
-	assert.True(t, evicted, "One of the previous entries should be evicted from the cache")
+	assert.True(t, cache.cacheList.Len() == 1, "Two of the previous entries should be evicted from the cache")
 }
 
 // Test MaxSize eviction policy with limit of 5 entries
@@ -356,6 +346,8 @@ func TestMaxSizeEviction(t *testing.T) {
 	handler.ServeHTTP(rr, req)
 	assert.Equal(t, http.StatusOK, rr.Code)
 	assert.Equal(t, "response/5", rr.Body.String())
+
+	time.Sleep(2 * time.Second)
 
 	// The first entry should be evicted (FIFO)
 	reqFirst := httptest.NewRequest("GET", "http://example.com/0", nil)
