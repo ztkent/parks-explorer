@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/Ztkent/nps-dashboard/internal/dashboard"
-	"github.com/Ztkent/nps-dashboard/replay"
+	"github.com/Ztkent/replay"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/httprate"
@@ -51,6 +51,6 @@ func DefineRoutes(r *chi.Mux, dashManager *dashboard.Dashboard, cache *replay.Ca
 		60*time.Second, // per durations
 		httprate.WithKeyFuncs(httprate.KeyByIP, httprate.KeyByEndpoint),
 	))
-	r.Get("/park-cams", cache.Middleware(dashManager.LiveParkCamsHandler()))
-	r.Get("/park-list", cache.Middleware(dashManager.ParkListHandler()))
+	r.Get("/park-cams", cache.MiddlewareFunc(dashManager.LiveParkCamsHandler()))
+	r.Get("/park-list", cache.MiddlewareFunc(dashManager.ParkListHandler()))
 }
