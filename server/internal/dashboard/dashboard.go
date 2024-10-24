@@ -1,6 +1,6 @@
 package dashboard
 
-import "github.com/Ztkent/go-nps"
+import "github.com/ztkent/go-nps"
 
 type Dashboard struct {
 	npsApi nps.NpsApi

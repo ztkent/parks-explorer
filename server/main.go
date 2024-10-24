@@ -7,8 +7,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/Ztkent/nps-dashboard/internal/dashboard"
-	"github.com/Ztkent/replay"
+	"github.com/ztkent/nps-dashboard/internal/dashboard"
+	"github.com/ztkent/replay"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/httprate"
