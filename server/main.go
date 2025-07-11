@@ -7,12 +7,12 @@ import (
 	"os"
 	"time"
 
-	"github.com/ztkent/nps-dashboard/internal/dashboard"
-	"github.com/ztkent/replay"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/httprate"
 	"github.com/rs/cors"
+	"github.com/ztkent/nps-dashboard/internal/dashboard"
+	"github.com/ztkent/replay"
 )
 
 func main() {
@@ -40,7 +40,6 @@ func main() {
 		log.Fatal(http.ListenAndServe(":"+os.Getenv("SERVER_PORT"), cors.Default().Handler(r)))
 	}
 	log.Fatal(http.ListenAndServeTLS(":"+os.Getenv("SERVER_PORT"), os.Getenv("CERT_PATH"), os.Getenv("CERT_KEY_PATH"), r))
-	return
 }
 
 func DefineRoutes(r *chi.Mux, dashManager *dashboard.Dashboard, cache *replay.Cache) {
