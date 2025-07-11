@@ -552,15 +552,10 @@ body {
     display: none;
 }
 
-/* ==========================================================================
-   Responsive Design
-   ========================================================================== */
-
 /* Mobile Styles */
 @media (max-width: 850px) {
     /* Header adjustments */
     .header {
-        flex-wrap: wrap;
         padding: 1rem;
         gap: 1rem;
     }
