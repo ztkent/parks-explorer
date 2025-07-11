@@ -70,6 +70,7 @@ func DefineRoutes(r *chi.Mux, dashManager *dashboard.Dashboard, cache *replay.Ca
 		r.Get("/auth/callback", dashManager.GoogleCallbackHandler)
 		r.Get("/auth/logout", dashManager.LogoutHandler)
 		r.Get("/user-info", dashManager.UserInfoHandler)
+		r.Get("/avatar", dashManager.AvatarProxyHandler)
 	})
 
 	// Legacy API routes (keep for backward compatibility)

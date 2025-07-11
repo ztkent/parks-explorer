@@ -2,6 +2,7 @@ package dashboard
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -100,4 +101,33 @@ func (dm *Dashboard) EnsureUUIDHandler() http.HandlerFunc {
 			http.Error(w, "Failed to read cookie", http.StatusInternalServerError)
 		}
 	}
+}
+
+// AvatarProxyHandler avoids CORS issues by fetching the avatar on the server side
+func (dm *Dashboard) AvatarProxyHandler(w http.ResponseWriter, r *http.Request) {
+	user, err := dm.GetCurrentUser(r)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	if user.AvatarURL == "" {
+		http.Error(w, "No avatar URL", http.StatusNotFound)
+		return
+	}
+
+	// Fetch the image from Google
+	resp, err := http.Get(user.AvatarURL)
+	if err != nil {
+		http.Error(w, "Failed to fetch avatar", http.StatusInternalServerError)
+		return
+	}
+	defer resp.Body.Close()
+
+	// Copy headers
+	w.Header().Set("Content-Type", resp.Header.Get("Content-Type"))
+	w.Header().Set("Cache-Control", "public, max-age=3600") // Cache for 1 hour
+
+	// Copy the image data
+	io.Copy(w, resp.Body)
 }
