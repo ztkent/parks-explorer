@@ -35,7 +35,7 @@ func main() {
 	))
 
 	// Start server
-	fmt.Println("Server is running on port " + os.Getenv("SERVER_PORT"))
+	fmt.Println("Dashboard is running on port " + os.Getenv("SERVER_PORT"))
 	if os.Getenv("ENV") == "dev" {
 		log.Fatal(http.ListenAndServe(":"+os.Getenv("SERVER_PORT"), cors.Default().Handler(r)))
 	}
@@ -44,7 +44,6 @@ func main() {
 
 func DefineRoutes(r *chi.Mux, dashManager *dashboard.Dashboard, cache *replay.Cache) {
 	// Apply a rate limiter to all routes
-
 	r.Use(httprate.Limit(
 		50,             // requests
 		60*time.Second, // per durations

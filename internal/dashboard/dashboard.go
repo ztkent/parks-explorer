@@ -1,9 +1,14 @@
 package dashboard
 
-import "github.com/ztkent/go-nps"
+import (
+	"database/sql"
+
+	"github.com/ztkent/go-nps"
+)
 
 type Dashboard struct {
 	npsApi nps.NpsApi
+	db     *sql.DB
 }
 
 func NewDashboard(apiKey string) *Dashboard {
