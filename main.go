@@ -71,6 +71,11 @@ func DefineRoutes(r *chi.Mux, dashManager *dashboard.Dashboard, cache *replay.Ca
 		r.Get("/auth/logout", dashManager.LogoutHandler)
 		r.Get("/user-info", dashManager.UserInfoHandler)
 		r.Get("/avatar", dashManager.AvatarProxyHandler)
+
+		// HTMX routes
+		r.Get("/auth-status", dashManager.AuthStatusHandler)
+		r.Get("/parks/featured", cache.MiddlewareFunc(dashManager.FeaturedParksHandler))
+		r.Get("/parks/search", cache.MiddlewareFunc(dashManager.ParkSearchHandler))
 	})
 
 	// Legacy API routes (keep for backward compatibility)
