@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>National Parks</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f5f5f5;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2d5016;
+        }
+
+        .logo::before {
+            content: "🏞️";
+            margin-right: 0.5rem;
+        }
+
+        .search-container {
+            flex: 1;
+            max-width: 500px;
+            margin: 0 2rem;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 50px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .search-input:focus {
+            border-color: #4a90e2;
+        }
+
+        .auth-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .auth-button {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .google-signin {
+            background: #4285f4;
+            color: white;
+        }
+
+        .google-signin:hover {
+            background: #357ae8;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+        }
+
+        .logout-btn {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .logout-btn:hover {
+            background: #e0e0e0;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400"><rect fill="%23228B22" width="1200" height="400"/><polygon fill="%23FFA500" points="0,400 300,100 600,250 900,50 1200,200 1200,400"/></svg>');
+            background-size: cover;
+            background-position: center;
+            height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: white;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            max-width: 600px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .cta-button {
+            background: #76b900;
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .cta-button:hover {
+            background: #5a8a00;
+            transform: translateY(-2px);
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 3rem;
+            color: #2d5016;
+        }
+
+        /* Featured Parks Grid */
+        .parks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+
+        .park-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+
+        .park-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .park-image {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(45deg, #228B22, #32CD32);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .park-image::after {
+            content: '🏔️';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4rem;
+        }
+
+        .park-content {
+            padding: 1.5rem;
+        }
+
+        .park-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #2d5016;
+        }
+
+        .park-description {
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+        }
+
+        .park-location {
+            font-size: 0.9rem;
+            color: #888;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .park-location::before {
+            content: '📍';
+        }
+
+        /* Footer */
+        .footer {
+            background: #2d5016;
+            color: white;
+            text-align: center;
+            padding: 2rem;
+            margin-top: 4rem;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .footer-links a {
+            color: #a0c060;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: white;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 1rem;
+                padding: 1rem;
+            }
+
+            .search-container {
+                margin: 0;
+                max-width: 100%;
+            }
+
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .hero p {
+                font-size: 1rem;
+            }
+
+            .parks-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-links {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">National Parks</div>
+        
+        <div class="search-container">
+            <input type="text" class="search-input" placeholder="Search parks...">
+        </div>
+        
+        <div class="auth-container" id="authContainer">
+            <!-- Auth buttons will be populated by JavaScript -->
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1>Explore America's Natural Wonders</h1>
+        <p>Discover the beauty and history of our national parks. Plan your adventure today.</p>
+        <a href="#featured" class="cta-button">Find a Park</a>
+    </section>
+
+    <!-- Main Content -->
+    <main class="container">
+        <section id="featured">
+            <h2 class="section-title">Featured Parks</h2>
+            
+            <div id="parksGrid" class="parks-grid">
+                <!-- Loading state -->
+                <div class="loading">Loading parks...</div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-links">
+            <a href="#contact">Contact</a>
+            <a href="#privacy">Privacy Policy</a>
+            <a href="#terms">Terms of Service</a>
+        </div>
+        <p>&copy; 2024 National Parks. All rights reserved.</p>
+    </footer>
+
+    <script>
+        class NationalParksApp {
+            constructor() {
+                this.user = null;
+                this.parks = [];
+                this.init();
+            }
+
+            async init() {
+                await this.checkAuth();
+                await this.loadParks();
+                this.setupEventListeners();
+            }
+
+            async checkAuth() {
+                try {
+                    const response = await fetch('/api/user-info');
+                    const data = await response.json();
+                    
+                    if (data.authenticated) {
+                        this.user = data.user;
+                    }
+                    
+                    this.updateAuthUI();
+                } catch (error) {
+                    console.error('Auth check failed:', error);
+                    this.updateAuthUI();
+                }
+            }
+
+            updateAuthUI() {
+                const authContainer = document.getElementById('authContainer');
+                
+                if (this.user) {
+                    authContainer.innerHTML = `
+                        <div class="user-info">
+                            <img src="${this.user.avatar_url}" alt="${this.user.username}" class="user-avatar">
+                            <span>${this.user.username}</span>
+                        </div>
+                        <a href="/api/auth/logout" class="auth-button logout-btn">Logout</a>
+                    `;
+                } else {
+                    authContainer.innerHTML = `
+                        <a href="/api/auth/google" class="auth-button google-signin">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                            </svg>
+                            Sign in with Google
+                        </a>
+                    `;
+                }
+            }
+
+            async loadParks() {
+                try {
+                    const response = await fetch('/park-list');
+                    const data = await response.json();
+                    
+                    if (data.parks) {
+                        this.parks = data.parks;
+                        this.renderParks();
+                    }
+                } catch (error) {
+                    console.error('Failed to load parks:', error);
+                    this.showError('Failed to load parks');
+                }
+            }
+
+            renderParks() {
+                const parksGrid = document.getElementById('parksGrid');
+                
+                if (this.parks.length === 0) {
+                    parksGrid.innerHTML = '<div class="loading">No parks available</div>';
+                    return;
+                }
+
+                // Show first 6 parks as featured
+                const featuredParks = this.parks.slice(0, 6);
+                
+                parksGrid.innerHTML = featuredParks.map(parkName => {
+                    const parkSlug = this.createSlug(parkName);
+                    
+                    return `
+                        <div class="park-card" data-park="${parkSlug}">
+                            <div class="park-image"></div>
+                            <div class="park-content">
+                                <h3 class="park-title">${parkName}</h3>
+                                <p class="park-description">
+                                    Explore the natural beauty and unique features of ${parkName}.
+                                </p>
+                                <div class="park-location">United States</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                // Add click handlers to park cards
+                parksGrid.querySelectorAll('.park-card').forEach(card => {
+                    card.addEventListener('click', (e) => {
+                        const parkSlug = e.currentTarget.dataset.park;
+                        this.showParkDetails(parkSlug);
+                    });
+                });
+            }
+
+            createSlug(text) {
+                return text.toLowerCase()
+                    .replace(/[^\w\s-]/g, '')
+                    .replace(/[\s_-]+/g, '-')
+                    .replace(/^-+|-+$/g, '');
+            }
+
+            showParkDetails(parkSlug) {
+                // For now, just log the park - in the future this could open a modal or navigate to a detail page
+                console.log('Viewing park:', parkSlug);
+                alert(`Park details for ${parkSlug} - Feature coming soon!`);
+            }
+
+            showError(message) {
+                const parksGrid = document.getElementById('parksGrid');
+                parksGrid.innerHTML = `<div class="loading">Error: ${message}</div>`;
+            }
+
+            setupEventListeners() {
+                // Search functionality
+                const searchInput = document.querySelector('.search-input');
+                let searchTimeout;
+                
+                searchInput.addEventListener('input', (e) => {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(() => {
+                        this.searchParks(e.target.value);
+                    }, 300);
+                });
+
+                // Smooth scrolling for CTA button
+                document.querySelector('.cta-button').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    document.getElementById('featured').scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                });
+            }
+
+            searchParks(query) {
+                if (!query.trim()) {
+                    this.renderParks();
+                    return;
+                }
+
+                const filteredParks = this.parks.filter(park =>
+                    park.toLowerCase().includes(query.toLowerCase())
+                );
+
+                const parksGrid = document.getElementById('parksGrid');
+                
+                if (filteredParks.length === 0) {
+                    parksGrid.innerHTML = '<div class="loading">No parks found matching your search</div>';
+                    return;
+                }
+
+                parksGrid.innerHTML = filteredParks.map(parkName => {
+                    const parkSlug = this.createSlug(parkName);
+                    
+                    return `
+                        <div class="park-card" data-park="${parkSlug}">
+                            <div class="park-image"></div>
+                            <div class="park-content">
+                                <h3 class="park-title">${parkName}</h3>
+                                <p class="park-description">
+                                    Explore the natural beauty and unique features of ${parkName}.
+                                </p>
+                                <div class="park-location">United States</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                // Add click handlers
+                parksGrid.querySelectorAll('.park-card').forEach(card => {
+                    card.addEventListener('click', (e) => {
+                        const parkSlug = e.currentTarget.dataset.park;
+                        this.showParkDetails(parkSlug);
+                    });
+                });
+            }
+        }
+
+        // Initialize the app when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new NationalParksApp();
+        });
+    </script>
+</body>
+</html>

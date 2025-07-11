@@ -4,6 +4,7 @@ import (
 	"database/sql"
 
 	"github.com/ztkent/go-nps"
+	"github.com/ztkent/nps-dashboard/internal/database"
 )
 
 type Dashboard struct {
@@ -11,9 +12,16 @@ type Dashboard struct {
 	db     *sql.DB
 }
 
-func NewDashboard(apiKey string) *Dashboard {
+func NewDashboard(apiKey string, dbPath string) *Dashboard {
+	// Initialize database
+	db, err := database.NewDatabase(dbPath)
+	if err != nil {
+		panic(err)
+	}
+
 	return &Dashboard{
 		npsApi: nps.NewNpsApi(apiKey),
+		db:     db.DB,
 	}
 }
 

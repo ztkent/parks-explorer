@@ -3,9 +3,36 @@ package dashboard
 import (
 	"encoding/json"
 	"net/http"
+	"os"
+	"path/filepath"
 
 	"github.com/google/uuid"
 )
+
+// HomeHandler serves the main HTML page
+func (dm *Dashboard) HomeHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Serve the static HTML file
+		http.ServeFile(w, r, "web/static/index.html")
+	}
+}
+
+// StaticFileHandler serves static files
+func (dm *Dashboard) StaticFileHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Extract the file path from URL
+		filePath := r.URL.Path[len("/static/"):]
+		fullPath := filepath.Join("web/static", filePath)
+
+		// Check if file exists
+		if _, err := os.Stat(fullPath); os.IsNotExist(err) {
+			http.NotFound(w, r)
+			return
+		}
+
+		http.ServeFile(w, r, fullPath)
+	}
+}
 
 // LiveParkCamsHandler returns a list of live park cameras.
 type ParkCam struct {

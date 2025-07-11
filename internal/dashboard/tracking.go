@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"net/http"
+	"os"
 
 	"github.com/google/uuid"
 )
@@ -40,13 +41,18 @@ func (s *Dashboard) getOrCreateVisitorID(w http.ResponseWriter, r *http.Request)
 
 // setVisitorCookie sets the visitor tracking cookie
 func (s *Dashboard) setVisitorCookie(w http.ResponseWriter, visitorID string) {
+	secure := true
+	if os.Getenv("ENV") == "dev" {
+		secure = false
+	}
+
 	cookie := &http.Cookie{
 		Name:     VisitorCookieName,
 		Value:    visitorID,
 		Path:     "/",
 		MaxAge:   CookieMaxAge,
 		HttpOnly: true,
-		Secure:   true,
+		Secure:   secure,
 		SameSite: http.SameSiteLaxMode,
 	}
 
