@@ -70,13 +70,13 @@ type ParkList struct {
 
 func (dm *Dashboard) ParkListHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		res, err := dm.npsApi.GetParks(nil, nil, 0, 500, "", nil)
+		parks, err := dm.parkService.GetAllParks()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		parkList := ParkList{}
-		for _, park := range res.Data {
+		for _, park := range parks {
 			parkList.Parks = append(parkList.Parks, park.Name)
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -173,7 +173,7 @@ func (dm *Dashboard) AuthStatusHandler(w http.ResponseWriter, r *http.Request) {
 
 // FeaturedParksHandler returns HTML for featured parks
 func (dm *Dashboard) FeaturedParksHandler(w http.ResponseWriter, r *http.Request) {
-	res, err := dm.npsApi.GetParks(nil, nil, 0, 500, "", nil)
+	parks, err := dm.parkService.GetFeaturedParks()
 	if err != nil {
 		w.Header().Set("Content-Type", "text/html")
 		w.Write([]byte(`<div class="loading">Error loading parks</div>`))
@@ -182,26 +182,35 @@ func (dm *Dashboard) FeaturedParksHandler(w http.ResponseWriter, r *http.Request
 
 	w.Header().Set("Content-Type", "text/html")
 
-	if len(res.Data) == 0 {
+	if len(parks) == 0 {
 		w.Write([]byte(`<div class="loading">No parks available</div>`))
 		return
 	}
 
-	// Show first 6 parks as featured
-	featuredParks := res.Data
-	if len(featuredParks) > 6 {
-		featuredParks = featuredParks[:6]
-	}
-
 	var html strings.Builder
-	for _, park := range featuredParks {
-		parkSlug := createSlug(park.Name)
+	for _, park := range parks {
+		// Get the first available image or use a placeholder
+		imageUrl := ""
+		imageAlt := park.Name
+		if len(park.Images) > 0 {
+			imageUrl = park.Images[0].URL
+			if park.Images[0].AltText != "" {
+				imageAlt = park.Images[0].AltText
+			}
+		}
+
+		// Build the image HTML
+		imageHTML := `<div class="park-image"></div>`
+		if imageUrl != "" {
+			imageHTML = fmt.Sprintf(`<div class="park-image" style="background-image: url('%s');" title="%s"></div>`, imageUrl, imageAlt)
+		}
+
 		html.WriteString(fmt.Sprintf(`
 			<div class="park-card" data-park="%s" 
 				 hx-get="/api/parks/%s/details" 
 				 hx-target="#park-modal" 
 				 hx-swap="innerHTML">
-				<div class="park-image"></div>
+				%s
 				<div class="park-content">
 					<h3 class="park-title">%s</h3>
 					<p class="park-description">
@@ -210,7 +219,7 @@ func (dm *Dashboard) FeaturedParksHandler(w http.ResponseWriter, r *http.Request
 					<div class="park-location">United States</div>
 				</div>
 			</div>
-		`, parkSlug, parkSlug, park.Name, park.Name))
+		`, park.Slug, park.Slug, imageHTML, park.Name, park.Name))
 	}
 
 	w.Write([]byte(html.String()))
@@ -220,13 +229,6 @@ func (dm *Dashboard) FeaturedParksHandler(w http.ResponseWriter, r *http.Request
 func (dm *Dashboard) ParkSearchHandler(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("q")
 
-	res, err := dm.npsApi.GetParks(nil, nil, 0, 500, "", nil)
-	if err != nil {
-		w.Header().Set("Content-Type", "text/html")
-		w.Write([]byte(`<div class="loading">Error loading parks</div>`))
-		return
-	}
-
 	w.Header().Set("Content-Type", "text/html")
 
 	// If no query, show featured parks
@@ -235,36 +237,118 @@ func (dm *Dashboard) ParkSearchHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Filter parks by query
-	queryLower := strings.ToLower(query)
-	var html strings.Builder
-	matchCount := 0
-
-	for _, park := range res.Data {
-		if strings.Contains(strings.ToLower(park.Name), queryLower) {
-			parkSlug := createSlug(park.Name)
-			html.WriteString(fmt.Sprintf(`
-				<div class="park-card" data-park="%s">
-					<div class="park-image"></div>
-					<div class="park-content">
-						<h3 class="park-title">%s</h3>
-						<p class="park-description">
-							Explore the natural beauty and unique features of %s.
-						</p>
-						<div class="park-location">United States</div>
-					</div>
-				</div>
-			`, parkSlug, park.Name, park.Name))
-			matchCount++
-		}
+	// Search parks using the park service
+	parks, err := dm.parkService.SearchParks(query)
+	if err != nil {
+		w.Write([]byte(`<div class="loading">Error searching parks</div>`))
+		return
 	}
 
-	if matchCount == 0 {
+	if len(parks) == 0 {
 		w.Write([]byte(`<div class="loading">No parks found matching your search</div>`))
 		return
 	}
 
+	var html strings.Builder
+	for _, park := range parks {
+		// Get the first available image or use a placeholder
+		imageUrl := ""
+		imageAlt := park.Name
+		if len(park.Images) > 0 {
+			imageUrl = park.Images[0].URL
+			if park.Images[0].AltText != "" {
+				imageAlt = park.Images[0].AltText
+			}
+		}
+
+		// Build the image HTML
+		imageHTML := `<div class="park-image"></div>`
+		if imageUrl != "" {
+			imageHTML = fmt.Sprintf(`<div class="park-image" style="background-image: url('%s');" title="%s"></div>`, imageUrl, imageAlt)
+		}
+
+		html.WriteString(fmt.Sprintf(`
+			<div class="park-card" data-park="%s"
+				 hx-get="/api/parks/%s/details" 
+				 hx-target="#park-modal" 
+				 hx-swap="innerHTML">
+				%s
+				<div class="park-content">
+					<h3 class="park-title">%s</h3>
+					<p class="park-description">
+						Explore the natural beauty and unique features of %s.
+					</p>
+					<div class="park-location">United States</div>
+				</div>
+			</div>
+		`, park.Slug, park.Slug, imageHTML, park.Name, park.Name))
+	}
+
 	w.Write([]byte(html.String()))
+}
+
+// ParkDetailsHandler returns HTML for a specific park's details
+func (dm *Dashboard) ParkDetailsHandler(w http.ResponseWriter, r *http.Request) {
+	slug := r.URL.Path[len("/api/parks/"):]
+	slug = slug[:len(slug)-len("/details")]
+
+	// Get park from cache
+	park, err := dm.parkService.GetParkBySlug(slug)
+	if err != nil {
+		w.Header().Set("Content-Type", "text/html")
+		w.Write([]byte(`<div class="modal-content"><h2>Park not found</h2></div>`))
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html")
+
+	// Get the first available image
+	imageUrl := ""
+	if len(park.Images) > 0 {
+		imageUrl = park.Images[0].URL
+	}
+
+	// Build park details HTML
+	imageHTML := ""
+	if imageUrl != "" {
+		imageHTML = fmt.Sprintf(`<img src="%s" alt="%s" style="width: 100%%; height: 300px; object-fit: cover; border-radius: 8px; margin-bottom: 1rem;">`, imageUrl, park.Name)
+	}
+
+	description := park.Description
+	if description == "" {
+		description = fmt.Sprintf("Discover the natural beauty and unique features of %s.", park.Name)
+	}
+
+	// Truncate description if it's too long
+	if len(description) > 300 {
+		description = description[:300] + "..."
+	}
+
+	html := fmt.Sprintf(`
+		<div class="modal-content" style="padding: 2rem; max-width: 600px;">
+			<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
+				<h2 style="margin: 0; color: #111827; font-size: 1.8rem;">%s</h2>
+				<button onclick="closeModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #6b7280;">&times;</button>
+			</div>
+			%s
+			<p style="color: #6b7280; line-height: 1.6; margin-bottom: 1.5rem;">%s</p>
+			<div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+				<div style="background: #f3f4f6; padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.9rem;">
+					<strong>State(s):</strong> %s
+				</div>
+				<div style="background: #f3f4f6; padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.9rem;">
+					<strong>Designation:</strong> %s
+				</div>
+			</div>
+			<div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e5e7eb;">
+				<a href="%s" target="_blank" style="background: #16a34a; color: white; padding: 0.75rem 1.5rem; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-block;">
+					Visit Official Site
+				</a>
+			</div>
+		</div>
+	`, park.Name, imageHTML, description, park.States, park.Designation, park.URL)
+
+	w.Write([]byte(html))
 }
 
 // Helper function to create slugs

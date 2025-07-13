@@ -71,4 +71,33 @@ document.addEventListener('htmx:afterSwap', (event) => {
             });
         }
     }
+    
+    // Check if park modal content was loaded
+    if (event.target.id === 'park-modal') {
+        openModal();
+    }
+});
+
+// Modal functionality
+function openModal() {
+    const modal = document.getElementById('park-modal');
+    if (modal) {
+        modal.classList.add('show');
+        document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    }
+}
+
+function closeModal() {
+    const modal = document.getElementById('park-modal');
+    if (modal) {
+        modal.classList.remove('show');
+        document.body.style.overflow = ''; // Restore scrolling
+    }
+}
+
+// Close modal on Escape key
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        closeModal();
+    }
 });

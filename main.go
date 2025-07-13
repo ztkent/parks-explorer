@@ -76,6 +76,7 @@ func DefineRoutes(r *chi.Mux, dashManager *dashboard.Dashboard, cache *replay.Ca
 		r.Get("/auth-status", dashManager.AuthStatusHandler)
 		r.Get("/parks/featured", cache.MiddlewareFunc(dashManager.FeaturedParksHandler))
 		r.Get("/parks/search", cache.MiddlewareFunc(dashManager.ParkSearchHandler))
+		r.Get("/parks/{slug}/details", cache.MiddlewareFunc(dashManager.ParkDetailsHandler))
 	})
 
 	// Legacy API routes (keep for backward compatibility)

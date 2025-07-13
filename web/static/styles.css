@@ -428,31 +428,6 @@ body {
     overflow: hidden;
 }
 
-/* Specific park images */
-.park-card[data-park*="yosemite"] .park-image {
-    background-image: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');
-}
-
-.park-card[data-park*="zion"] .park-image {
-    background-image: url('https://images.unsplash.com/photo-1560707303-4e980ce876ad?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');
-}
-
-.park-card[data-park*="acadia"] .park-image {
-    background-image: url('https://images.unsplash.com/photo-1557804506-669a67965ba0?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');
-}
-
-.park-card[data-park*="yellowstone"] .park-image {
-    background-image: url('https://images.unsplash.com/photo-1570479767851-e52a62a4b8b8?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');
-}
-
-.park-card[data-park*="grand-canyon"] .park-image {
-    background-image: url('https://images.unsplash.com/photo-1615671524827-c1fe3973b648?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');
-}
-
-.park-card[data-park*="death-valley"] .park-image {
-    background-image: url('https://images.unsplash.com/photo-1502744688674-c619d1586c9e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');
-}
-
 /* Fallback for parks without specific images */
 .park-image:not([style*="background-image"]) {
     background: linear-gradient(135deg, #16a34a, #059669);
@@ -550,6 +525,67 @@ body {
 
 .hidden {
     display: none;
+}
+
+/* ==========================================================================
+   Modal
+   ========================================================================== */
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal.show {
+    display: flex;
+}
+
+.modal-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    z-index: 1001;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Mobile modal adjustments */
+@media (max-width: 768px) {
+    .modal-content {
+        max-width: 95vw;
+        margin: 1rem;
+    }
 }
 
 /* Mobile Styles */

@@ -1,15 +1,14 @@
 package dashboard
 
 import (
-	"database/sql"
-
 	"github.com/ztkent/go-nps"
 	"github.com/ztkent/nps-dashboard/internal/database"
 )
 
 type Dashboard struct {
-	npsApi nps.NpsApi
-	db     *sql.DB
+	npsApi      nps.NpsApi
+	db          *database.DB
+	parkService *ParkService
 }
 
 func NewDashboard(apiKey string, dbPath string) *Dashboard {
@@ -19,38 +18,20 @@ func NewDashboard(apiKey string, dbPath string) *Dashboard {
 		panic(err)
 	}
 
+	// Initialize NPS API
+	npsApi := nps.NewNpsApi(apiKey)
+
+	// Initialize park service
+	parkService := NewParkService(npsApi, db)
+
 	return &Dashboard{
-		npsApi: nps.NewNpsApi(apiKey),
-		db:     db.DB,
+		npsApi:      npsApi,
+		db:          db,
+		parkService: parkService,
 	}
 }
 
-func (d *Dashboard) ListAllParks() {
-	res, err := d.npsApi.GetParks(nil, nil, 0, 0, "", nil)
-	if err != nil {
-		panic(err)
-	}
-	for _, park := range res.Data {
-		println(park.Name)
-	}
-}
-
-func (d *Dashboard) GetVisitorCentersInState(state string) {
-	res, err := d.npsApi.GetVisitorCenters(nil, []string{state}, "", 0, 1, nil)
-	if err != nil {
-		panic(err)
-	}
-	for _, visitorCenter := range res.Data {
-		println(visitorCenter.Name)
-	}
-}
-
-func (d *Dashboard) ListImportantPeopleInPark(siteCode string) {
-	res, err := d.npsApi.GetPeople([]string{siteCode}, nil, "", 0, 0)
-	if err != nil {
-		panic(err)
-	}
-	for _, person := range res.Data {
-		println(person.FirstName + " " + person.LastName)
-	}
+// RefreshParkCache manually refreshes the park cache from the API
+func (d *Dashboard) RefreshParkCache() error {
+	return d.parkService.RefreshParksFromAPI()
 }
