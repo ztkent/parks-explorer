@@ -1,0 +1,31 @@
+<header class="header">
+    <a href="/" class="logo">🏞️ National Parks Explorer</a>
+    
+    <nav class="nav-links">
+        <li><a href="/">Plan Your Visit</a></li>
+        <li><a href="/">Find a Park</a></li>
+        <li><a href="/">Things to Do</a></li>
+        <li><a href="/">Learn About</a></li>
+        <li><a href="/">Get Involved</a></li>
+        <li><a href="/">News</a></li>
+    </nav>
+    
+    <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+    
+    <div class="auth-container" 
+         hx-get="/api/auth-status" 
+         hx-trigger="load"
+         hx-swap="innerHTML">
+    </div>
+    
+    <nav class="mobile-nav" id="mobile-nav">
+        <ul>
+            <li><a href="/" onclick="closeMobileMenu()">Plan Your Visit</a></li>
+            <li><a href="/" onclick="closeMobileMenu()">Find a Park</a></li>
+            <li><a href="/" onclick="closeMobileMenu()">Things to Do</a></li>
+            <li><a href="/" onclick="closeMobileMenu()">Learn About</a></li>
+            <li><a href="/" onclick="closeMobileMenu()">Get Involved</a></li>
+            <li><a href="/" onclick="closeMobileMenu()">News</a></li>
+        </ul>
+    </nav>
+</header>

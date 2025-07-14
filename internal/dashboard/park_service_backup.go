@@ -8,12 +8,6 @@ import (
 	"github.com/ztkent/nps-dashboard/internal/database"
 )
 
-// GetFeaturedParks returns the first 12 parks for the featured section
-func (ps *ParkService) GetFeaturedParks() ([]database.CachedPark, error) {
-	// Use pagination to get exactly 12 featured parks
-	return ps.GetParksWithPagination(0, 12)
-}
-
 // ParkService handles park data with caching
 type ParkService struct {
 	npsApi nps.NpsApi
@@ -44,6 +38,35 @@ func (ps *ParkService) GetAllParks() ([]database.CachedPark, error) {
 	}
 
 	return ps.db.GetAllParks()
+}
+
+// GetFeaturedParks returns the first 12 parks for the featured section
+func (ps *ParkService) GetFeaturedParks() ([]database.CachedPark, error) {
+	// Use pagination to get exactly 12 featured parks
+	return ps.GetParksWithPagination(0, 12)
+}
+
+// GetParksWithPagination returns parks with pagination support
+func (ps *ParkService) GetParksWithPagination(offset, limit int) ([]database.CachedPark, error) {
+	// Check if we need to refresh data (older than 24 hours)
+	stale, err := ps.db.IsDataStale(24 * time.Hour)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check data staleness: %w", err)
+	}
+
+	if stale {
+		if err := ps.RefreshParksFromAPI(); err != nil {
+			// If API fails, try to return cached data anyway
+			fmt.Printf("Warning: Failed to refresh parks from API: %v\n", err)
+		}
+	}
+
+	return ps.db.GetParksWithPagination(offset, limit)
+}
+
+// GetTotalParksCount returns the total number of parks
+func (ps *ParkService) GetTotalParksCount() (int, error) {
+	return ps.db.GetTotalParksCount()
 }
 
 // SearchParks searches for parks by name
@@ -98,29 +121,6 @@ func (ps *ParkService) GetParkBySlug(slug string) (*database.CachedPark, error) 
 	}
 
 	return nil, fmt.Errorf("park not found: %s", slug)
-}
-
-// GetParksWithPagination returns parks with pagination support
-func (ps *ParkService) GetParksWithPagination(offset, limit int) ([]database.CachedPark, error) {
-	// Check if we need to refresh data (older than 24 hours)
-	stale, err := ps.db.IsDataStale(24 * time.Hour)
-	if err != nil {
-		return nil, fmt.Errorf("failed to check data staleness: %w", err)
-	}
-
-	if stale {
-		if err := ps.RefreshParksFromAPI(); err != nil {
-			// If API fails, try to return cached data anyway
-			fmt.Printf("Warning: Failed to refresh parks from API: %v\n", err)
-		}
-	}
-
-	return ps.db.GetParksWithPagination(offset, limit)
-}
-
-// GetTotalParksCount returns the total number of parks
-func (ps *ParkService) GetTotalParksCount() (int, error) {
-	return ps.db.GetTotalParksCount()
 }
 
 // RefreshParksFromAPI fetches fresh data from the NPS API and caches it

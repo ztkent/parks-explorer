@@ -11,17 +11,6 @@ function closeMobileMenu() {
 
 // Minimal JavaScript for enhanced UX
 document.addEventListener('DOMContentLoaded', () => {
-    // Smooth scrolling for CTA button
-    const ctaButton = document.querySelector('.cta-button');
-    if (ctaButton) {
-        ctaButton.addEventListener('click', (e) => {
-            e.preventDefault();
-            document.getElementById('featured').scrollIntoView({
-                behavior: 'smooth'
-            });
-        });
-    }
-    
     // Close mobile menu when clicking outside
     document.addEventListener('click', function(event) {
         const mobileNav = document.getElementById('mobile-nav');
@@ -71,33 +60,144 @@ document.addEventListener('htmx:afterSwap', (event) => {
             });
         }
     }
+});
+
+// Park detail page tab functionality
+document.addEventListener('DOMContentLoaded', () => {
+    // Initialize park detail tabs if on park detail page
+    initializeParkTabs();
+});
+
+function initializeParkTabs() {
+    const tabs = document.querySelectorAll('.park-nav-tab');
+    const tabContents = document.querySelectorAll('.park-tab-content');
     
-    // Check if park modal content was loaded
-    if (event.target.id === 'park-modal') {
-        openModal();
+    if (tabs.length === 0) return; // Not on park detail page
+    
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const targetTab = tab.dataset.tab;
+            
+            // Remove active class from all tabs and content
+            tabs.forEach(t => t.classList.remove('active'));
+            tabContents.forEach(content => content.classList.remove('active'));
+            
+            // Add active class to clicked tab and corresponding content
+            tab.classList.add('active');
+            const targetContent = document.getElementById(targetTab);
+            if (targetContent) {
+                targetContent.classList.add('active');
+            }
+            
+            // Update URL hash without page reload
+            if (history.pushState) {
+                const newUrl = window.location.pathname + '#' + targetTab;
+                history.pushState(null, '', newUrl);
+            }
+        });
+    });
+    
+    // Handle URL hash on page load
+    const hash = window.location.hash.substr(1);
+    if (hash) {
+        const targetTab = document.querySelector(`[data-tab="${hash}"]`);
+        const targetContent = document.getElementById(hash);
+        
+        if (targetTab && targetContent) {
+            // Remove active from all
+            tabs.forEach(t => t.classList.remove('active'));
+            tabContents.forEach(content => content.classList.remove('active'));
+            
+            // Activate target
+            targetTab.classList.add('active');
+            targetContent.classList.add('active');
+        }
+    }
+}
+
+// Infinite scrolling functionality
+let currentOffset = 12; // Start after featured parks (first 12)
+let isLoading = false;
+let hasMoreParks = true;
+const parksPerPage = 12;
+
+// Initialize infinite scrolling after HTMX loads featured parks
+document.addEventListener('htmx:afterSwap', (event) => {
+    if (event.target.id === 'parksGrid') {
+        // Show the infinite scroll trigger after featured parks load
+        const trigger = document.getElementById('infinite-scroll-trigger');
+        if (trigger && hasMoreParks) {
+            trigger.style.display = 'flex';
+            setupInfiniteScrollTrigger();
+        }
     }
 });
 
-// Modal functionality
-function openModal() {
-    const modal = document.getElementById('park-modal');
-    if (modal) {
-        modal.classList.add('show');
-        document.body.style.overflow = 'hidden'; // Prevent background scrolling
-    }
+// Setup the infinite scroll trigger
+function setupInfiniteScrollTrigger() {
+    const trigger = document.getElementById('infinite-scroll-trigger');
+    if (!trigger || !hasMoreParks) return;
+    
+    // Set up the HTMX attributes for the next load
+    trigger.setAttribute('hx-get', `/api/parks?offset=${currentOffset}&limit=${parksPerPage}`);
+    trigger.setAttribute('hx-trigger', 'intersect once');
+    trigger.setAttribute('hx-target', '#parksGrid');
+    trigger.setAttribute('hx-swap', 'beforeend');
+    
+    // Process the element so HTMX recognizes it
+    htmx.process(trigger);
 }
 
-function closeModal() {
-    const modal = document.getElementById('park-modal');
-    if (modal) {
-        modal.classList.remove('show');
-        document.body.style.overflow = ''; // Restore scrolling
+// Handle infinite scroll responses
+document.addEventListener('htmx:beforeRequest', (event) => {
+    if (event.target.id === 'infinite-scroll-trigger') {
+        isLoading = true;
     }
-}
+});
 
-// Close modal on Escape key
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-        closeModal();
+document.addEventListener('htmx:afterRequest', (event) => {
+    if (event.target.id === 'infinite-scroll-trigger') {
+        isLoading = false;
+        
+        const response = event.detail.xhr.responseText;
+        
+        // Check if we got park cards or if we're at the end
+        if (!response.includes('park-card') || response.includes('No more parks')) {
+            hasMoreParks = false;
+            event.target.style.display = 'none';
+        } else {
+            // Update offset and setup trigger for next load
+            currentOffset += parksPerPage;
+            setTimeout(() => {
+                setupInfiniteScrollTrigger();
+            }, 100); // Small delay to ensure DOM is updated
+        }
+    }
+});
+
+// Reset infinite scroll state when search is performed
+document.addEventListener('input', (event) => {
+    if (event.target.classList.contains('hero-search-input')) {
+        // Reset infinite scroll state when search starts
+        const trigger = document.getElementById('infinite-scroll-trigger');
+        if (trigger) {
+            trigger.style.display = 'none';
+        }
+    }
+});
+
+// Handle search completion and show infinite scroll trigger again when search is cleared
+document.addEventListener('htmx:afterSwap', (event) => {
+    if (event.target.id === 'parksGrid') {
+        const searchInput = document.querySelector('.hero-search-input');
+        const trigger = document.getElementById('infinite-scroll-trigger');
+        
+        // If search input is empty (showing featured parks), reset and show trigger
+        if (searchInput && searchInput.value.trim() === '' && trigger) {
+            currentOffset = 12;
+            hasMoreParks = true;
+            trigger.style.display = 'flex';
+            setupInfiniteScrollTrigger();
+        }
     }
 });

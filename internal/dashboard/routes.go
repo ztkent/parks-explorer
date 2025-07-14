@@ -3,14 +3,27 @@ package dashboard
 import (
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 )
+
+// ParkPageData represents the data structure for the park page template
+type ParkPageData struct {
+	Name        string
+	ImageURL    string
+	Description string
+	States      string
+	Designation string
+	URL         string
+}
 
 // HomeHandler serves the main HTML page
 func (dm *Dashboard) HomeHandler() http.HandlerFunc {
@@ -206,18 +219,17 @@ func (dm *Dashboard) FeaturedParksHandler(w http.ResponseWriter, r *http.Request
 		}
 
 		html.WriteString(fmt.Sprintf(`
-			<div class="park-card" data-park="%s" 
-				 hx-get="/api/parks/%s/details" 
-				 hx-target="#park-modal" 
-				 hx-swap="innerHTML">
-				%s
-				<div class="park-content">
-					<h3 class="park-title">%s</h3>
-					<p class="park-description">
-						Explore the natural beauty and unique features of %s.
-					</p>
-					<div class="park-location">United States</div>
-				</div>
+			<div class="park-card" data-park="%s">
+				<a href="/parks/%s" class="park-card-link">
+					%s
+					<div class="park-content">
+						<h3 class="park-title">%s</h3>
+						<p class="park-description">
+							Explore the natural beauty and unique features of %s.
+						</p>
+						<div class="park-location">United States</div>
+					</div>
+				</a>
 			</div>
 		`, park.Slug, park.Slug, imageHTML, park.Name, park.Name))
 	}
@@ -268,18 +280,17 @@ func (dm *Dashboard) ParkSearchHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		html.WriteString(fmt.Sprintf(`
-			<div class="park-card" data-park="%s"
-				 hx-get="/api/parks/%s/details" 
-				 hx-target="#park-modal" 
-				 hx-swap="innerHTML">
-				%s
-				<div class="park-content">
-					<h3 class="park-title">%s</h3>
-					<p class="park-description">
-						Explore the natural beauty and unique features of %s.
-					</p>
-					<div class="park-location">United States</div>
-				</div>
+			<div class="park-card" data-park="%s">
+				<a href="/parks/%s" class="park-card-link">
+					%s
+					<div class="park-content">
+						<h3 class="park-title">%s</h3>
+						<p class="park-description">
+							Explore the natural beauty and unique features of %s.
+						</p>
+						<div class="park-location">United States</div>
+					</div>
+				</a>
 			</div>
 		`, park.Slug, park.Slug, imageHTML, park.Name, park.Name))
 	}
@@ -349,6 +360,160 @@ func (dm *Dashboard) ParkDetailsHandler(w http.ResponseWriter, r *http.Request) 
 	`, park.Name, imageHTML, description, park.States, park.Designation, park.URL)
 
 	w.Write([]byte(html))
+}
+
+// ParkPageHandler returns a full HTML page for a specific park
+func (dm *Dashboard) ParkPageHandler(w http.ResponseWriter, r *http.Request) {
+	slug := chi.URLParam(r, "slug")
+
+	// Get park from cache
+	park, err := dm.parkService.GetParkBySlug(slug)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html")
+
+	// Get the first available image
+	imageUrl := ""
+	if len(park.Images) > 0 {
+		imageUrl = park.Images[0].URL
+	}
+
+	description := park.Description
+	if description == "" {
+		description = fmt.Sprintf("Explore a variety of activities available at %s, from hiking and rock climbing to guided tours and stargazing.", park.Name)
+	}
+
+	// Create template data
+	data := ParkPageData{
+		Name:        park.Name,
+		ImageURL:    imageUrl,
+		Description: description,
+		States:      park.States,
+		Designation: park.Designation,
+		URL:         park.URL,
+	}
+
+	// Parse and execute the template from file
+	tmpl, err := template.ParseFiles("web/templates/park.html")
+	if err != nil {
+		http.Error(w, "Failed to load park page template", http.StatusInternalServerError)
+		return
+	}
+
+	err = tmpl.Execute(w, data)
+	if err != nil {
+		http.Error(w, "Failed to render park page", http.StatusInternalServerError)
+		return
+	}
+}
+
+// TemplateHandler serves HTML template fragments
+func (dm *Dashboard) TemplateHandler(w http.ResponseWriter, r *http.Request) {
+	templateName := chi.URLParam(r, "template")
+
+	w.Header().Set("Content-Type", "text/html")
+
+	switch templateName {
+	case "header":
+		tmpl, err := template.ParseFiles("web/templates/header.html")
+		if err != nil {
+			http.Error(w, "Failed to load header template", http.StatusInternalServerError)
+			return
+		}
+		err = tmpl.Execute(w, nil)
+		if err != nil {
+			http.Error(w, "Failed to render header template", http.StatusInternalServerError)
+			return
+		}
+	case "footer":
+		tmpl, err := template.ParseFiles("web/templates/footer.html")
+		if err != nil {
+			http.Error(w, "Failed to load footer template", http.StatusInternalServerError)
+			return
+		}
+		err = tmpl.Execute(w, nil)
+		if err != nil {
+			http.Error(w, "Failed to render footer template", http.StatusInternalServerError)
+			return
+		}
+	default:
+		http.NotFound(w, r)
+	}
+}
+
+// ParksHandler returns HTML for parks with pagination support
+func (dm *Dashboard) ParksHandler(w http.ResponseWriter, r *http.Request) {
+	// Parse query parameters
+	offsetStr := r.URL.Query().Get("offset")
+	limitStr := r.URL.Query().Get("limit")
+
+	offset := 0
+	limit := 12 // Default page size
+
+	if offsetStr != "" {
+		if parsedOffset, err := strconv.Atoi(offsetStr); err == nil && parsedOffset >= 0 {
+			offset = parsedOffset
+		}
+	}
+
+	if limitStr != "" {
+		if parsedLimit, err := strconv.Atoi(limitStr); err == nil && parsedLimit > 0 && parsedLimit <= 50 {
+			limit = parsedLimit
+		}
+	}
+
+	parks, err := dm.parkService.GetParksWithPagination(offset, limit)
+	if err != nil {
+		w.Header().Set("Content-Type", "text/html")
+		w.Write([]byte(`<div class="loading">Error loading parks</div>`))
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html")
+
+	if len(parks) == 0 {
+		w.Write([]byte(`<div class="loading">No more parks available</div>`))
+		return
+	}
+
+	var html strings.Builder
+	for _, park := range parks {
+		// Get the first available image or use a placeholder
+		imageUrl := ""
+		imageAlt := park.Name
+		if len(park.Images) > 0 {
+			imageUrl = park.Images[0].URL
+			if park.Images[0].AltText != "" {
+				imageAlt = park.Images[0].AltText
+			}
+		}
+
+		// Build the image HTML
+		imageHTML := `<div class="park-image"></div>`
+		if imageUrl != "" {
+			imageHTML = fmt.Sprintf(`<div class="park-image" style="background-image: url('%s');" title="%s"></div>`, imageUrl, imageAlt)
+		}
+
+		html.WriteString(fmt.Sprintf(`
+			<div class="park-card" data-park="%s">
+				<a href="/parks/%s" class="park-card-link">
+					%s
+					<div class="park-content">
+						<h3 class="park-title">%s</h3>
+						<p class="park-description">
+							Explore the natural beauty and unique features of %s.
+						</p>
+						<div class="park-location">United States</div>
+					</div>
+				</a>
+			</div>
+		`, park.Slug, park.Slug, imageHTML, park.Name, park.Name))
+	}
+
+	w.Write([]byte(html.String()))
 }
 
 // Helper function to create slugs

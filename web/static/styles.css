@@ -134,43 +134,6 @@ body {
    Search
    ========================================================================== */
 
-.search-container {
-    flex: 0 0 auto;
-    max-width: 300px;
-    width: 300px;
-    position: relative;
-    margin-left: auto;
-    margin-right: 0.5rem;
-}
-
-.search-input {
-    width: 100%;
-    padding: 0.75rem 1rem 0.75rem 2.5rem;
-    border: 1px solid #d1d5db;
-    border-radius: 25px;
-    font-size: 0.95rem;
-    outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
-    background: #f9fafb;
-}
-
-.search-input:focus {
-    border-color: #2d5016;
-    box-shadow: 0 0 0 3px rgba(45, 80, 22, 0.1);
-    background: white;
-}
-
-.search-container::before {
-    content: "🔍";
-    position: absolute;
-    left: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #9ca3af;
-    font-size: 1rem;
-    pointer-events: none;
-}
-
 /* ==========================================================================
    Authentication
    ========================================================================== */
@@ -296,28 +259,6 @@ body {
     position: relative;
 }
 
-.tooltip::after {
-    content: attr(data-tooltip);
-    position: absolute;
-    bottom: -35px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.8);
-    color: white;
-    padding: 6px 8px;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    white-space: nowrap;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s;
-    z-index: 1000;
-}
-
-.tooltip:hover::after {
-    opacity: 1;
-}
-
 /* ==========================================================================
    Hero Section
    ========================================================================== */
@@ -374,6 +315,56 @@ body {
     box-shadow: 0 6px 20px rgba(22, 163, 74, 0.4);
 }
 
+/* Hero Search Section */
+.hero-search-container {
+    margin: 2rem 0;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+.hero-search-wrapper {
+    position: relative;
+    max-width: 700px;
+    width: 100%;
+}
+
+.hero-search-input {
+    width: 100%;
+    padding: 1.2rem 1.5rem 1.2rem 3.5rem;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50px;
+    font-size: 1.2rem;
+    outline: none;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    color: #374151;
+}
+
+.hero-search-input:focus {
+    border-color: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.2), 0 8px 32px rgba(0, 0, 0, 0.15);
+    background: rgba(255, 255, 255, 1);
+}
+
+.hero-search-input::placeholder {
+    color: #6b7280;
+}
+
+.hero-search-icon {
+    position: absolute;
+    left: 1.2rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 24px;
+    fill: #6b7280;
+    pointer-events: none;
+    z-index: 10;
+}
+
 /* ==========================================================================
    Main Content
    ========================================================================== */
@@ -398,7 +389,7 @@ body {
 
 .parks-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+    grid-template-columns: repeat(4, 1fr);
     gap: 2rem;
     margin-bottom: 4rem;
 }
@@ -476,6 +467,20 @@ body {
     font-size: 0.9rem;
 }
 
+/* Park Card Links */
+.park-card-link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    width: 100%;
+    height: 100%;
+}
+
+.park-card-link:hover {
+    text-decoration: none;
+    color: inherit;
+}
+
 /* ==========================================================================
    Footer
    ========================================================================== */
@@ -528,64 +533,42 @@ body {
 }
 
 /* ==========================================================================
-   Modal
+   Infinite Scroll
    ========================================================================== */
 
-.modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 1000;
-    align-items: center;
-    justify-content: center;
-}
-
-.modal.show {
+.infinite-scroll-trigger {
     display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    margin-top: 2rem;
 }
 
-.modal-backdrop {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    cursor: pointer;
+.infinite-scroll-trigger .loading {
+    padding: 1rem 2rem;
+    margin: 0;
 }
 
-.modal-content {
-    background: white;
-    border-radius: 12px;
-    max-width: 90vw;
-    max-height: 90vh;
-    overflow-y: auto;
+/* Loading indicator animation */
+.loading {
     position: relative;
-    z-index: 1001;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    animation: modalSlideIn 0.3s ease-out;
 }
 
-@keyframes modalSlideIn {
-    from {
-        opacity: 0;
-        transform: scale(0.9) translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1) translateY(0);
-    }
+.loading::after {
+    content: '';
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    margin-left: 0.5em;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #2d5016;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
 }
 
-/* Mobile modal adjustments */
-@media (max-width: 768px) {
-    .modal-content {
-        max-width: 95vw;
-        margin: 1rem;
-    }
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 /* Mobile Styles */
@@ -602,11 +585,6 @@ body {
 
     /* Hide desktop navigation */
     .nav-links {
-        display: none;
-    }
-
-    /* Hide search bar on mobile */
-    .search-container {
         display: none;
     }
 
@@ -637,13 +615,30 @@ body {
         font-size: 1.1rem;
     }
 
+    /* Hero search mobile adjustments */
+    .hero-search-container {
+        margin: 1.5rem 0;
+        padding: 0 1rem;
+    }
+
+    .hero-search-input {
+        padding: 1rem 1.2rem 1rem 3rem;
+        font-size: 1.1rem;
+    }
+
+    .hero-search-icon {
+        left: 1rem;
+        width: 20px;
+        height: 20px;
+    }
+
     /* Content adjustments */
     .section-title {
         font-size: 2rem;
         text-align: center;
     }
 
-    /* Single column grid */
+    /* Single column grid on mobile, 2 columns on tablet, 4 on desktop */
     .parks-grid {
         grid-template-columns: 1fr;
     }
@@ -657,13 +652,286 @@ body {
 
 /* Tablet and larger styles */
 @media (min-width: 851px) {
-    /* Ensure search bar is visible on desktop */
-    .search-container {
-        display: block;
-    }
-    
     /* Ensure mobile menu is hidden on desktop */
     .mobile-menu-btn {
         display: none;
+    }
+}
+
+/* Tablet styles */
+@media (min-width: 768px) and (max-width: 1024px) {
+    .parks-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* ==========================================================================
+   Park Detail Page
+   ========================================================================== */
+
+.park-detail-page {
+    min-height: 100vh;
+}
+
+/* Park Hero Section */
+.park-hero {
+    height: 400px;
+    background-size: cover;
+    background-position: center;
+    background-color: #2d5016;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    color: white;
+}
+
+.park-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1;
+}
+
+.park-hero-content {
+    text-align: center;
+    position: relative;
+    z-index: 2;
+    max-width: 800px;
+    padding: 0 2rem;
+}
+
+.park-hero-title {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+.park-hero-description {
+    font-size: 1.2rem;
+    opacity: 0.95;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    line-height: 1.6;
+}
+
+/* Park Navigation Tabs */
+.park-nav {
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.park-nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+    padding: 0 2rem;
+}
+
+.park-nav-tab {
+    background: none;
+    border: none;
+    padding: 1rem 1.5rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #6b7280;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+    white-space: nowrap;
+    min-width: fit-content;
+}
+
+.park-nav-tab:hover {
+    color: #2d5016;
+    background: #f9fafb;
+}
+
+.park-nav-tab.active {
+    color: #2d5016;
+    border-bottom-color: #f59e0b;
+}
+
+/* Tab Content */
+.park-content-container {
+    background: #f8f9fa;
+    min-height: 60vh;
+}
+
+.park-tab-content {
+    display: none;
+    padding: 3rem 0;
+}
+
+.park-tab-content.active {
+    display: block;
+}
+
+/* Popular Activities Section */
+.popular-activities h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 3rem;
+    color: #111827;
+}
+
+.activities-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 2rem;
+    margin-bottom: 4rem;
+}
+
+.activity-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    transition: transform 0.3s, box-shadow 0.3s;
+    cursor: pointer;
+    border: 1px solid #f3f4f6;
+}
+
+.activity-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+.activity-image {
+    width: 100%;
+    height: 200px;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}
+
+/* Activity Image Backgrounds */
+.activity-image.hiking {
+    background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), 
+                url('https://images.unsplash.com/photo-1551632811-561732d1e306?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');
+}
+
+.activity-image.climbing {
+    background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), 
+                url('https://images.unsplash.com/photo-1522163182402-834f871fd851?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');
+}
+
+.activity-image.water {
+    background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), 
+                url('https://images.unsplash.com/photo-1544551763-46a013bb70d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');
+}
+
+.activity-image.tours {
+    background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), 
+                url('https://images.unsplash.com/photo-1539635278303-d4002c07eae3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');
+}
+
+.activity-image.stargazing {
+    background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), 
+                url('https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');
+}
+
+.activity-image.wildlife {
+    background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), 
+                url('https://images.unsplash.com/photo-1571068316344-75bc76f77890?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');
+}
+
+.activity-content {
+    padding: 1.5rem;
+}
+
+.activity-content h3 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #111827;
+}
+
+.activity-content p {
+    color: #6b7280;
+    line-height: 1.6;
+    font-size: 0.95rem;
+}
+
+/* Park Info Grid */
+.park-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.park-info-card {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    border: 1px solid #f3f4f6;
+}
+
+.park-info-card h3 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #111827;
+}
+
+.park-info-card p {
+    color: #6b7280;
+    margin-bottom: 0.5rem;
+}
+
+.park-official-link {
+    background: #16a34a;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    display: inline-block;
+    transition: background 0.2s;
+}
+
+.park-official-link:hover {
+    background: #15803d;
+}
+
+/* Mobile Styles for Park Detail Page */
+@media (max-width: 768px) {
+    .park-hero-title {
+        font-size: 2rem;
+    }
+    
+    .park-hero-description {
+        font-size: 1rem;
+    }
+    
+    .park-nav-container {
+        padding: 0 1rem;
+    }
+    
+    .park-nav-tab {
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+    }
+    
+    .activities-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .popular-activities h2 {
+        font-size: 2rem;
+        text-align: center;
+    }
+    
+    .container {
+        padding: 2rem 1rem;
     }
 }

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Name}} - National Parks Explorer</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <script src="https://unpkg.com/htmx.org@1.9.8"></script>
+</head>
+<body>
+    <!-- Header loaded via HTMX -->
+    <div id="header-container"
+         hx-get="/api/templates/header"
+         hx-trigger="load"
+         hx-swap="innerHTML">
+    </div>
+
+    <main class="park-detail-page">
+        <!-- Hero Section -->
+        <section class="park-hero" style="background-image: url('{{.ImageURL}}');">
+            <div class="park-hero-content">
+                <h1 class="park-hero-title">Activities at {{.Name}}</h1>
+                <p class="park-hero-description">{{.Description}}</p>
+            </div>
+        </section>
+
+        <!-- Navigation Tabs -->
+        <nav class="park-nav">
+            <div class="park-nav-container">
+                <button class="park-nav-tab active" data-tab="overview">Overview</button>
+                <button class="park-nav-tab" data-tab="things-to-do">Things To Do</button>
+                <button class="park-nav-tab" data-tab="photos-videos">Photos & Videos</button>
+                <button class="park-nav-tab" data-tab="news">News</button>
+                <button class="park-nav-tab" data-tab="park-details">Park Details</button>
+            </div>
+        </nav>
+
+        <!-- Tab Content -->
+        <div class="park-content-container">
+            <!-- Overview Tab -->
+            <div class="park-tab-content active" id="overview">
+                <div class="container">
+                    <section class="popular-activities">
+                        <h2>Popular Activities</h2>
+                        <div class="activities-grid">
+                            <div class="activity-card">
+                                <div class="activity-image hiking"></div>
+                                <div class="activity-content">
+                                    <h3>Hiking Trails</h3>
+                                    <p>Explore scenic trails with varying difficulty levels.</p>
+                                </div>
+                            </div>
+                            <div class="activity-card">
+                                <div class="activity-image climbing"></div>
+                                <div class="activity-content">
+                                    <h3>Rock Climbing</h3>
+                                    <p>Challenge yourself with world-class rock climbing routes.</p>
+                                </div>
+                            </div>
+                            <div class="activity-card">
+                                <div class="activity-image water"></div>
+                                <div class="activity-content">
+                                    <h3>Water Activities</h3>
+                                    <p>Enjoy swimming, kayaking, and rafting in the park's waters.</p>
+                                </div>
+                            </div>
+                            <div class="activity-card">
+                                <div class="activity-image tours"></div>
+                                <div class="activity-content">
+                                    <h3>Guided Tours</h3>
+                                    <p>Join ranger-led tours to learn about the park's history and ecology.</p>
+                                </div>
+                            </div>
+                            <div class="activity-card">
+                                <div class="activity-image stargazing"></div>
+                                <div class="activity-content">
+                                    <h3>Stargazing</h3>
+                                    <p>Experience the beauty of the night sky with minimal light pollution.</p>
+                                </div>
+                            </div>
+                            <div class="activity-card">
+                                <div class="activity-image wildlife"></div>
+                                <div class="activity-content">
+                                    <h3>Wildlife Viewing</h3>
+                                    <p>Observe diverse wildlife in their natural habitats.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <!-- Things To Do Tab -->
+            <div class="park-tab-content" id="things-to-do">
+                <div class="container">
+                    <h2>Things To Do</h2>
+                    <p class="loading">Content coming soon...</p>
+                </div>
+            </div>
+
+            <!-- Photos & Videos Tab -->
+            <div class="park-tab-content" id="photos-videos">
+                <div class="container">
+                    <h2>Photos & Videos</h2>
+                    <p class="loading">Content coming soon...</p>
+                </div>
+            </div>
+
+            <!-- News Tab -->
+            <div class="park-tab-content" id="news">
+                <div class="container">
+                    <h2>News</h2>
+                    <p class="loading">Content coming soon...</p>
+                </div>
+            </div>
+
+            <!-- Park Details Tab -->
+            <div class="park-tab-content" id="park-details">
+                <div class="container">
+                    <h2>Park Details</h2>
+                    <div class="park-info-grid">
+                        <div class="park-info-card">
+                            <h3>Location</h3>
+                            <p><strong>State(s):</strong> {{.States}}</p>
+                            <p><strong>Designation:</strong> {{.Designation}}</p>
+                        </div>
+                        <div class="park-info-card">
+                            <h3>Visit Information</h3>
+                            <a href="{{.URL}}" target="_blank" class="park-official-link">Visit Official Site</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer loaded via HTMX -->
+    <div id="footer-container"
+         hx-get="/api/templates/footer"
+         hx-trigger="load"
+         hx-swap="innerHTML">
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>

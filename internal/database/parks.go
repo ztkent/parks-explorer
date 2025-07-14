@@ -264,6 +264,11 @@ func (db *DB) GetParkImages(parkID int) ([]ParkImage, error) {
 
 // GetAllParks retrieves all cached parks
 func (db *DB) GetAllParks() ([]CachedPark, error) {
+	return db.GetParksWithPagination(0, -1) // -1 means no limit for backward compatibility
+}
+
+// GetParksWithPagination retrieves cached parks with pagination support
+func (db *DB) GetParksWithPagination(offset, limit int) ([]CachedPark, error) {
 	query := `
 		SELECT id, park_code, name, full_name, slug, states, designation, description,
 			   weather_info, directions_info, url, directions_url, latitude, longitude,
@@ -271,7 +276,13 @@ func (db *DB) GetAllParks() ([]CachedPark, error) {
 		FROM parks ORDER BY name
 	`
 
-	rows, err := db.Query(query)
+	var args []interface{}
+	if limit > 0 {
+		query += " LIMIT ? OFFSET ?"
+		args = append(args, limit, offset)
+	}
+
+	rows, err := db.Query(query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query parks: %w", err)
 	}
@@ -302,6 +313,16 @@ func (db *DB) GetAllParks() ([]CachedPark, error) {
 	}
 
 	return parks, nil
+}
+
+// GetTotalParksCount returns the total number of parks in the database
+func (db *DB) GetTotalParksCount() (int, error) {
+	var count int
+	err := db.QueryRow("SELECT COUNT(*) FROM parks").Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("failed to count parks: %w", err)
+	}
+	return count, nil
 }
 
 // SearchParks searches cached parks by name

@@ -3,67 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>National Parks Dashboard</title>
+    <title>National Parks Explorer</title>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     <link rel="stylesheet" href="/static/styles.css">
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
 </head>
 <body>
-    <!-- Header -->
-    <header class="header">
-        <a href="/" class="logo">National Parks</a>
-        
-        <nav>
-            <ul class="nav-links">
-                <li><a href="#parks">Parks</a></li>
-                <li><a href="#about">About</a></li>
-                <li><a href="#contact">Contact</a></li>
-            </ul>
-        </nav>
-        
-        <div class="search-container">
-            <input 
-                type="text" 
-                class="search-input" 
-                placeholder="Search national parks..."
-                hx-get="/api/parks/search"
-                hx-target="#parksGrid"
-                hx-trigger="keyup changed delay:300ms"
-                name="q"
-            >
-        </div>
-        
-        <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
-        
-        <div class="auth-container" 
-             hx-get="/api/auth-status" 
-             hx-trigger="load"
-             hx-swap="innerHTML">
-            <!-- Auth buttons will be populated by HTMX -->
-        </div>
-        
-        <!-- Mobile Navigation -->
-        <nav class="mobile-nav" id="mobile-nav">
-            <ul>
-                <li><a href="#parks" onclick="closeMobileMenu()">Parks</a></li>
-                <li><a href="#about" onclick="closeMobileMenu()">About</a></li>
-                <li><a href="#contact" onclick="closeMobileMenu()">Contact</a></li>
-            </ul>
-        </nav>
-    </header>
+    <!-- Header loaded via HTMX -->
+    <div id="header-container"
+         hx-get="/api/templates/header"
+         hx-trigger="load"
+         hx-swap="innerHTML">
+    </div>
 
     <!-- Hero Section -->
     <section class="hero">
-        <h1>Explore America's Natural Wonders</h1>
-        <p>Discover the beauty and history of our national parks. Plan your adventure today.</p>
-        <a href="#featured" class="cta-button">Find a Park</a>
+        <h1>Explore America</h1>
+        <p>Discover the beauty and history of our national land. Participate in our shared heritage, and plan your visit.</p>
+        
+        <!-- Search Section in Hero -->
+        <div class="hero-search-container">
+            <div class="hero-search-wrapper">
+                <svg class="hero-search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M3.75 10.875a7.125 7.125 0 1 1 14.25 0 7.125 7.125 0 0 1-14.25 0Zm7.125-8.625a8.625 8.625 0 1 0 5.546 15.231l4.049 4.05a.75.75 0 0 0 1.06-1.061l-4.049-4.05a8.625 8.625 0 0 0-6.606-14.17Z"></path>
+                </svg>
+                <input 
+                    type="text" 
+                    class="hero-search-input" 
+                    placeholder="Search national parks..."
+                    hx-get="/api/parks/search"
+                    hx-target="#parksGrid"
+                    hx-trigger="keyup changed delay:300ms"
+                    name="q"
+                >
+            </div>
+        </div>
+        
+        <a href="#featured" class="cta-button">Plan Your Trip</a>
     </section>
 
     <!-- Main Content -->
     <main class="container">
         <section id="featured">
-            <h2 class="section-title">Featured Parks</h2>
-            
             <div id="parksGrid" 
                  class="parks-grid"
                  hx-get="/api/parks/featured"
@@ -72,23 +53,25 @@
                 <!-- Loading state -->
                 <div class="loading">Loading parks...</div>
             </div>
+            
+            <!-- Infinite scroll trigger -->
+            <div id="infinite-scroll-trigger" 
+                 class="infinite-scroll-trigger"
+                 hx-get="/api/parks?offset=12&limit=12"
+                 hx-trigger="intersect once"
+                 hx-target="#parksGrid"
+                 hx-swap="beforeend"
+                 style="display: none;">
+                <div class="loading">Loading more parks...</div>
+            </div>
         </section>
     </main>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="footer-links">
-            <a href="#contact">Contact</a>
-            <a href="#privacy">Privacy Policy</a>
-            <a href="#terms">Terms of Service</a>
-        </div>
-        <p>&copy; 2025 National Parks. All rights reserved.</p>
-    </footer>
-
-    <!-- Modal -->
-    <div id="park-modal" class="modal">
-        <div class="modal-backdrop" onclick="closeModal()"></div>
-        <!-- Modal content will be loaded here by HTMX -->
+    <!-- Footer loaded via HTMX -->
+    <div id="footer-container"
+         hx-get="/api/templates/footer"
+         hx-trigger="load"
+         hx-swap="innerHTML">
     </div>
 
     <script src="/static/script.js"></script>

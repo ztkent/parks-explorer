@@ -61,6 +61,7 @@ func DefineRoutes(r *chi.Mux, dashManager *dashboard.Dashboard, cache *replay.Ca
 
 	// Static routes
 	r.Get("/", dashManager.HomeHandler())
+	r.Get("/parks/{slug}", cache.MiddlewareFunc(dashManager.ParkPageHandler))
 	r.Get("/static/*", dashManager.StaticFileHandler())
 
 	// API routes
@@ -74,9 +75,13 @@ func DefineRoutes(r *chi.Mux, dashManager *dashboard.Dashboard, cache *replay.Ca
 
 		// HTMX routes
 		r.Get("/auth-status", dashManager.AuthStatusHandler)
+		r.Get("/parks", cache.MiddlewareFunc(dashManager.ParksHandler))
 		r.Get("/parks/featured", cache.MiddlewareFunc(dashManager.FeaturedParksHandler))
 		r.Get("/parks/search", cache.MiddlewareFunc(dashManager.ParkSearchHandler))
 		r.Get("/parks/{slug}/details", cache.MiddlewareFunc(dashManager.ParkDetailsHandler))
+
+		// Template routes
+		r.Get("/templates/{template}", dashManager.TemplateHandler)
 	})
 
 	// Legacy API routes (keep for backward compatibility)
