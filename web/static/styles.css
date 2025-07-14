@@ -571,6 +571,73 @@ body {
     100% { transform: rotate(360deg); }
 }
 
+/* ==========================================================================
+   No Results Styling
+   ========================================================================== */
+
+.no-results {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 4rem 2rem;
+    min-height: 300px;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    border: 1px solid #f3f4f6;
+    margin: 2rem 0;
+    grid-column: 1 / -1; /* Span all grid columns */
+}
+
+.no-results-icon {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+    opacity: 0.6;
+}
+
+.no-results-title {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 1rem;
+}
+
+.no-results-message {
+    font-size: 1.1rem;
+    color: #6b7280;
+    line-height: 1.6;
+    max-width: 500px;
+}
+
+.no-results-message strong {
+    color: #2d5016;
+    font-weight: 600;
+}
+
+/* Mobile styles for no results */
+@media (max-width: 768px) {
+    .no-results {
+        padding: 3rem 1.5rem;
+        min-height: 250px;
+        margin: 1rem 0;
+    }
+    
+    .no-results-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+    
+    .no-results-title {
+        font-size: 1.5rem;
+    }
+    
+    .no-results-message {
+        font-size: 1rem;
+    }
+}
+
 /* Mobile Styles */
 @media (max-width: 850px) {
     /* Header adjustments */

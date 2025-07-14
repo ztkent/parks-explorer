@@ -183,6 +183,9 @@ document.addEventListener('input', (event) => {
         if (trigger) {
             trigger.style.display = 'none';
         }
+        isLoading = false;
+        hasMoreParks = true;
+        currentOffset = 12;
     }
 });
 
@@ -192,12 +195,15 @@ document.addEventListener('htmx:afterSwap', (event) => {
         const searchInput = document.querySelector('.hero-search-input');
         const trigger = document.getElementById('infinite-scroll-trigger');
         
-        // If search input is empty (showing featured parks), reset and show trigger
+        // If search input is empty or has whitespace only (showing featured parks), reset and show trigger
         if (searchInput && searchInput.value.trim() === '' && trigger) {
             currentOffset = 12;
             hasMoreParks = true;
             trigger.style.display = 'flex';
             setupInfiniteScrollTrigger();
+        } else if (searchInput && searchInput.value.trim() !== '' && trigger) {
+            // If there's a search query, hide the infinite scroll trigger
+            trigger.style.display = 'none';
         }
     }
 });

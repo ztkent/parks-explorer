@@ -3,6 +3,7 @@ package dashboard
 import (
 	"encoding/json"
 	"fmt"
+	"html"
 	"html/template"
 	"io"
 	"net/http"
@@ -252,12 +253,16 @@ func (dm *Dashboard) ParkSearchHandler(w http.ResponseWriter, r *http.Request) {
 	// Search parks using the park service
 	parks, err := dm.parkService.SearchParks(query)
 	if err != nil {
-		w.Write([]byte(`<div class="loading">Error searching parks</div>`))
+		w.Write([]byte(`<div >Error searching parks</div>`))
 		return
 	}
 
 	if len(parks) == 0 {
-		w.Write([]byte(`<div class="loading">No parks found matching your search</div>`))
+		w.Write([]byte(`<div class="no-results">
+			<div class="no-results-icon">🏔️</div>
+			<h3 class="no-results-title">No parks found</h3>
+			<p class="no-results-message">We couldn't find any national parks matching "<strong>` + html.EscapeString(query) + `</strong>". Try adjusting your search terms.</p>
+		</div>`))
 		return
 	}
 
