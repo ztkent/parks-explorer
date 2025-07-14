@@ -169,6 +169,320 @@ func (ps *ParkService) RefreshParksFromAPI() error {
 	return nil
 }
 
+// GetParkThingsToDo fetches things to do for a specific park
+func (ps *ParkService) GetParkThingsToDo(parkCode string) (*nps.ThingsToDoResponse, error) {
+	return ps.npsApi.GetThingsToDo("", parkCode, "", "", 20, 0, nil)
+}
+
+// GetParkTours fetches tours for a specific park
+func (ps *ParkService) GetParkTours(parkCode string) (*nps.TourResponse, error) {
+	return ps.npsApi.GetTours(nil, []string{parkCode}, nil, "", 20, 0, nil)
+}
+
+// GetParkActivities fetches activities available for a specific park
+func (ps *ParkService) GetParkActivities(parkCode string) (*nps.ActivityResponse, error) {
+	return ps.npsApi.GetActivities("", "", 20, 0, "")
+}
+
+// GetParkMedia fetches multimedia content for a specific park
+func (ps *ParkService) GetParkMedia(parkCode string) (map[string]interface{}, error) {
+	// Fetch galleries
+	galleries, err := ps.npsApi.GetMultimediaGalleries([]string{parkCode}, nil, "", 0, 10)
+	if err != nil {
+		galleries = nil // Continue even if galleries fail
+	}
+
+	// Fetch videos
+	videos, err := ps.npsApi.GetMultimediaVideos([]string{parkCode}, nil, "", 0, 10)
+	if err != nil {
+		videos = nil // Continue even if videos fail
+	}
+
+	// Fetch webcams
+	webcams, err := ps.npsApi.GetWebcams("", []string{parkCode}, nil, "", 10, 0)
+	if err != nil {
+		webcams = nil // Continue even if webcams fail
+	}
+
+	return map[string]interface{}{
+		"galleries": galleries,
+		"videos":    videos,
+		"webcams":   webcams,
+	}, nil
+}
+
+// GetParkNews fetches news and alerts for a specific park
+func (ps *ParkService) GetParkNews(parkCode string) (map[string]interface{}, error) {
+	// Fetch articles
+	articles, err := ps.npsApi.GetArticles([]string{parkCode}, nil, "", 10, 0)
+	if err != nil {
+		articles = nil // Continue even if articles fail
+	}
+
+	// Fetch alerts
+	alerts, err := ps.npsApi.GetAlerts([]string{parkCode}, nil, "", 10, 0)
+	if err != nil {
+		alerts = nil // Continue even if alerts fail
+	}
+
+	// Fetch events
+	events, err := ps.npsApi.GetEvents([]string{parkCode}, nil, nil, nil, nil, nil, nil, nil, "", "", nil, "", "", 10, 0, false)
+	if err != nil {
+		events = nil // Continue even if events fail
+	}
+
+	return map[string]interface{}{
+		"articles": articles,
+		"alerts":   alerts,
+		"events":   events,
+	}, nil
+}
+
+// GetParkEnhancedDetails fetches comprehensive park details
+func (ps *ParkService) GetParkEnhancedDetails(parkCode string) (map[string]interface{}, error) {
+	// Get basic park info
+	parks, err := ps.npsApi.GetParks([]string{parkCode}, nil, 0, 1, "", nil)
+	if err != nil || len(parks.Data) == 0 {
+		return nil, fmt.Errorf("park not found")
+	}
+	park := parks.Data[0]
+
+	// Fetch visitor centers
+	visitorCenters, err := ps.npsApi.GetVisitorCenters([]string{parkCode}, nil, "", 10, 0, nil)
+	if err != nil {
+		visitorCenters = nil
+	}
+
+	// Fetch campgrounds
+	campgrounds, err := ps.npsApi.GetCampgrounds([]string{parkCode}, nil, "", 10, 0, nil)
+	if err != nil {
+		campgrounds = nil
+	}
+
+	// Fetch fees and passes
+	fees, err := ps.npsApi.GetFeesPasses([]string{parkCode}, nil, "", 0, 10, nil)
+	if err != nil {
+		fees = nil
+	}
+
+	// Fetch parking lots
+	parkingLots, err := ps.npsApi.GetParkinglots([]string{parkCode}, nil, "", 0, 10)
+	if err != nil {
+		parkingLots = nil
+	}
+
+	return map[string]interface{}{
+		"park":           park,
+		"visitorCenters": visitorCenters,
+		"campgrounds":    campgrounds,
+		"fees":           fees,
+		"parkingLots":    parkingLots,
+	}, nil
+}
+
+// GetParkAmenities fetches amenities for a specific park
+func (ps *ParkService) GetParkAmenities(parkCode string) (*nps.AmenityResponse, error) {
+	return ps.npsApi.GetAmenities([]string{parkCode}, "", 20, 0)
+}
+
+// GetParkNewsReleases fetches news releases for a specific park
+func (ps *ParkService) GetParkNewsReleases(parkCode string) (*nps.NewsReleaseResponse, error) {
+	return ps.npsApi.GetNewsReleases([]string{parkCode}, nil, "", 10, 0, nil)
+}
+
+// GetParkMultimediaAudio fetches audio content for a specific park
+func (ps *ParkService) GetParkMultimediaAudio(parkCode string) (*nps.MultimediaAudioResponse, error) {
+	return ps.npsApi.GetMultimediaAudio([]string{parkCode}, nil, "", 0, 10)
+}
+
+// GetParkMultimediaGalleriesAssets fetches assets for a specific gallery
+func (ps *ParkService) GetParkMultimediaGalleriesAssets(galleryId string, parkCode string) (*nps.MultimediaGalleriesAssetsResponse, error) {
+	return ps.npsApi.GetMultimediaGalleriesAssets("", galleryId, []string{parkCode}, nil, "", 0, 50)
+}
+
+// GetParkEvents fetches events for a specific park
+func (ps *ParkService) GetParkEvents(parkCode string) (*nps.EventResponse, error) {
+	return ps.npsApi.GetEvents([]string{parkCode}, nil, nil, nil, nil, nil, nil, nil, "", "", nil, "", "", 10, 0, false)
+}
+
+// GetParkCampgrounds fetches campgrounds for a specific park
+func (ps *ParkService) GetParkCampgrounds(parkCode string) (*nps.CampgroundData, error) {
+	return ps.npsApi.GetCampgrounds([]string{parkCode}, nil, "", 10, 0, nil)
+}
+
+// GetParkOverview fetches comprehensive overview data with all available fields
+func (ps *ParkService) GetParkOverview(parkCode string) (map[string]interface{}, error) {
+	result := make(map[string]interface{})
+
+	// Fetch things to do for overview with error handling
+	thingsToDo, err := ps.npsApi.GetThingsToDo("", parkCode, "", "", 6, 0, nil)
+	if err != nil {
+		fmt.Printf("Warning: Failed to fetch things to do for park %s: %v\n", parkCode, err)
+		result["thingsToDo"] = map[string]interface{}{
+			"Data":  []interface{}{},
+			"Total": "0",
+			"Limit": "6",
+			"Start": "0",
+		}
+	} else {
+		result["thingsToDo"] = thingsToDo
+	}
+
+	// Fetch activities with error handling
+	activities, err := ps.npsApi.GetActivities("", "", 15, 0, "")
+	if err != nil {
+		fmt.Printf("Warning: Failed to fetch activities for park %s: %v\n", parkCode, err)
+		result["activities"] = map[string]interface{}{
+			"Data":  []interface{}{},
+			"Total": "0",
+			"Limit": "15",
+			"Start": "0",
+		}
+	} else {
+		result["activities"] = activities
+	}
+
+	// Fetch visitor centers for services overview with error handling
+	visitorCenters, err := ps.npsApi.GetVisitorCenters([]string{parkCode}, nil, "", 3, 0, nil)
+	if err != nil {
+		fmt.Printf("Warning: Failed to fetch visitor centers for park %s: %v\n", parkCode, err)
+		result["visitorCenters"] = map[string]interface{}{
+			"Data":  []interface{}{},
+			"Total": "0",
+			"Limit": "3",
+			"Start": "0",
+		}
+	} else {
+		result["visitorCenters"] = visitorCenters
+	}
+
+	// Fetch amenities for facilities overview with error handling
+	amenities, err := ps.npsApi.GetAmenities([]string{parkCode}, "", 10, 0)
+	if err != nil {
+		fmt.Printf("Warning: Failed to fetch amenities for park %s: %v\n", parkCode, err)
+		result["amenities"] = map[string]interface{}{
+			"Data":  []interface{}{},
+			"Total": "0",
+			"Limit": "10",
+			"Start": "0",
+		}
+	} else {
+		result["amenities"] = amenities
+	}
+
+	// Fetch tours for enhanced overview with error handling
+	tours, err := ps.npsApi.GetTours(nil, []string{parkCode}, nil, "", 3, 0, nil)
+	if err != nil {
+		fmt.Printf("Warning: Failed to fetch tours for park %s: %v\n", parkCode, err)
+		result["tours"] = map[string]interface{}{
+			"Data":  []interface{}{},
+			"Total": "0",
+			"Limit": "3",
+			"Start": "0",
+		}
+	} else {
+		result["tours"] = tours
+	}
+
+	// Fetch events for overview with error handling
+	events, err := ps.npsApi.GetEvents([]string{parkCode}, nil, nil, nil, nil, nil, nil, nil, "", "", nil, "", "", 3, 0, false)
+	if err != nil {
+		fmt.Printf("Warning: Failed to fetch events for park %s: %v\n", parkCode, err)
+		result["events"] = map[string]interface{}{
+			"Data":  []interface{}{},
+			"Total": "0",
+			"Limit": "3",
+			"Start": "0",
+		}
+	} else {
+		result["events"] = events
+	}
+
+	// Fetch alerts for overview with error handling
+	alerts, err := ps.npsApi.GetAlerts([]string{parkCode}, nil, "", 3, 0)
+	if err != nil {
+		fmt.Printf("Warning: Failed to fetch alerts for park %s: %v\n", parkCode, err)
+		result["alerts"] = map[string]interface{}{
+			"Data":  []interface{}{},
+			"Total": "0",
+			"Limit": "3",
+			"Start": "0",
+		}
+	} else {
+		result["alerts"] = alerts
+	}
+
+	return result, nil
+}
+
+// UpdateGetParkMedia to include audio content
+func (ps *ParkService) GetParkMediaComplete(parkCode string) (map[string]interface{}, error) {
+	// Fetch galleries
+	galleries, err := ps.npsApi.GetMultimediaGalleries([]string{parkCode}, nil, "", 0, 10)
+	if err != nil {
+		galleries = nil
+	}
+
+	// Fetch videos
+	videos, err := ps.npsApi.GetMultimediaVideos([]string{parkCode}, nil, "", 0, 10)
+	if err != nil {
+		videos = nil
+	}
+
+	// Fetch audio content
+	audio, err := ps.npsApi.GetMultimediaAudio([]string{parkCode}, nil, "", 0, 10)
+	if err != nil {
+		audio = nil
+	}
+
+	// Fetch webcams
+	webcams, err := ps.npsApi.GetWebcams("", []string{parkCode}, nil, "", 10, 0)
+	if err != nil {
+		webcams = nil
+	}
+
+	return map[string]interface{}{
+		"galleries": galleries,
+		"videos":    videos,
+		"audio":     audio,
+		"webcams":   webcams,
+	}, nil
+}
+
+// UpdateGetParkNews to include news releases
+func (ps *ParkService) GetParkNewsComplete(parkCode string) (map[string]interface{}, error) {
+	// Fetch news releases
+	newsReleases, err := ps.npsApi.GetNewsReleases([]string{parkCode}, nil, "", 10, 0, nil)
+	if err != nil {
+		newsReleases = nil
+	}
+
+	// Fetch articles
+	articles, err := ps.npsApi.GetArticles([]string{parkCode}, nil, "", 10, 0)
+	if err != nil {
+		articles = nil
+	}
+
+	// Fetch alerts
+	alerts, err := ps.npsApi.GetAlerts([]string{parkCode}, nil, "", 10, 0)
+	if err != nil {
+		alerts = nil
+	}
+
+	// Fetch events
+	events, err := ps.npsApi.GetEvents([]string{parkCode}, nil, nil, nil, nil, nil, nil, nil, "", "", nil, "", "", 10, 0, false)
+	if err != nil {
+		events = nil
+	}
+
+	return map[string]interface{}{
+		"newsReleases": newsReleases,
+		"articles":     articles,
+		"alerts":       alerts,
+		"events":       events,
+	}, nil
+}
+
 // convertImagesToInterface converts the park images to interface{} for database storage
 func convertImagesToInterface(images []struct {
 	Credit  string `json:"credit"`

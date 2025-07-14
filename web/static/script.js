@@ -76,27 +76,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function initializeParkTabs() {
     const tabs = document.querySelectorAll('.park-nav-tab');
-    const tabContents = document.querySelectorAll('.park-tab-content');
     
     if (tabs.length === 0) return; // Not on park detail page
     
+    // Add HTMX event listeners for tab switching
     tabs.forEach(tab => {
         tab.addEventListener('click', () => {
-            const targetTab = tab.dataset.tab;
-            
-            // Remove active class from all tabs and content
+            // Remove active class from all tabs
             tabs.forEach(t => t.classList.remove('active'));
-            tabContents.forEach(content => content.classList.remove('active'));
             
-            // Add active class to clicked tab and corresponding content
+            // Add active class to clicked tab
             tab.classList.add('active');
-            const targetContent = document.getElementById(targetTab);
-            if (targetContent) {
-                targetContent.classList.add('active');
-            }
             
             // Update URL hash without page reload
-            if (history.pushState) {
+            const targetTab = tab.dataset.tab;
+            if (history.pushState && targetTab) {
                 const newUrl = window.location.pathname + '#' + targetTab;
                 history.pushState(null, '', newUrl);
             }
@@ -107,19 +101,44 @@ function initializeParkTabs() {
     const hash = window.location.hash.substr(1);
     if (hash) {
         const targetTab = document.querySelector(`[data-tab="${hash}"]`);
-        const targetContent = document.getElementById(hash);
         
-        if (targetTab && targetContent) {
-            // Remove active from all
+        if (targetTab) {
+            // Remove active from all tabs
             tabs.forEach(t => t.classList.remove('active'));
-            tabContents.forEach(content => content.classList.remove('active'));
             
-            // Activate target
+            // Activate target tab and trigger its HTMX request
             targetTab.classList.add('active');
-            targetContent.classList.add('active');
+            htmx.trigger(targetTab, 'click');
         }
     }
 }
+
+// Add HTMX event listeners for better UX
+document.addEventListener('htmx:beforeRequest', (event) => {
+    // Show loading state for park tab requests
+    if (event.target.classList.contains('park-nav-tab')) {
+        const dynamicContent = document.getElementById('dynamic-content');
+        if (dynamicContent) {
+            dynamicContent.innerHTML = `
+                <div class="loading-container">
+                    <div class="loading-spinner"></div>
+                    <p>Loading content...</p>
+                </div>
+            `;
+        }
+    }
+});
+
+document.addEventListener('htmx:afterRequest', (event) => {
+    // Handle any post-load processing for park tab content
+    if (event.target.classList.contains('park-nav-tab')) {
+        // Scroll to top of content after loading
+        const dynamicContent = document.getElementById('dynamic-content');
+        if (dynamicContent) {
+            dynamicContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+});
 
 // Infinite scrolling functionality
 let currentOffset = 12; // Start after featured parks (first 12)

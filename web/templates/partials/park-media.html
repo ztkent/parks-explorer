@@ -1,0 +1,146 @@
+<div class="container">
+    {{if .Media.webcams}}
+    <section class="live-webcams">
+        <h2>Live Webcams</h2>
+        <div class="webcams-grid">
+            {{range .Media.webcams.Data}}
+            {{if .IsStreaming}}
+            <div class="webcam-card">
+                <div class="webcam-header">
+                    <h3>{{.Title}}</h3>
+                    <span class="status {{if .IsStreaming}}live{{else}}offline{{end}}">
+                        {{if .IsStreaming}}🔴 Live{{else}}📴 Offline{{end}}
+                    </span>
+                </div>
+                {{if .Images}}
+                <img src="{{(index .Images 0).URL}}" alt="{{.Title}}" class="webcam-preview" />
+                {{end}}
+                <p>{{.Description}}</p>
+                {{if .StatusMessage}}
+                <p class="status-message">{{.StatusMessage}}</p>
+                {{end}}
+            </div>
+            {{end}}
+            {{end}}
+        </div>
+    </section>
+    {{end}}
+
+    {{if .Media.galleries}}
+    <section class="photo-galleries">
+        <h2>Photo Galleries</h2>
+        <div class="galleries-grid">
+            {{range .Media.galleries.Data}}
+            <div class="gallery-card" data-gallery-id="{{.ID}}">
+                {{if .Images}}
+                <div class="gallery-preview">
+                    <img src="{{(index .Images 0).URL}}" alt="{{(index .Images 0).AltText}}" />
+                    <div class="gallery-overlay">
+                        <span class="photo-count">{{len .Images}} photos</span>
+                    </div>
+                </div>
+                {{end}}
+                <div class="gallery-info">
+                    <h3>{{.Title}}</h3>
+                    <p>{{.Description}}</p>
+                    {{if .Images}}
+                    <div class="gallery-images-preview">
+                        {{range (slice .Images 0 4)}}
+                        <img src="{{.URL}}" alt="{{.AltText}}" class="thumbnail" title="{{.Caption}}" />
+                        {{end}}
+                    </div>
+                    {{end}}
+                </div>
+            </div>
+            {{end}}
+        </div>
+    </section>
+    {{end}}
+
+    {{if .Media.videos}}
+    <section class="videos">
+        <h2>Videos</h2>
+        <div class="videos-grid">
+            {{range .Media.videos.Data}}
+            <div class="video-card">
+                {{if .Images}}
+                <div class="video-thumbnail">
+                    <img src="{{(index .Images 0).URL}}" alt="{{.Title}}" />
+                    <div class="play-button">▶️</div>
+                </div>
+                {{end}}
+                <div class="video-content">
+                    <h3>{{.Title}}</h3>
+                    <p>{{.Description}}</p>
+                    {{if .DurationMs}}
+                    <span class="duration">⏱️ {{div .DurationMs 60000}} min</span>
+                    {{end}}
+                    {{if .PermalinkUrl}}
+                    <a href="{{.PermalinkUrl}}" target="_blank" class="video-link">Watch Video</a>
+                    {{end}}
+                    {{if .Transcript}}
+                    <details class="transcript">
+                        <summary>View Transcript</summary>
+                        <div class="transcript-content">{{.Transcript}}</div>
+                    </details>
+                    {{end}}
+                </div>
+            </div>
+            {{end}}
+        </div>
+    </section>
+    {{end}}
+
+    {{if .Media.audio}}
+    <section class="audio-content">
+        <h2>Audio Content</h2>
+        <div class="audio-grid">
+            {{range .Media.audio.Data}}
+            <div class="audio-card">
+                {{if .Images}}
+                <img src="{{(index .Images 0).URL}}" alt="{{.Title}}" class="audio-cover" />
+                {{end}}
+                <div class="audio-content">
+                    <h3>{{.Title}}</h3>
+                    <p>{{.Description}}</p>
+                    {{if .DurationMs}}
+                    <span class="duration">⏱️ {{div .DurationMs 60000}} min</span>
+                    {{end}}
+                    {{if .PermalinkUrl}}
+                    <a href="{{.PermalinkUrl}}" target="_blank" class="audio-link">Listen Now</a>
+                    {{end}}
+                    {{if .Transcript}}
+                    <details class="transcript">
+                        <summary>View Transcript</summary>
+                        <div class="transcript-content">{{.Transcript}}</div>
+                    </details>
+                    {{end}}
+                </div>
+            </div>
+            {{end}}
+        </div>
+    </section>
+    {{end}}
+
+    {{if .Audio}}
+    <section class="additional-audio">
+        <h2>Audio Tours & Podcasts</h2>
+        <div class="audio-list">
+            {{range .Audio.Data}}
+            <div class="audio-item">
+                <div class="audio-header">
+                    <h4>{{.Title}}</h4>
+                    {{if .DurationMs}}
+                    <span class="duration">{{div .DurationMs 60000}} min</span>
+                    {{end}}
+                </div>
+                <p>{{.Description}}</p>
+                {{if .PermalinkUrl}}
+                <a href="{{.PermalinkUrl}}" target="_blank" class="listen-link">🎧 Listen</a>
+                {{end}}
+            </div>
+            {{end}}
+        </div>
+    </section>
+    {{end}}
+</div>

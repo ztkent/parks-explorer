@@ -1,0 +1,146 @@
+<div class="container">
+    {{if .ThingsToDo}}
+    <section class="things-to-do">
+        <h2>Things To Do</h2>
+        <div class="activities-detailed">
+            {{range .ThingsToDo.Data}}
+            <div class="activity-detail-card">
+                <div class="activity-info">
+                    <h3>{{.Title}}</h3>
+                    {{if .ShortDescription}}
+                    <p class="short-desc">{{.ShortDescription}}</p>
+                    {{end}}
+                    <div class="activity-meta">
+                        {{if .DurationDescription}}
+                        <span class="duration">⏱️ {{.DurationDescription}}</span>
+                        {{end}}
+                        {{if .LocationDescription}}
+                        <span class="location">📍 {{.LocationDescription}}</span>
+                        {{end}}
+                        {{if eq .DoFeesApply "Yes"}}
+                        <span class="fee">💳 {{.FeeDescription}}</span>
+                        {{end}}
+                        {{if eq .ArePetsPermitted "Yes"}}
+                        <span class="pets">🐕 Pet Friendly</span>
+                        {{end}}
+                    </div>
+                    {{if .LongDescription}}
+                    <div class="activity-details">
+                        {{.LongDescription | unescapeHTML}}
+                    </div>
+                    {{end}}
+                    {{if .AccessibilityInformation}}
+                    <div class="accessibility">
+                        <strong>Accessibility:</strong> {{.AccessibilityInformation | unescapeHTML}}
+                    </div>
+                    {{end}}
+                    {{if .Season}}
+                    <div class="season">
+                        <strong>Best Season:</strong> {{range $i, $s := .Season}}{{if $i}}, {{end}}{{$s}}{{end}}
+                    </div>
+                    {{end}}
+                </div>
+            </div>
+            {{end}}
+        </div>
+    </section>
+    {{end}}
+
+    {{if .Tours}}
+    <section class="guided-tours">
+        <h2>Guided Tours</h2>
+        <div class="tours-grid">
+            {{range .Tours.Data}}
+            <div class="tour-card">
+                <div class="tour-content">
+                    <h3>{{.Title}}</h3>
+                    {{.Description | unescapeHTML}}
+                    {{if .DurationMin}}
+                    <p class="duration">Duration: {{.DurationMin}}{{if .DurationMax}} - {{.DurationMax}}{{end}} {{.DurationUnit}}</p>
+                    {{end}}
+                    {{if .Activities}}
+                    <div class="tour-activities">
+                        <strong>Activities:</strong>
+                        {{range $i, $a := .Activities}}{{if $i}}, {{end}}{{$a.Name}}{{end}}
+                    </div>
+                    {{end}}
+                </div>
+            </div>
+            {{end}}
+        </div>
+    </section>
+    {{end}}
+
+    {{if .Events}}
+    <section class="events">
+        <h2>Upcoming Events</h2>
+        <div class="events-list">
+            {{range .Events.Data}}
+            <div class="event-card">
+                <div class="event-header">
+                    <h3>{{.Title}}</h3>
+                    {{if .DateStart}}
+                    <span class="event-date">📅 {{.DateStart}}</span>
+                    {{end}}
+                </div>
+                {{.Description | unescapeHTML}}
+                {{if .Location}}
+                <p class="event-location">📍 {{.Location}}</p>
+                {{end}}
+                {{if .FeeDescription}}
+                <p class="event-fee">💳 {{.FeeDescription}}</p>
+                {{end}}
+                {{if .Times}}
+                <div class="event-times">
+                    {{range .Times}}
+                    <span class="time-slot">⏰ {{.TimeStart}}{{if .TimeEnd}} - {{.TimeEnd}}{{end}}</span>
+                    {{end}}
+                </div>
+                {{end}}
+            </div>
+            {{end}}
+        </div>
+    </section>
+    {{end}}
+
+    {{if .Campgrounds}}
+    <section class="campgrounds">
+        <h2>Camping</h2>
+        <div class="campgrounds-grid">
+            {{range .Campgrounds.Data}}
+            <div class="campground-card">
+                <div class="campground-content">
+                    <h3>{{.Name}}</h3>
+                    <p>{{.Description}}</p>
+                    {{if .Campsites}}
+                    <div class="campsite-info">
+                        {{if .Campsites.TotalSites}}
+                        <span class="sites-count">🏕️ {{.Campsites.TotalSites}} Total Sites</span>
+                        {{end}}
+                        {{if .Campsites.ElectricalHookups}}
+                        <span class="amenity">⚡ Electric: {{.Campsites.ElectricalHookups}}</span>
+                        {{end}}
+                    </div>
+                    {{end}}
+                    {{if .ReservationInfo}}
+                    <div class="reservation-info">
+                        <strong>Reservations:</strong> {{.ReservationInfo}}
+                    </div>
+                    {{end}}
+                    {{if .Fees}}
+                    <div class="campground-fees">
+                        {{range .Fees}}
+                        <div class="fee-item">
+                            <strong>{{.Title}}:</strong> ${{.Cost}}
+                            {{if .Description}}<br><small>{{.Description}}</small>{{end}}
+                        </div>
+                        {{end}}
+                    </div>
+                    {{end}}
+                </div>
+            </div>
+            {{end}}
+        </div>
+    </section>
+    {{end}}
+</div>

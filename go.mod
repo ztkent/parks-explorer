@@ -20,3 +20,5 @@ require (
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	golang.org/x/sys v0.25.0 // indirect
 )
+
+replace github.com/ztkent/go-nps => ../go-nps

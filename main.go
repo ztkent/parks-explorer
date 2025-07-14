@@ -80,6 +80,13 @@ func DefineRoutes(r *chi.Mux, dashManager *dashboard.Dashboard, cache *replay.Ca
 		r.Get("/parks/search", cache.MiddlewareFunc(dashManager.ParkSearchHandler))
 		r.Get("/parks/{slug}/details", cache.MiddlewareFunc(dashManager.ParkDetailsHandler))
 
+		// Park tab content routes
+		r.Get("/parks/{parkCode}/overview", cache.MiddlewareFunc(dashManager.ParkOverviewHandler))
+		r.Get("/parks/{parkCode}/activities", cache.MiddlewareFunc(dashManager.ParkActivitiesHandler))
+		r.Get("/parks/{parkCode}/media", cache.MiddlewareFunc(dashManager.ParkMediaHandler))
+		r.Get("/parks/{parkCode}/news", cache.MiddlewareFunc(dashManager.ParkNewsHandler))
+		r.Get("/parks/{parkCode}/details-enhanced", cache.MiddlewareFunc(dashManager.ParkEnhancedDetailsHandler))
+
 		// Template routes
 		r.Get("/templates/{template}", dashManager.TemplateHandler)
 	})

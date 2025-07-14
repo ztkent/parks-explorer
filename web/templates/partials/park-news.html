@@ -1,0 +1,125 @@
+<div class="container">
+    {{if .News.alerts}}
+    <section class="alerts">
+        <h2>Current Alerts</h2>
+        <div class="alerts-list">
+            {{range .News.alerts.Data}}
+            <div class="alert-card alert-{{.Category | lower}}">
+                <div class="alert-header">
+                    <h3>{{.Title}}</h3>
+                    <span class="alert-category">{{.Category}}</span>
+                </div>
+                <p>{{.Description}}</p>
+                {{if .URL}}
+                <a href="{{.URL}}" target="_blank" class="alert-link">More Information</a>
+                {{end}}
+                {{if .LastIndexedDate}}
+                <div class="alert-date">Last Updated: {{.LastIndexedDate}}</div>
+                {{end}}
+            </div>
+            {{end}}
+        </div>
+    </section>
+    {{end}}
+
+    {{if .NewsReleases}}
+    <section class="news-releases">
+        <h2>News & Press Releases</h2>
+        <div class="news-list">
+            {{range .NewsReleases.Data}}
+            <article class="news-card">
+                <div class="news-header">
+                    <h3>{{.Title}}</h3>
+                    {{if .ReleaseDate}}
+                    <span class="release-date">📅 {{.ReleaseDate}}</span>
+                    {{end}}
+                </div>
+                {{if .Abstract}}
+                <p class="news-abstract">{{.Abstract}}</p>
+                {{end}}
+                {{if .Image}}
+                <img src="{{.Image.URL}}" alt="{{.Image.AltText}}" class="news-image" />
+                {{end}}
+                {{if .URL}}
+                <a href="{{.URL}}" target="_blank" class="read-more">Read Full Article</a>
+                {{end}}
+            </article>
+            {{end}}
+        </div>
+    </section>
+    {{end}}
+
+    {{if .News.articles}}
+    <section class="articles">
+        <h2>Educational Articles</h2>
+        <div class="articles-grid">
+            {{range .News.articles.Data}}
+            <div class="article-card">
+                {{if .ListingImage.URL}}
+                <img src="{{.ListingImage.URL}}" alt="{{.ListingImage.Title}}" class="article-image" />
+                {{end}}
+                <div class="article-content">
+                    <h3>{{.Title}}</h3>
+                    {{if .ListingDescription}}
+                    <p>{{.ListingDescription}}</p>
+                    {{end}}
+                    {{if .Tags}}
+                    <div class="article-tags">
+                        {{range .Tags}}
+                        <span class="tag">{{.}}</span>
+                        {{end}}
+                    </div>
+                    {{end}}
+                    {{if .URL}}
+                    <a href="{{.URL}}" target="_blank" class="read-article">Read More</a>
+                    {{end}}
+                </div>
+            </div>
+            {{end}}
+        </div>
+    </section>
+    {{end}}
+
+    {{if .News.events}}
+    <section class="upcoming-events">
+        <h2>Upcoming Events & Programs</h2>
+        <div class="events-calendar">
+            {{range .News.events.Data}}
+            <div class="event-item">
+                <div class="event-date-block">
+                    {{if .DateStart}}
+                    <span class="month">{{slice .DateStart 5 7}}</span>
+                    <span class="day">{{slice .DateStart 8 10}}</span>
+                    {{end}}
+                </div>
+                <div class="event-details">
+                    <h4>{{.Title}}</h4>
+                    <p>{{.Description}}</p>
+                    {{if .Location}}
+                    <p class="event-location">📍 {{.Location}}</p>
+                    {{end}}
+                    {{if .FeeDescription}}
+                    <p class="event-fee">💳 {{.FeeDescription}}</p>
+                    {{end}}
+                    {{if .TimeStart}}
+                    <p class="event-time">⏰ {{.TimeStart}}{{if .TimeEnd}} - {{.TimeEnd}}{{end}}</p>
+                    {{end}}
+                    {{if .InfoURL}}
+                    <a href="{{.InfoURL}}" target="_blank" class="event-info">More Info</a>
+                    {{end}}
+                </div>
+            </div>
+            {{end}}
+        </div>
+    </section>
+    {{end}}
+
+    {{if not (or .News.alerts .NewsReleases .News.articles .News.events)}}
+    <section class="no-news">
+        <div class="no-news-content">
+            <h2>📰 News & Updates</h2>
+            <p>No current news, alerts, or events available for this park. Check back later for updates!</p>
+        </div>
+    </section>
+    {{end}}
+</div>

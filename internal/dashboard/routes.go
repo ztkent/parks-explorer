@@ -6,6 +6,7 @@ import (
 	"html"
 	"html/template"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -19,6 +20,7 @@ import (
 // ParkPageData represents the data structure for the park page template
 type ParkPageData struct {
 	Name        string
+	Code        string
 	ImageURL    string
 	Description string
 	States      string
@@ -391,6 +393,7 @@ func (dm *Dashboard) ParkPageHandler(w http.ResponseWriter, r *http.Request) {
 	// Create template data
 	data := ParkPageData{
 		Name:        park.Name,
+		Code:        park.ParkCode,
 		ImageURL:    imageUrl,
 		Description: description,
 		States:      park.States,
@@ -550,4 +553,211 @@ func formatStatesDisplay(states string) string {
 	firstFive := stateList[:5]
 	remaining := len(stateList) - 5
 	return strings.Join(firstFive, ", ") + fmt.Sprintf(", +%d", remaining)
+}
+
+// ParkOverviewHandler returns comprehensive overview data for a park
+func (dm *Dashboard) ParkOverviewHandler(w http.ResponseWriter, r *http.Request) {
+	parkCode := chi.URLParam(r, "parkCode")
+	if parkCode == "" {
+		http.Error(w, "Park code required", http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html")
+
+	// Get comprehensive overview data including all major elements
+	overview, err := dm.parkService.GetParkOverview(parkCode)
+	if err != nil {
+		http.Error(w, "Failed to load park overview", http.StatusInternalServerError)
+		return
+	}
+
+	// Prepare data for the template with proper structure
+	data := map[string]interface{}{
+		"Overview": overview,
+		"ParkCode": parkCode,
+	}
+
+	// Parse and execute the overview template
+	tmpl, err := template.ParseFiles("web/templates/partials/park-overview.html")
+	if err != nil {
+		http.Error(w, "Failed to load overview template", http.StatusInternalServerError)
+		return
+	}
+
+	err = tmpl.Execute(w, data)
+	if err != nil {
+		http.Error(w, "Failed to render overview content", http.StatusInternalServerError)
+		return
+	}
+}
+
+// ParkActivitiesHandler returns comprehensive activities and things to do data
+func (dm *Dashboard) ParkActivitiesHandler(w http.ResponseWriter, r *http.Request) {
+	parkCode := chi.URLParam(r, "parkCode")
+	if parkCode == "" {
+		http.Error(w, "Park code required", http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html")
+
+	// Fetch comprehensive activity data with all available details
+	thingsToDo, _ := dm.parkService.GetParkThingsToDo(parkCode)
+	tours, _ := dm.parkService.GetParkTours(parkCode)
+	events, _ := dm.parkService.GetParkEvents(parkCode)
+	campgrounds, _ := dm.parkService.GetParkCampgrounds(parkCode)
+	activities, _ := dm.parkService.GetParkActivities(parkCode)
+
+	// Comprehensive data structure leveraging all available NPS API fields
+	data := map[string]interface{}{
+		"ThingsToDo":  thingsToDo,
+		"Tours":       tours,
+		"Events":      events,
+		"Campgrounds": campgrounds,
+		"Activities":  activities,
+		"ParkCode":    parkCode,
+	}
+
+	// Parse and execute the activities template
+	tmpl, err := template.New("activities").Funcs(template.FuncMap{
+		"unescapeHTML": func(s string) template.HTML {
+			return template.HTML(s)
+		},
+	}).ParseFiles("web/templates/partials/park-activities.html")
+	if err != nil {
+		http.Error(w, "Failed to load activities template", http.StatusInternalServerError)
+		return
+	}
+
+	err = tmpl.Execute(w, data)
+	if err != nil {
+		http.Error(w, "Failed to render activities content", http.StatusInternalServerError)
+		return
+	}
+}
+
+// ParkMediaHandler returns comprehensive multimedia content including all media types
+func (dm *Dashboard) ParkMediaHandler(w http.ResponseWriter, r *http.Request) {
+	parkCode := chi.URLParam(r, "parkCode")
+	if parkCode == "" {
+		http.Error(w, "Park code required", http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html")
+
+	// Get comprehensive media data leveraging all multimedia endpoints
+	// Galleries: images with credits, captions, alt text, crops for different aspect ratios
+	// Videos: duration, transcripts, permalinks, descriptions
+	// Audio: multimedia audio content with descriptions and metadata
+	// Webcams: live feeds with streaming status, images, descriptions, coordinates
+	mediaData, _ := dm.parkService.GetParkMediaComplete(parkCode)
+
+	// Additional specific media fetches for enhanced content
+	audio, _ := dm.parkService.GetParkMultimediaAudio(parkCode)
+
+	// Comprehensive media data structure
+	data := map[string]interface{}{
+		"Media":    mediaData, // Includes galleries, videos, audio, webcams
+		"Audio":    audio,     // Additional audio content with detailed metadata
+		"ParkCode": parkCode,
+	}
+
+	// Parse and execute the media template
+	tmpl, err := template.ParseFiles("web/templates/partials/park-media.html")
+	if err != nil {
+		http.Error(w, "Failed to load media template", http.StatusInternalServerError)
+		return
+	}
+
+	err = tmpl.Execute(w, data)
+	if err != nil {
+		http.Error(w, "Failed to render media content", http.StatusInternalServerError)
+		return
+	}
+}
+
+// ParkNewsHandler returns comprehensive news, alerts, and updates with full content details
+func (dm *Dashboard) ParkNewsHandler(w http.ResponseWriter, r *http.Request) {
+	parkCode := chi.URLParam(r, "parkCode")
+	if parkCode == "" {
+		http.Error(w, "Park code required", http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html")
+
+	// Get comprehensive news data leveraging all news and information endpoints
+	// News releases: official announcements with full content and metadata
+	// Articles: educational content with images, descriptions, and URLs
+	// Alerts: current warnings, closures, and important information with categories
+	// Events: upcoming programs and activities with dates, descriptions, and details
+	newsData, _ := dm.parkService.GetParkNewsComplete(parkCode)
+
+	// Additional specific news fetches for enhanced content
+	newsReleases, _ := dm.parkService.GetParkNewsReleases(parkCode)
+
+	// Comprehensive news data structure with all available fields
+	data := map[string]interface{}{
+		"News":         newsData,     // Includes articles, alerts, events from complete method
+		"NewsReleases": newsReleases, // Official press releases with detailed content
+		"ParkCode":     parkCode,
+	}
+
+	// Parse and execute the news template
+	tmpl, err := template.ParseFiles("web/templates/partials/park-news.html")
+	if err != nil {
+		http.Error(w, "Failed to load news template", http.StatusInternalServerError)
+		return
+	}
+
+	err = tmpl.Execute(w, data)
+	if err != nil {
+		http.Error(w, "Failed to render news content", http.StatusInternalServerError)
+		return
+	}
+}
+
+// ParkEnhancedDetailsHandler returns comprehensive park details and facilities information
+func (dm *Dashboard) ParkEnhancedDetailsHandler(w http.ResponseWriter, r *http.Request) {
+	parkCode := chi.URLParam(r, "parkCode")
+	if parkCode == "" {
+		http.Error(w, "Park code required", http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html")
+
+	// Get comprehensive enhanced details leveraging all facilities and information endpoints
+	// Park details: addresses, contacts, operating hours, entrance fees, weather info, directions
+	// Visitor centers: locations, services, operating hours, contacts, amenities
+	// Campgrounds: sites, amenities, reservations, accessibility, fees
+	// Fees and passes: entrance fees, annual passes, descriptions, costs
+	// Parking lots: locations, accessibility, capacity, fees
+	detailsData, _ := dm.parkService.GetParkEnhancedDetails(parkCode)
+
+	// Additional specific detail fetches for comprehensive information
+	amenities, _ := dm.parkService.GetParkAmenities(parkCode)
+
+	// Comprehensive details data structure with all available NPS API fields
+	data := map[string]interface{}{
+		"Details":   detailsData, // Includes park info, visitor centers, campgrounds, fees, parking
+		"Amenities": amenities,   // Detailed amenity information with descriptions
+		"ParkCode":  parkCode,
+	}
+
+	// Parse and execute the details template
+	tmpl, err := template.ParseFiles("web/templates/partials/park-details.html")
+	if err != nil {
+		http.Error(w, "Failed to load details template", http.StatusInternalServerError)
+		return
+	}
+
+	err = tmpl.Execute(w, data)
+	if err != nil {
+		log.Printf("Template execution error for park %s: %v", parkCode, err)
+		http.Error(w, "Failed to render park details", http.StatusInternalServerError)
+		return
+	}
 }
