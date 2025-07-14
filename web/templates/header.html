@@ -1,23 +1,28 @@
 <header class="header">
-    <a href="/" class="logo">🏞️ National Parks Explorer</a>
-    
-    <nav class="nav-links">
-        <li><a href="/">Plan Your Visit</a></li>
-        <li><a href="/">Find a Park</a></li>
-        <li><a href="/">Things to Do</a></li>
-        <li><a href="/">Learn About</a></li>
-        <li><a href="/">Get Involved</a></li>
-        <li><a href="/">News</a></li>
-    </nav>
-    
-    <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
-    
-    <div class="auth-container" 
-         hx-get="/api/auth-status" 
-         hx-trigger="load"
-         hx-swap="innerHTML">
+    <div class="header-left">
+        <div class="logo">🏞️ National Parks Dashboard</div>
+        <nav class="nav-links">
+            <a href="/" class="nav-link">Plan Your Visit</a>
+            <a href="/" class="nav-link">Find a Park</a>
+            <a href="/" class="nav-link">Things to Do</a>
+            <a href="/" class="nav-link">Learn About</a>
+            <a href="/" class="nav-link">Get Involved</a>
+            <a href="/" class="nav-link">News</a>
+        </nav>
     </div>
     
+    <div class="header-right">
+        <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+        
+        <!-- Authentication Section -->
+        <div class="auth-container" 
+             hx-get="/api/auth-status" 
+             hx-trigger="load, authChange from:body"
+             hx-swap="innerHTML">
+        </div>
+    </div>
+    
+    <!-- Mobile Navigation Menu -->
     <nav class="mobile-nav" id="mobile-nav">
         <ul>
             <li><a href="/" onclick="closeMobileMenu()">Plan Your Visit</a></li>

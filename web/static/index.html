@@ -7,6 +7,14 @@
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     <link rel="stylesheet" href="/static/styles.css">
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script>
+        // Trigger auth change event after page loads to refresh authentication status
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                document.body.dispatchEvent(new Event('authChange'));
+            }, 100);
+        });
+    </script>
 </head>
 <body>
     <!-- Header loaded via HTMX -->

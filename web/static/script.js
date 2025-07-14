@@ -1,3 +1,20 @@
+// User dropdown functionality
+function toggleDropdown(event) {
+    event.stopPropagation();
+    const dropdown = event.target.closest('.user-dropdown');
+    const dropdownContent = dropdown.querySelector('.dropdown-content');
+    
+    // Close any other open dropdowns
+    document.querySelectorAll('.dropdown-content.show').forEach(d => {
+        if (d !== dropdownContent) {
+            d.classList.remove('show');
+        }
+    });
+    
+    // Toggle current dropdown
+    dropdownContent.classList.toggle('show');
+}
+
 // Mobile menu functionality
 function toggleMobileMenu() {
     const mobileNav = document.getElementById('mobile-nav');
@@ -11,7 +28,7 @@ function closeMobileMenu() {
 
 // Minimal JavaScript for enhanced UX
 document.addEventListener('DOMContentLoaded', () => {
-    // Close mobile menu when clicking outside
+    // Close mobile menu and dropdowns when clicking outside
     document.addEventListener('click', function(event) {
         const mobileNav = document.getElementById('mobile-nav');
         const menuBtn = document.querySelector('.mobile-menu-btn');
@@ -19,6 +36,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (mobileNav && !mobileNav.contains(event.target) && 
             menuBtn && !menuBtn.contains(event.target)) {
             mobileNav.classList.remove('show');
+        }
+        
+        // Close user dropdown when clicking outside
+        const userDropdown = event.target.closest('.user-dropdown');
+        if (!userDropdown) {
+            document.querySelectorAll('.dropdown-content.show').forEach(dropdown => {
+                dropdown.classList.remove('show');
+            });
         }
     });
     
