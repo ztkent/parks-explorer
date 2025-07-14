@@ -120,6 +120,13 @@ body {
     flex-shrink: 0;
 }
 
+.logo-image {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+    margin-right: 0.5rem;
+}
+
 .logo::before {
     margin-right: 0.5rem;
     font-size: 1.25rem;
@@ -463,7 +470,6 @@ body {
 
 /* Hero Search Section */
 .hero-search-container {
-    margin: 2rem 0;
     display: flex;
     justify-content: center;
     width: 100%;
@@ -839,6 +845,11 @@ body {
         font-size: 1rem;
     }
 
+    .header-left .logo .logo-image {
+        width: 28px;
+        height: 28px;
+    }
+
     .header-left .logo::before {
         font-size: 1.1rem;
     }
@@ -870,7 +881,6 @@ body {
 
     /* Hero search mobile adjustments */
     .hero-search-container {
-        margin: 1.5rem 0;
         padding: 0 1rem;
     }
 
