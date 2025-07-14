@@ -104,11 +104,6 @@ body {
     margin-right: 0.5rem;
 }
 
-.logo::before {
-    margin-right: 0.5rem;
-    font-size: 1.25rem;
-}
-
 /* Desktop Navigation */
 .nav-links {
     display: flex;
@@ -194,10 +189,6 @@ body {
     background-color: var(--bg-tertiary);
     color: var(--accent-green);
 }
-
-/* ==========================================================================
-   Search
-   ========================================================================== */
 
 /* ==========================================================================
    Authentication
@@ -687,119 +678,8 @@ body {
     font-weight: 600;
 }
 
-/* Mobile styles for no results */
-@media (max-width: 768px) {
-    .no-results {
-        padding: 3rem 1.5rem;
-        min-height: 250px;
-        margin: 1rem 0;
-    }
-    
-    .no-results-icon {
-        font-size: 3rem;
-        margin-bottom: 1rem;
-    }
-    
-    .no-results-title {
-        font-size: 1.5rem;
-    }
-    
-    .no-results-message {
-        font-size: 1rem;
-    }
-}
-
-/* Mobile Styles */
-@media (max-width: 850px) {
-    /* Header adjustments */
-    .header {
-        padding: 0.75rem 1rem;
-    }
-
-    .header-left .logo {
-        font-size: 1rem;
-    }
-
-    .header-left .logo .logo-image {
-        width: 28px;
-        height: 28px;
-    }
-
-    .header-left .logo::before {
-        font-size: 1.1rem;
-    }
-
-    /* Hide desktop navigation */
-    .nav-links {
-        display: none;
-    }
-
-    /* Show mobile menu button */
-    .mobile-menu-btn {
-        display: block;
-    }
-
-    /* Adjust dropdown positioning */
-    .dropdown-content {
-        right: -8px;
-        min-width: 160px;
-    }
-
-    /* Hero section adjustments */
-    .hero h1 {
-        font-size: 2.5rem;
-    }
-
-    .hero p {
-        font-size: 1.1rem;
-    }
-
-    /* Hero search mobile adjustments */
-    .hero-search-container {
-        padding: 0 1rem;
-    }
-
-    .hero-search-input {
-        padding: 1rem 1.2rem 1rem 3rem;
-        font-size: 1.1rem;
-    }
-
-    .hero-search-icon {
-        left: 1rem;
-        width: 20px;
-        height: 20px;
-    }
-
-    /* Content adjustments */
-    /* Single column grid on mobile, 2 columns on tablet, 4 on desktop */
-    .parks-grid {
-        grid-template-columns: 1fr;
-    }
-
-    /* Footer adjustments */
-    .footer-links {
-        flex-direction: column;
-        gap: 1rem;
-    }
-}
-
-/* Tablet and larger styles */
-@media (min-width: 851px) {
-    /* Ensure mobile menu is hidden on desktop */
-    .mobile-menu-btn {
-        display: none;
-    }
-}
-
-/* Tablet styles */
-@media (min-width: 768px) and (max-width: 1024px) {
-    .parks-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
 /* ==========================================================================
-   Park Detail Page
+   Park Detail Page - Only Used Classes
    ========================================================================== */
 
 .park-detail-page {
@@ -943,29 +823,6 @@ body {
     white-space: nowrap;
 }
 
-/* Legacy activities grid - keep for backwards compatibility */
-.activities-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-    gap: 2rem;
-    margin-bottom: 4rem;
-}
-
-.activity-card {
-    background: white;
-    border-radius: 16px;
-    overflow: hidden;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-    transition: transform 0.3s, box-shadow 0.3s;
-    cursor: pointer;
-    border: 1px solid #f3f4f6;
-}
-
-.activity-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-}
-
 /* Current Alerts Section */
 .current-alerts {
     margin-bottom: 4rem;
@@ -1009,10 +866,6 @@ body {
     border-left-color: #3b82f6;
 }
 
-.alert-card.alert-Park\ Closure {
-    border-left-color: #dc2626;
-}
-
 .alert-category {
     font-size: 0.75rem;
     font-weight: 600;
@@ -1033,7 +886,169 @@ body {
     text-decoration: underline;
 }
 
-/* Things To Do Section */
+/* Empty State */
+.empty-state {
+    text-align: center;
+    color: #6b7280;
+    font-style: italic;
+    padding: 2rem;
+    background: #f9fafb;
+    border-radius: 12px;
+    border: 1px dashed #d1d5db;
+}
+
+/* Mobile Styles */
+@media (max-width: 850px) {
+    /* Header adjustments */
+    .header {
+        padding: 0.75rem 1rem;
+    }
+
+    .header-left .logo {
+        font-size: 1rem;
+    }
+
+    .header-left .logo .logo-image {
+        width: 28px;
+        height: 28px;
+    }
+
+    /* Hide desktop navigation */
+    .nav-links {
+        display: none;
+    }
+
+    /* Show mobile menu button */
+    .mobile-menu-btn {
+        display: block;
+    }
+
+    /* Adjust dropdown positioning */
+    .dropdown-content {
+        right: -8px;
+        min-width: 160px;
+    }
+
+    /* Hero section adjustments */
+    .hero h1 {
+        font-size: 2.5rem;
+    }
+
+    .hero p {
+        font-size: 1.1rem;
+    }
+
+    /* Hero search mobile adjustments */
+    .hero-search-container {
+        padding: 0 1rem;
+    }
+
+    .hero-search-input {
+        padding: 1rem 1.2rem 1rem 3rem;
+        font-size: 1.1rem;
+    }
+
+    .hero-search-icon {
+        left: 1rem;
+        width: 20px;
+        height: 20px;
+    }
+
+    /* Single column grid on mobile */
+    .parks-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* Footer adjustments */
+    .footer-links {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    /* No results mobile */
+    .no-results {
+        padding: 3rem 1.5rem;
+        min-height: 250px;
+        margin: 1rem 0;
+    }
+    
+    .no-results-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+    
+    .no-results-title {
+        font-size: 1.5rem;
+    }
+    
+    .no-results-message {
+        font-size: 1rem;
+    }
+
+    /* Park detail mobile */
+    .park-hero-title {
+        font-size: 2rem;
+    }
+    
+    .park-hero-description {
+        font-size: 1rem;
+    }
+    
+    .park-nav-container {
+        padding: 0 1rem;
+    }
+    
+    .park-nav-tab {
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+    }
+    
+    /* Activities Pills Mobile Layout */
+    .activities-pills {
+        gap: 0.5rem;
+        justify-content: center;
+    }
+    
+    .activity-pill {
+        font-size: 0.8rem;
+        padding: 0.4rem 0.8rem;
+    }
+    
+    .popular-activities h2 {
+        font-size: 2rem;
+        text-align: center;
+    }
+
+    /* Alerts Mobile */
+    .alerts-grid {
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+    }
+    
+    .container {
+        padding: 2rem 1rem;
+    }
+}
+
+/* Tablet and larger styles */
+@media (min-width: 851px) {
+    /* Ensure mobile menu is hidden on desktop */
+    .mobile-menu-btn {
+        display: none;
+    }
+}
+
+/* Tablet styles */
+@media (min-width: 768px) and (max-width: 1024px) {
+    .parks-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* ==========================================================================
+   Things To Do Section (Overview & Activities)
+   ========================================================================== */
+
 .things-to-do-preview {
     margin-bottom: 4rem;
 }
@@ -1118,7 +1133,20 @@ body {
     font-weight: 500;
 }
 
-/* Events Section */
+.duration {
+    color: #6b7280;
+    font-size: 0.9rem;
+}
+
+.season {
+    color: #6b7280;
+    font-size: 0.9rem;
+}
+
+/* ==========================================================================
+   Events Section
+   ========================================================================== */
+
 .upcoming-events {
     margin-bottom: 4rem;
 }
@@ -1164,7 +1192,7 @@ body {
     font-weight: 500;
 }
 
-.event-time {
+.event-end-date {
     background: #f3f4f6;
     color: #6b7280;
     padding: 0.25rem 0.75rem;
@@ -1189,7 +1217,49 @@ body {
     margin-top: 0.5rem;
 }
 
-/* Visitor Services Section */
+/* Events List for Activities Page */
+.events {
+    margin-bottom: 4rem;
+}
+
+.events h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    color: #111827;
+}
+
+.events-list {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.event-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.event-times {
+    margin-top: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.time-slot {
+    background: #f3f4f6;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    color: #6b7280;
+}
+
+/* ==========================================================================
+   Visitor Services Section
+   ========================================================================== */
+
 .visitor-services {
     margin-bottom: 4rem;
 }
@@ -1247,7 +1317,10 @@ body {
     font-size: 0.8rem;
 }
 
-/* Amenities Section */
+/* ==========================================================================
+   Amenities Section
+   ========================================================================== */
+
 .park-amenities {
     margin-bottom: 4rem;
 }
@@ -1279,7 +1352,10 @@ body {
     transform: translateY(-2px);
 }
 
-/* Tours Section */
+/* ==========================================================================
+   Tours Section
+   ========================================================================== */
+
 .featured-tours {
     margin-bottom: 4rem;
 }
@@ -1325,7 +1401,7 @@ body {
     color: #6b7280;
 }
 
-.tour-price {
+.tour-duration {
     background: #fef3c7 !important;
     color: #d97706 !important;
 }
@@ -1346,203 +1422,46 @@ body {
     font-weight: 500;
 }
 
-/* Empty State */
-.empty-state {
-    text-align: center;
-    color: #6b7280;
-    font-style: italic;
-    padding: 2rem;
-    background: #f9fafb;
-    border-radius: 12px;
-    border: 1px dashed #d1d5db;
+/* Guided Tours for Activities Page */
+.guided-tours {
+    margin-bottom: 4rem;
 }
 
-.activity-image {
-    width: 100%;
-    height: 200px;
-    background-size: cover;
-    background-position: center;
-    position: relative;
-}
-
-/* Activity Image Backgrounds */
-.activity-image.hiking {
-    background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), 
-                url('https://images.unsplash.com/photo-1551632811-561732d1e306?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');
-}
-
-.activity-image.climbing {
-    background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), 
-                url('https://images.unsplash.com/photo-1522163182402-834f871fd851?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');
-}
-
-.activity-image.water {
-    background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), 
-                url('https://images.unsplash.com/photo-1544551763-46a013bb70d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');
-}
-
-.activity-image.tours {
-    background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), 
-                url('https://images.unsplash.com/photo-1539635278303-d4002c07eae3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');
-}
-
-.activity-image.stargazing {
-    background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), 
-                url('https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');
-}
-
-.activity-image.wildlife {
-    background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), 
-                url('https://images.unsplash.com/photo-1571068316344-75bc76f77890?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');
-}
-
-.activity-content {
-    padding: 1.5rem;
-}
-
-.activity-content h3 {
-    font-size: 1.3rem;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
+.guided-tours h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
     color: #111827;
 }
 
-.activity-content p {
-    color: #6b7280;
-    line-height: 1.6;
-    font-size: 0.95rem;
-}
-
-/* Park Info Grid */
-.park-info-grid {
+.tours-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
     gap: 2rem;
-    margin-top: 2rem;
 }
 
-.park-info-card {
+.tour-card {
     background: white;
-    border-radius: 12px;
-    padding: 2rem;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    transition: transform 0.3s, box-shadow 0.3s;
     border: 1px solid #f3f4f6;
 }
 
-.park-info-card h3 {
-    font-size: 1.3rem;
-    font-weight: 600;
-    margin-bottom: 1rem;
-    color: #111827;
+.tour-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
 }
 
-.park-info-card p {
-    color: #6b7280;
-    margin-bottom: 0.5rem;
-}
-
-.park-official-link {
-    background: var(--accent-green);
-    color: white;
-    padding: 0.75rem 1.5rem;
-    border-radius: 8px;
-    text-decoration: none;
-    font-weight: 600;
-    display: inline-block;
-    transition: background 0.2s;
-}
-
-.park-official-link:hover {
-    background: var(--accent-green-hover);
-}
-
-/* Mobile Styles for Park Detail Page */
-@media (max-width: 768px) {
-    .park-hero-title {
-        font-size: 2rem;
-    }
-    
-    .park-hero-description {
-        font-size: 1rem;
-    }
-    
-    .park-nav-container {
-        padding: 0 1rem;
-    }
-    
-    .park-nav-tab {
-        padding: 0.75rem 1rem;
-        font-size: 0.9rem;
-    }
-    
-    /* Activities Pills Mobile Layout */
-    .activities-pills {
-        gap: 0.5rem;
-        justify-content: center;
-    }
-    
-    .activity-pill {
-        font-size: 0.8rem;
-        padding: 0.4rem 0.8rem;
-    }
-    
-    /* Legacy activities grid */
-    .activities-grid {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
-    }
-    
-    .popular-activities h2 {
-        font-size: 2rem;
-        text-align: center;
-    }
-    
-    /* Things To Do Mobile */
-    .things-grid {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
-    }
-    
-    /* Events Mobile */
-    .events-grid {
-        grid-template-columns: 1fr;
-        gap: 1.25rem;
-    }
-    
-    /* Services Mobile */
-    .services-grid {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
-    }
-    
-    /* Amenities Mobile */
-    .amenities-grid {
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1rem;
-    }
-    
-    /* Tours Mobile */
-    .tours-preview {
-        grid-template-columns: 1fr;
-        gap: 1.25rem;
-    }
-    
-    /* Alerts Mobile */
-    .alerts-grid {
-        grid-template-columns: 1fr;
-        gap: 1.25rem;
-    }
-    
-    .container {
-        padding: 2rem 1rem;
-    }
+.tour-content {
+    padding: 1.5rem;
 }
 
 /* ==========================================================================
-   Park Details Section
+   Park Details Page Specific Styles
    ========================================================================== */
 
-/* Park Details Grid Layout */
 .park-details-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -1550,7 +1469,6 @@ body {
     margin: 2rem 0;
 }
 
-/* Detail Section Cards */
 .detail-section {
     background: var(--bg-primary);
     border: 1px solid var(--border-primary);
@@ -1573,7 +1491,7 @@ body {
     border-bottom: 2px solid var(--border-secondary);
 }
 
-/* Address Card */
+/* Address Cards */
 .address-card {
     background: var(--bg-secondary);
     border: 1px solid var(--border-secondary);
@@ -1652,7 +1570,6 @@ body {
     margin-bottom: 1rem;
 }
 
-/* Hours Grid */
 .hours-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -2021,34 +1938,660 @@ body {
     color: var(--text-secondary);
 }
 
-/* Amenities Detailed */
-.amenities-detailed {
-    display: grid;
-    gap: 1rem;
+/* ==========================================================================
+   Activities Detailed (Activities Page)
+   ========================================================================== */
+
+.things-to-do {
+    margin-bottom: 4rem;
 }
 
-.amenity-detail {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-secondary);
+.things-to-do h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    color: #111827;
+}
+
+.activities-detailed {
+    display: grid;
+    gap: 2rem;
+}
+
+.activity-detail-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    border: 1px solid #f3f4f6;
+    transition: transform 0.2s;
+}
+
+.activity-detail-card:hover {
+    transform: translateY(-2px);
+}
+
+.activity-info h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #111827;
+}
+
+.short-desc {
+    color: #6b7280;
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+}
+
+.activity-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin: 1rem 0;
+    padding: 1rem;
+    background: #f9fafb;
     border-radius: 8px;
+}
+
+.activity-meta span {
+    background: white;
+    padding: 0.5rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    color: #6b7280;
+    border: 1px solid #e5e7eb;
+}
+
+.activity-meta .fee {
+    background: #fef3c7;
+    color: #d97706;
+    border-color: #f59e0b;
+}
+
+.activity-meta .pets {
+    background: #dcfce7;
+    color: #16a34a;
+    border-color: #22c55e;
+}
+
+.activity-details {
+    background: #f9fafb;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin: 1rem 0;
+    line-height: 1.6;
+    color: #374151;
+}
+
+.accessibility {
+    background: #dbeafe;
+    padding: 1rem;
+    border-radius: 8px;
+    margin: 1rem 0;
+    border-left: 4px solid #3b82f6;
+}
+
+.accessibility strong {
+    color: #1e40af;
+    font-weight: 600;
+}
+
+.season {
+    background: #ecfdf5;
+    padding: 1rem;
+    border-radius: 8px;
+    margin: 1rem 0;
+    border-left: 4px solid #22c55e;
+}
+
+.season strong {
+    color: #15803d;
+    font-weight: 600;
+}
+
+/* ==========================================================================
+   Campgrounds Section (Activities Page)
+   ========================================================================== */
+
+.campgrounds {
+    margin-bottom: 4rem;
+}
+
+.campgrounds h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    color: #111827;
+}
+
+.campgrounds-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 2rem;
+}
+
+.campground-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    border: 1px solid #f3f4f6;
+    transition: transform 0.2s;
+}
+
+.campground-card:hover {
+    transform: translateY(-2px);
+}
+
+.campground-content {
+    padding: 1.5rem;
+}
+
+.campground-content h3 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #111827;
+}
+
+.campsite-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin: 1rem 0;
+    padding: 1rem;
+    background: #f9fafb;
+    border-radius: 8px;
+}
+
+.sites-count {
+    background: #dcfce7;
+    color: #16a34a;
+    padding: 0.5rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.amenity {
+    background: #fef3c7;
+    color: #d97706;
+    padding: 0.5rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.reservation-info {
+    background: #dbeafe;
+    padding: 1rem;
+    border-radius: 8px;
+    margin: 1rem 0;
+    border-left: 4px solid #3b82f6;
+}
+
+.reservation-info strong {
+    color: #1e40af;
+    font-weight: 600;
+}
+
+.campground-fees {
+    margin-top: 1rem;
+}
+
+.fee-item {
+    background: #f9fafb;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    border-left: 4px solid #22c55e;
+}
+
+.fee-item strong {
+    color: #15803d;
+    font-weight: 600;
+}
+
+.fee-item small {
+    color: #6b7280;
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+/* ==========================================================================
+   Media Page Styles
+   ========================================================================== */
+
+.live-webcams {
+    margin-bottom: 4rem;
+}
+
+.live-webcams h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    color: #111827;
+}
+
+.webcams-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.webcam-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    border: 1px solid #f3f4f6;
+    transition: transform 0.2s;
+}
+
+.webcam-card:hover {
+    transform: translateY(-2px);
+}
+
+.webcam-header {
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.webcam-header h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #111827;
+    margin: 0;
+}
+
+.status {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status.live {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.status.offline {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.webcam-preview {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.status-message {
+    padding: 1rem;
+    color: #6b7280;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+/* Photo Galleries */
+.photo-galleries {
+    margin-bottom: 4rem;
+}
+
+.photo-galleries h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    color: #111827;
+}
+
+.galleries-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.gallery-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    border: 1px solid #f3f4f6;
+    transition: transform 0.2s;
+    cursor: pointer;
+}
+
+.gallery-card:hover {
+    transform: translateY(-2px);
+}
+
+.gallery-preview {
+    position: relative;
+    height: 200px;
+    background-size: cover;
+    background-position: center;
+}
+
+.gallery-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0,0,0,0.7));
+    color: white;
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.photo-count {
+    background: rgba(255,255,255,0.2);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.gallery-info {
     padding: 1rem;
 }
 
-.amenity-detail h4 {
-    color: var(--text-primary);
-    font-size: 1rem;
+.gallery-info h3 {
+    font-size: 1.2rem;
     font-weight: 600;
+    color: #111827;
     margin: 0 0 0.5rem 0;
 }
 
-.amenity-detail p {
-    color: var(--text-secondary);
+.gallery-images-preview {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.thumbnail {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 2px solid #e5e7eb;
+    transition: border-color 0.2s;
+}
+
+.thumbnail:hover {
+    border-color: #16a34a;
+}
+
+/* Videos Section */
+.videos {
+    margin-bottom: 4rem;
+}
+
+.videos h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    color: #111827;
+}
+
+.videos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 2rem;
+}
+
+.video-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    border: 1px solid #f3f4f6;
+    transition: transform 0.2s;
+}
+
+.video-card:hover {
+    transform: translateY(-2px);
+}
+
+.video-thumbnail {
+    position: relative;
+    height: 200px;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.play-button {
+    background: rgba(0,0,0,0.7);
+    color: white;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    transition: transform 0.2s;
+}
+
+.play-button:hover {
+    transform: scale(1.1);
+}
+
+.video-content {
+    padding: 1.5rem;
+}
+
+.video-content h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #111827;
+    margin: 0 0 0.5rem 0;
+}
+
+.video-content .duration {
+    background: #f3f4f6;
+    color: #6b7280;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    display: inline-block;
+    margin: 0.5rem 0;
+}
+
+.video-link {
+    color: #16a34a;
+    text-decoration: none;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    border: 2px solid #16a34a;
+    border-radius: 6px;
+    display: inline-block;
+    transition: all 0.2s ease;
+    margin-top: 0.5rem;
+}
+
+.video-link:hover {
+    background: #16a34a;
+    color: white;
+}
+
+.transcript {
+    margin-top: 1rem;
+}
+
+.transcript summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: #6b7280;
+    padding: 0.5rem 0;
+}
+
+.transcript-content {
+    padding: 1rem;
+    background: #f9fafb;
+    border-radius: 6px;
+    margin-top: 0.5rem;
+    color: #374151;
     line-height: 1.6;
-    margin: 0;
     font-size: 0.9rem;
 }
 
-/* Mobile Responsiveness for Park Details */
+/* Audio Content */
+.audio-content,
+.additional-audio {
+    margin-bottom: 4rem;
+}
+
+.audio-content h2,
+.additional-audio h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    color: #111827;
+}
+
+.audio-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.audio-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    border: 1px solid #f3f4f6;
+    transition: transform 0.2s;
+}
+
+.audio-card:hover {
+    transform: translateY(-2px);
+}
+
+.audio-cover {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.audio-content {
+    padding: 1.5rem;
+}
+
+.audio-content h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #111827;
+    margin: 0 0 0.5rem 0;
+}
+
+.audio-link {
+    color: #16a34a;
+    text-decoration: none;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    border: 2px solid #16a34a;
+    border-radius: 6px;
+    display: inline-block;
+    transition: all 0.2s ease;
+    margin-top: 0.5rem;
+}
+
+.audio-link:hover {
+    background: #16a34a;
+    color: white;
+}
+
+/* Audio List */
+.audio-list {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.audio-item {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    border: 1px solid #f3f4f6;
+    transition: transform 0.2s;
+}
+
+.audio-item:hover {
+    transform: translateY(-2px);
+}
+
+.audio-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.audio-header h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #111827;
+    margin: 0;
+    flex: 1;
+}
+
+.listen-link {
+    color: #16a34a;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+    border: 2px solid #16a34a;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.listen-link:hover {
+    background: #16a34a;
+    color: white;
+}
+
+/* Mobile responsiveness for media pages */
+@media (max-width: 768px) {
+    .webcams-grid,
+    .galleries-grid,
+    .videos-grid,
+    .audio-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .gallery-images-preview {
+        justify-content: center;
+    }
+    
+    .audio-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
+    }
+    
+    .listen-link {
+        text-align: center;
+    }
+}
+
+/* Mobile responsiveness for park details */
 @media (max-width: 768px) {
     .park-details-grid {
         grid-template-columns: 1fr;
@@ -2080,6 +2623,58 @@ body {
     }
     
     .parking-accessibility {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    /* Mobile styles for things to do */
+    .things-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    /* Mobile styles for events */
+    .events-grid {
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+    }
+    
+    /* Mobile styles for services */
+    .services-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    /* Mobile styles for amenities */
+    .amenities-grid {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+    
+    /* Mobile styles for tours */
+    .tours-preview,
+    .tours-grid {
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+    }
+
+    /* Mobile styles for activities detailed */
+    .activities-detailed {
+        gap: 1.5rem;
+    }
+    
+    .activity-meta {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    /* Mobile styles for campgrounds */
+    .campgrounds-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .campsite-info {
         flex-direction: column;
         gap: 0.5rem;
     }

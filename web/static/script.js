@@ -26,7 +26,7 @@ function closeMobileMenu() {
     mobileNav.classList.remove('show');
 }
 
-// Minimal JavaScript for enhanced UX
+// Enhanced UX functionality
 document.addEventListener('DOMContentLoaded', () => {
     // Close mobile menu and dropdowns when clicking outside
     document.addEventListener('click', function(event) {
@@ -60,26 +60,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     behavior: 'smooth',
                     block: 'start'
                 });
-                
-                // Close mobile menu if open
                 closeMobileMenu();
             }
         }
     });
-});
 
-// Park detail page tab functionality
-document.addEventListener('DOMContentLoaded', () => {
     // Initialize park detail tabs if on park detail page
     initializeParkTabs();
 });
 
+// Park detail page tab functionality
 function initializeParkTabs() {
     const tabs = document.querySelectorAll('.park-nav-tab');
     
     if (tabs.length === 0) return; // Not on park detail page
     
-    // Add HTMX event listeners for tab switching
     tabs.forEach(tab => {
         tab.addEventListener('click', () => {
             // Remove active class from all tabs
@@ -113,33 +108,6 @@ function initializeParkTabs() {
     }
 }
 
-// Add HTMX event listeners for better UX
-document.addEventListener('htmx:beforeRequest', (event) => {
-    // Show loading state for park tab requests
-    if (event.target.classList.contains('park-nav-tab')) {
-        const dynamicContent = document.getElementById('dynamic-content');
-        if (dynamicContent) {
-            dynamicContent.innerHTML = `
-                <div class="loading-container">
-                    <div class="loading-spinner"></div>
-                    <p>Loading content...</p>
-                </div>
-            `;
-        }
-    }
-});
-
-document.addEventListener('htmx:afterRequest', (event) => {
-    // Handle any post-load processing for park tab content
-    if (event.target.classList.contains('park-nav-tab')) {
-        // Scroll to top of content after loading
-        const dynamicContent = document.getElementById('dynamic-content');
-        if (dynamicContent) {
-            dynamicContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-    }
-});
-
 // Infinite scrolling functionality
 let currentOffset = 12; // Start after featured parks (first 12)
 let isLoading = false;
@@ -156,7 +124,7 @@ document.addEventListener('htmx:afterSwap', (event) => {
         const trigger = document.getElementById('infinite-scroll-trigger');
         const searchInput = document.querySelector('.hero-search-input');
         
-        // If search input is empty or has whitespace only (showing featured parks), reset and show trigger
+        // If search input is empty (showing featured parks), reset and show trigger
         if (searchInput && searchInput.value.trim() === '' && trigger && hasMoreParks) {
             currentOffset = 12;
             hasMoreParks = true;
@@ -177,8 +145,8 @@ function setupInfiniteScrollTrigger() {
     // Set up the HTMX attributes for the next load
     trigger.setAttribute('hx-get', `/api/parks?offset=${currentOffset}&limit=${parksPerPage}`);
     trigger.setAttribute('hx-trigger', 'intersect once');
-    trigger.setAttribute('hx-target', '#infinite-scroll-trigger'); // Target the trigger itself to prevent auto-insertion
-    trigger.setAttribute('hx-swap', 'none'); // Don't automatically swap content
+    trigger.setAttribute('hx-target', '#infinite-scroll-trigger');
+    trigger.setAttribute('hx-swap', 'none');
     
     // Process the element so HTMX recognizes it
     htmx.process(trigger);
@@ -236,7 +204,7 @@ document.addEventListener('htmx:afterRequest', (event) => {
                 currentOffset += parksPerPage;
                 setTimeout(() => {
                     setupInfiniteScrollTrigger();
-                }, 100); // Small delay to ensure DOM is updated
+                }, 100);
             }
         }
     }
@@ -267,10 +235,36 @@ function removeDuplicateParks() {
     parkCards.forEach(card => {
         const parkSlug = card.getAttribute('data-park');
         if (seenParks.has(parkSlug)) {
-            // Remove duplicate
             card.remove();
         } else {
             seenParks.add(parkSlug);
         }
     });
 }
+
+// HTMX event listeners for better UX
+document.addEventListener('htmx:beforeRequest', (event) => {
+    // Show loading state for park tab requests
+    if (event.target.classList.contains('park-nav-tab')) {
+        const dynamicContent = document.getElementById('dynamic-content');
+        if (dynamicContent) {
+            dynamicContent.innerHTML = `
+                <div class="loading-container">
+                    <div class="loading-spinner"></div>
+                    <p>Loading content...</p>
+                </div>
+            `;
+        }
+    }
+});
+
+document.addEventListener('htmx:afterRequest', (event) => {
+    // Handle any post-load processing for park tab content
+    if (event.target.classList.contains('park-nav-tab')) {
+        // Scroll to top of content after loading
+        const dynamicContent = document.getElementById('dynamic-content');
+        if (dynamicContent) {
+            dynamicContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+});

@@ -71,9 +71,6 @@
                                         {{if .Duration}}
                                             <span class="duration">Duration: {{.Duration}}</span>
                                         {{end}}
-                                        {{if .SeasonDescription}}
-                                            <span class="season">Best time: {{.SeasonDescription}}</span>
-                                        {{end}}
                                         {{if .DoFeesApply}}
                                             {{if eq .DoFeesApply "Yes"}}
                                                 <span class="fee-required">Fee Required</span>
@@ -176,12 +173,16 @@
                                 {{if .Contacts}}
                                     {{if .Contacts.PhoneNumbers}}
                                         {{range .Contacts.PhoneNumbers}}
-                                            <p class="contact-phone">📞 {{.PhoneNumber}}</p>
+                                            {{if .PhoneNumber}}
+                                                <p class="contact-phone">📞 {{.PhoneNumber}}</p>
+                                            {{end}}
                                         {{end}}
                                     {{end}}
                                     {{if .Contacts.EmailAddresses}}
                                         {{range .Contacts.EmailAddresses}}
-                                            <p class="contact-email">✉️ {{.EmailAddress}}</p>
+                                            {{if .EmailAddress}}
+                                                <p class="contact-email">✉️ {{.EmailAddress}}</p>
+                                            {{end}}
                                         {{end}}
                                     {{end}}
                                 {{end}}
@@ -238,7 +239,9 @@
                                     {{if .Activities}}
                                         <div class="tour-activities">
                                             {{range .Activities}}
-                                                <span class="tour-activity-tag">{{.Name}}</span>
+                                                {{if .Name}}
+                                                    <span class="tour-activity-tag">{{.Name}}</span>
+                                                {{end}}
                                             {{end}}
                                         </div>
                                     {{end}}
