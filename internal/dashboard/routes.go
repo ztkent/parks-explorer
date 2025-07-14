@@ -225,11 +225,11 @@ func (dm *Dashboard) FeaturedParksHandler(w http.ResponseWriter, r *http.Request
 						<p class="park-description">
 							Explore the natural beauty and unique features of %s.
 						</p>
-						<div class="park-location">United States</div>
+						<div class="park-location">%s</div>
 					</div>
 				</a>
 			</div>
-		`, park.Slug, park.Slug, imageHTML, park.Name, park.Name))
+		`, park.Slug, park.Slug, imageHTML, park.Name, park.Name, formatStatesDisplay(park.States)))
 	}
 
 	w.Write([]byte(html.String()))
@@ -290,11 +290,11 @@ func (dm *Dashboard) ParkSearchHandler(w http.ResponseWriter, r *http.Request) {
 						<p class="park-description">
 							Explore the natural beauty and unique features of %s.
 						</p>
-						<div class="park-location">United States</div>
+						<div class="park-location">%s</div>
 					</div>
 				</a>
 			</div>
-		`, park.Slug, park.Slug, imageHTML, park.Name, park.Name))
+		`, park.Slug, park.Slug, imageHTML, park.Name, park.Name, formatStatesDisplay(park.States)))
 	}
 
 	w.Write([]byte(html.String()))
@@ -359,7 +359,7 @@ func (dm *Dashboard) ParkDetailsHandler(w http.ResponseWriter, r *http.Request) 
 				</a>
 			</div>
 		</div>
-	`, park.Name, imageHTML, description, park.States, park.Designation, park.URL)
+	`, park.Name, imageHTML, description, formatStatesDisplay(park.States), park.Designation, park.URL)
 
 	w.Write([]byte(html))
 }
@@ -508,11 +508,11 @@ func (dm *Dashboard) ParksHandler(w http.ResponseWriter, r *http.Request) {
 						<p class="park-description">
 							Explore the natural beauty and unique features of %s.
 						</p>
-						<div class="park-location">United States</div>
+						<div class="park-location">%s</div>
 					</div>
 				</a>
 			</div>
-		`, park.Slug, park.Slug, imageHTML, park.Name, park.Name))
+		`, park.Slug, park.Slug, imageHTML, park.Name, park.Name, formatStatesDisplay(park.States)))
 	}
 
 	w.Write([]byte(html.String()))
@@ -527,4 +527,27 @@ func createSlug(text string) string {
 	slug = strings.ReplaceAll(slug, ".", "")
 	slug = strings.ReplaceAll(slug, "&", "and")
 	return slug
+}
+
+// formatStatesDisplay formats the states string to show only first 5 states when there are more than 5
+func formatStatesDisplay(states string) string {
+	if states == "" {
+		return ""
+	}
+
+	// Split states by comma and trim whitespace
+	stateList := strings.Split(states, ",")
+	for i := range stateList {
+		stateList[i] = strings.TrimSpace(stateList[i])
+	}
+
+	// If 5 or fewer states, return as is
+	if len(stateList) <= 5 {
+		return strings.Join(stateList, ", ")
+	}
+
+	// If more than 5 states, show first 5 plus count of remaining
+	firstFive := stateList[:5]
+	remaining := len(stateList) - 5
+	return strings.Join(firstFive, ", ") + fmt.Sprintf(", +%d", remaining)
 }

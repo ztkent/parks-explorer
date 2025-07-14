@@ -12,50 +12,28 @@
     --text-tertiary: #9ca3af;
     --border-primary: #e5e7eb;
     --border-secondary: #f3f4f6;
-    --accent-green: #2d5016;
-    --accent-green-hover: #15803d;
+    --accent-green: #374151;
+    --accent-green-hover: #1f2937;
     --shadow-light: rgba(0,0,0,0.08);
     --shadow-medium: rgba(0,0,0,0.15);
     --shadow-heavy: rgba(0,0,0,0.25);
 }
 
-/* Light dark theme - a softer, warmer dark mode with better contrast */
+/* Light dark theme - subtle and minimal like GitHub's dark mode */
 [data-theme="dark"] {
-    --bg-primary: #2a2d3a;
-    --bg-secondary: #242833;
-    --bg-tertiary: #3c4050;
-    --text-primary: #e2e8f0;
-    --text-secondary: #cbd5e1;
-    --text-tertiary: #94a3b8;
-    --border-primary: #52596b;
-    --border-secondary: #64748b;
-    --accent-green: #86efac;
-    --accent-green-hover: #6ee7b7;
-    --shadow-light: rgba(0,0,0,0.25);
-    --shadow-medium: rgba(0,0,0,0.35);
-    --shadow-heavy: rgba(0,0,0,0.6);
-}
-
-/* Theme toggle button */
-.theme-toggle {
-    background: var(--bg-primary);
-    border: 2px solid var(--border-primary);
-    border-radius: 50%;
-    width: 32px;
-    height: 32px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-    color: var(--text-secondary);
-    font-size: 14px;
-}
-
-.theme-toggle:hover {
-    border-color: var(--accent-green);
-    color: var(--accent-green);
-    transform: scale(1.05);
+    --bg-primary: #000000ff;
+    --bg-secondary: #010409;
+    --bg-tertiary: #21262d;
+    --text-primary: #f0f6fc;
+    --text-secondary: #8b949e;
+    --text-tertiary: #6e7681;
+    --border-primary: #30363d;
+    --border-secondary: #21262d;
+    --accent-green: #8b949e;
+    --accent-green-hover: #f0f6fc;
+    --shadow-light: rgba(0,0,0,0.3);
+    --shadow-medium: rgba(0,0,0,0.4);
+    --shadow-heavy: rgba(0,0,0,0.7);
 }
 
 /* ==========================================================================
@@ -81,7 +59,6 @@ body {
 
 /* Header */
 .header {
-    background: var(--bg-primary);
     box-shadow: 0 1px 3px var(--shadow-light);
     padding: 0.75rem 1.5rem;
     display: flex;
@@ -142,7 +119,8 @@ body {
     margin-left: 1.5rem;
 }
 
-.nav-links a {
+.nav-links a,
+.nav-link {
     color: var(--text-secondary);
     text-decoration: none;
     font-weight: 500;
@@ -152,7 +130,8 @@ body {
     padding: 0.25rem 0;
 }
 
-.nav-links a:hover {
+.nav-links a:hover,
+.nav-link:hover {
     color: var(--accent-green);
 }
 
@@ -180,7 +159,6 @@ body {
     top: 100%;
     left: 0;
     right: 0;
-    background: var(--bg-primary);
     box-shadow: 0 4px 12px var(--shadow-medium);
     border-top: 1px solid var(--border-primary);
     z-index: 50;
@@ -242,7 +220,7 @@ body {
     width: 32px;
     height: 32px;
     background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--border-primary);
     border-radius: 50%;
     color: var(--text-secondary);
     text-decoration: none;
@@ -263,72 +241,10 @@ body {
     flex-shrink: 0;
 }
 
-/* Google Sign-in Icon (legacy) */
-.google-signin-icon {
-    width: 32px;
-    height: 32px;
-    background: var(--bg-tertiary);
-    border: 2px solid var(--text-secondary);
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s;
-    text-decoration: none;
-    color: var(--text-secondary);
-}
-
-.google-signin-icon:hover {
-    background: var(--accent-green);
-    color: white;
-    border-color: var(--accent-green);
-    transform: scale(1.05);
-}
-
-.google-signin-icon svg {
-    width: 16px;
-    height: 16px;
-}
-
 /* User Avatar with Dropdown */
 .user-dropdown {
     position: relative;
     display: inline-block;
-}
-
-.user-button {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.4rem 0.75rem;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    color: var(--text-primary);
-    font-size: 0.85rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    white-space: nowrap;
-}
-
-.user-button:hover {
-    background: var(--bg-secondary);
-    border-color: var(--accent-green);
-}
-
-.user-icon {
-    font-size: 1rem;
-}
-
-.dropdown-arrow {
-    font-size: 0.7rem;
-    transition: transform 0.2s ease;
-}
-
-.user-dropdown.active .dropdown-arrow {
-    transform: rotate(180deg);
 }
 
 .user-avatar {
@@ -336,7 +252,7 @@ body {
     height: 32px;
     border-radius: 50%;
     cursor: pointer;
-    border: 2px solid var(--border-color);
+    border: 2px solid var(--border-primary);
     transition: all 0.2s ease;
     object-fit: cover;
 }
@@ -353,7 +269,7 @@ body {
     right: 0;
     top: 100%;
     margin-top: 8px;
-    background-color: var(--bg-primary);
+    background-color: var(--bg-secondary);
     min-width: 180px;
     box-shadow: 0 10px 25px var(--shadow-medium);
     border-radius: 8px;
@@ -407,11 +323,6 @@ body {
     background-color: #fef2f2;
 }
 
-/* Tooltip */
-.tooltip {
-    position: relative;
-}
-
 /* ==========================================================================
    Hero Section
    ========================================================================== */
@@ -445,27 +356,6 @@ body {
     max-width: 600px;
     text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
     opacity: 0.95;
-}
-
-.cta-button {
-    background: #16a34a;
-    color: white;
-    padding: 1rem 2.5rem;
-    border: none;
-    border-radius: 8px;
-    font-size: 1.1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s;
-    text-decoration: none;
-    display: inline-block;
-    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
-}
-
-.cta-button:hover {
-    background: #15803d;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(22, 163, 74, 0.4);
 }
 
 /* Hero Search Section */
@@ -524,15 +414,7 @@ body {
 .container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 4rem 2rem;
-}
-
-.section-title {
-    font-size: 2.5rem;
-    font-weight: 700;
-    text-align: left;
-    margin-bottom: 3rem;
-    color: var(--text-primary);
+    padding: 2rem 2rem;
 }
 
 /* ==========================================================================
@@ -547,13 +429,15 @@ body {
 }
 
 .park-card {
-    background: var(--bg-primary);
     border-radius: 16px;
     overflow: hidden;
     box-shadow: 0 4px 16px var(--shadow-light);
     transition: transform 0.3s, box-shadow 0.3s;
     cursor: pointer;
     border: 1px solid var(--border-secondary);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
 .park-card:hover {
@@ -569,11 +453,12 @@ body {
     background-position: center;
     position: relative;
     overflow: hidden;
+    flex-shrink: 0;
 }
 
 /* Fallback for parks without specific images */
 .park-image:not([style*="background-image"]) {
-    background: linear-gradient(135deg, #16a34a, #059669);
+    background: linear-gradient(135deg, var(--accent-green), var(--accent-green-hover));
     display: flex;
     align-items: center;
     justify-content: center;
@@ -588,6 +473,10 @@ body {
 /* Park Content */
 .park-content {
     padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
 }
 
 .park-title {
@@ -601,8 +490,9 @@ body {
 .park-description {
     color: var(--text-secondary);
     line-height: 1.6;
-    margin-bottom: 1rem;
+    margin-bottom: auto;
     font-size: 0.95rem;
+    flex: 1;
 }
 
 .park-location {
@@ -612,6 +502,8 @@ body {
     align-items: center;
     gap: 0.25rem;
     font-weight: 500;
+    margin-top: 1rem;
+    flex-shrink: 0;
 }
 
 .park-location::before {
@@ -621,7 +513,8 @@ body {
 
 /* Park Card Links */
 .park-card-link {
-    display: block;
+    display: flex;
+    flex-direction: column;
     text-decoration: none;
     color: inherit;
     width: 100%;
@@ -735,7 +628,6 @@ body {
     text-align: center;
     padding: 4rem 2rem;
     min-height: 300px;
-    background: var(--bg-primary);
     border-radius: 16px;
     box-shadow: 0 4px 16px var(--shadow-light);
     border: 1px solid var(--border-secondary);
@@ -788,50 +680,6 @@ body {
     .no-results-message {
         font-size: 1rem;
     }
-}
-
-/* Mobile Navigation */
-.mobile-nav {
-    display: none;
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background: var(--bg-primary);
-    border-top: 1px solid var(--border-color);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    z-index: 1000;
-}
-
-.mobile-nav.show {
-    display: block;
-}
-
-.mobile-nav ul {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-}
-
-.mobile-nav li {
-    border-bottom: 1px solid var(--border-color);
-}
-
-.mobile-nav li:last-child {
-    border-bottom: none;
-}
-
-.mobile-nav a {
-    display: block;
-    padding: 0.75rem 1.5rem;
-    color: var(--text-primary);
-    text-decoration: none;
-    font-size: 0.9rem;
-    transition: background-color 0.2s ease;
-}
-
-.mobile-nav a:hover {
-    background: var(--bg-secondary);
 }
 
 /* Mobile Styles */
@@ -896,11 +744,6 @@ body {
     }
 
     /* Content adjustments */
-    .section-title {
-        font-size: 2rem;
-        text-align: center;
-    }
-
     /* Single column grid on mobile, 2 columns on tablet, 4 on desktop */
     .parks-grid {
         grid-template-columns: 1fr;
@@ -941,7 +784,7 @@ body {
     height: 400px;
     background-size: cover;
     background-position: center;
-    background-color: #2d5016;
+    background-color: var(--accent-green);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1012,12 +855,12 @@ body {
 }
 
 .park-nav-tab:hover {
-    color: #2d5016;
+    color: var(--accent-green);
     background: #f9fafb;
 }
 
 .park-nav-tab.active {
-    color: #2d5016;
+    color: var(--accent-green);
     border-bottom-color: #f59e0b;
 }
 
@@ -1029,7 +872,6 @@ body {
 
 .park-tab-content {
     display: none;
-    padding: 3rem 0;
 }
 
 .park-tab-content.active {
@@ -1151,7 +993,7 @@ body {
 }
 
 .park-official-link {
-    background: #16a34a;
+    background: var(--accent-green);
     color: white;
     padding: 0.75rem 1.5rem;
     border-radius: 8px;
@@ -1162,7 +1004,7 @@ body {
 }
 
 .park-official-link:hover {
-    background: #15803d;
+    background: var(--accent-green-hover);
 }
 
 /* Mobile Styles for Park Detail Page */

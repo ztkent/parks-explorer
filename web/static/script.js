@@ -68,25 +68,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// Handle login dropdown interactions after HTMX loads content
-document.addEventListener('htmx:afterSwap', (event) => {
-    // Check if auth container was updated and has a dropdown
-    if (event.target.classList.contains('auth-container') || event.target.closest('.auth-container')) {
-        const userAvatar = document.getElementById('userAvatar');
-        const userDropdown = document.getElementById('userDropdown');
-        if (userAvatar && userDropdown) {
-            userAvatar.addEventListener('click', (e) => {
-                e.stopPropagation();
-                userDropdown.classList.toggle('show');
-            });
-            // Close dropdown when clicking outside
-            document.addEventListener('click', () => {
-                userDropdown.classList.remove('show');
-            });
-        }
-    }
-});
-
 // Park detail page tab functionality
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize park detail tabs if on park detail page
@@ -149,11 +130,22 @@ const parksPerPage = 12;
 // Initialize infinite scrolling after HTMX loads featured parks
 document.addEventListener('htmx:afterSwap', (event) => {
     if (event.target.id === 'parksGrid') {
+        // Remove any duplicate parks that may have been added
+        removeDuplicateParks();
+        
         // Show the infinite scroll trigger after featured parks load
         const trigger = document.getElementById('infinite-scroll-trigger');
-        if (trigger && hasMoreParks) {
+        const searchInput = document.querySelector('.hero-search-input');
+        
+        // If search input is empty or has whitespace only (showing featured parks), reset and show trigger
+        if (searchInput && searchInput.value.trim() === '' && trigger && hasMoreParks) {
+            currentOffset = 12;
+            hasMoreParks = true;
             trigger.style.display = 'flex';
             setupInfiniteScrollTrigger();
+        } else if (searchInput && searchInput.value.trim() !== '' && trigger) {
+            // If there's a search query, hide the infinite scroll trigger
+            trigger.style.display = 'none';
         }
     }
 });
@@ -166,8 +158,8 @@ function setupInfiniteScrollTrigger() {
     // Set up the HTMX attributes for the next load
     trigger.setAttribute('hx-get', `/api/parks?offset=${currentOffset}&limit=${parksPerPage}`);
     trigger.setAttribute('hx-trigger', 'intersect once');
-    trigger.setAttribute('hx-target', '#parksGrid');
-    trigger.setAttribute('hx-swap', 'beforeend');
+    trigger.setAttribute('hx-target', '#infinite-scroll-trigger'); // Target the trigger itself to prevent auto-insertion
+    trigger.setAttribute('hx-swap', 'none'); // Don't automatically swap content
     
     // Process the element so HTMX recognizes it
     htmx.process(trigger);
@@ -191,11 +183,42 @@ document.addEventListener('htmx:afterRequest', (event) => {
             hasMoreParks = false;
             event.target.style.display = 'none';
         } else {
-            // Update offset and setup trigger for next load
-            currentOffset += parksPerPage;
-            setTimeout(() => {
-                setupInfiniteScrollTrigger();
-            }, 100); // Small delay to ensure DOM is updated
+            // Parse the response and check for duplicates
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = response;
+            const newParkCards = tempDiv.querySelectorAll('.park-card');
+            const existingParksGrid = document.getElementById('parksGrid');
+            const existingParkSlugs = new Set();
+            
+            // Get all existing park slugs
+            existingParksGrid.querySelectorAll('.park-card').forEach(card => {
+                const slug = card.dataset.park;
+                if (slug) {
+                    existingParkSlugs.add(slug);
+                }
+            });
+            
+            // Filter out duplicate parks and add only unique ones
+            let addedNewParks = false;
+            newParkCards.forEach(card => {
+                const slug = card.dataset.park;
+                if (slug && !existingParkSlugs.has(slug)) {
+                    existingParksGrid.appendChild(card.cloneNode(true));
+                    addedNewParks = true;
+                }
+            });
+            
+            // If no new unique parks were added, consider it the end
+            if (!addedNewParks) {
+                hasMoreParks = false;
+                event.target.style.display = 'none';
+            } else {
+                // Update offset and setup trigger for next load
+                currentOffset += parksPerPage;
+                setTimeout(() => {
+                    setupInfiniteScrollTrigger();
+                }, 100); // Small delay to ensure DOM is updated
+            }
         }
     }
 });
@@ -214,21 +237,21 @@ document.addEventListener('input', (event) => {
     }
 });
 
-// Handle search completion and show infinite scroll trigger again when search is cleared
-document.addEventListener('htmx:afterSwap', (event) => {
-    if (event.target.id === 'parksGrid') {
-        const searchInput = document.querySelector('.hero-search-input');
-        const trigger = document.getElementById('infinite-scroll-trigger');
-        
-        // If search input is empty or has whitespace only (showing featured parks), reset and show trigger
-        if (searchInput && searchInput.value.trim() === '' && trigger) {
-            currentOffset = 12;
-            hasMoreParks = true;
-            trigger.style.display = 'flex';
-            setupInfiniteScrollTrigger();
-        } else if (searchInput && searchInput.value.trim() !== '' && trigger) {
-            // If there's a search query, hide the infinite scroll trigger
-            trigger.style.display = 'none';
+// Function to remove duplicate park cards based on data-park attribute
+function removeDuplicateParks() {
+    const parksGrid = document.getElementById('parksGrid');
+    if (!parksGrid) return;
+    
+    const parkCards = parksGrid.querySelectorAll('.park-card[data-park]');
+    const seenParks = new Set();
+    
+    parkCards.forEach(card => {
+        const parkSlug = card.getAttribute('data-park');
+        if (seenParks.has(parkSlug)) {
+            // Remove duplicate
+            card.remove();
+        } else {
+            seenParks.add(parkSlug);
         }
-    }
-});
+    });
+}
