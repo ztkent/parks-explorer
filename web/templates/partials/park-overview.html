@@ -19,31 +19,6 @@
         </div>
     </section>
 
-    {{/* Current Alerts Section */}}
-    {{if .Overview.alerts}}
-        {{if .Overview.alerts.Data}}
-            {{if gt (len .Overview.alerts.Data) 0}}
-                <section class="current-alerts">
-                    <h2>Current Alerts</h2>
-                    <div class="alerts-grid">
-                        {{range .Overview.alerts.Data}}
-                            <div class="alert-card alert-{{.Category}}">
-                                <div class="alert-category">{{.Category}}</div>
-                                <h4>{{.Title}}</h4>
-                                {{if .Description}}
-                                    <p>{{.Description}}</p>
-                                {{end}}
-                                {{if .URL}}
-                                    <a href="{{.URL}}" target="_blank" class="alert-link">Learn More</a>
-                                {{end}}
-                            </div>
-                        {{end}}
-                    </div>
-                </section>
-            {{end}}
-        {{end}}
-    {{end}}
-
     {{/* Things To Do Section */}}
     {{if .Overview.thingsToDo}}
         {{if .Overview.thingsToDo.Data}}

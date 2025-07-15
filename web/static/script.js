@@ -242,29 +242,121 @@ function removeDuplicateParks() {
     });
 }
 
-// HTMX event listeners for better UX
-document.addEventListener('htmx:beforeRequest', (event) => {
-    // Show loading state for park tab requests
-    if (event.target.classList.contains('park-nav-tab')) {
-        const dynamicContent = document.getElementById('dynamic-content');
-        if (dynamicContent) {
-            dynamicContent.innerHTML = `
-                <div class="loading-container">
-                    <div class="loading-spinner"></div>
-                    <p>Loading content...</p>
-                </div>
-            `;
+// Expandable cards functionality for park details
+function initializeExpandableCards() {
+    const expandableCards = document.querySelectorAll('.expandable-card');
+    
+    expandableCards.forEach(card => {
+        const expandButton = card.querySelector('.expand-button');
+        const content = card.querySelector('.card-content');
+        
+        if (!expandButton || !content) return;
+        
+        // Force a reflow to get accurate measurements
+        card.style.display = 'block';
+        
+        // Temporarily remove collapsed class to measure full height
+        const wasCollapsed = card.classList.contains('collapsed');
+        card.classList.remove('collapsed');
+        
+        // Get the actual content height
+        const actualHeight = content.scrollHeight;
+        
+        // Restore collapsed state
+        if (wasCollapsed) {
+            card.classList.add('collapsed');
         }
-    }
-});
+        
+        // Get the collapsed height from CSS
+        const styles = getComputedStyle(card);
+        const collapsedHeight = parseInt(styles.maxHeight) || 300;
+                
+        // If content is shorter than collapsed height, hide the expand button
+        if (actualHeight <= collapsedHeight + 50) { // 50px buffer
+            expandButton.classList.add('hidden');
+            card.classList.remove('collapsed');
+            return;
+        }
+        
+        // Ensure the expand button is visible and the card is collapsed
+        expandButton.classList.remove('hidden');
+        card.classList.add('collapsed');
+        
+        // Remove any existing event listeners to avoid duplicates
+        const newButton = expandButton.cloneNode(true);
+        expandButton.parentNode.replaceChild(newButton, expandButton);
+        
+        // Add click handler for expand/collapse
+        newButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const isCollapsed = card.classList.contains('collapsed');
+            
+            if (isCollapsed) {
+                // Expand
+                card.classList.remove('collapsed');
+                newButton.innerHTML = 'Show Less <span class="expand-icon">▼</span>';
+            } else {
+                // Collapse
+                card.classList.add('collapsed');
+                newButton.innerHTML = 'Show More <span class="expand-icon">▼</span>';
+                
+                // Scroll to top of card when collapsing
+                card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    });
+}
 
-document.addEventListener('htmx:afterRequest', (event) => {
-    // Handle any post-load processing for park tab content
-    if (event.target.classList.contains('park-nav-tab')) {
-        // Scroll to top of content after loading
-        const dynamicContent = document.getElementById('dynamic-content');
-        if (dynamicContent) {
-            dynamicContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
+// Debug function to test expandable cards
+function debugExpandableCards() {
+    console.log('=== Debugging Expandable Cards ===');
+    const cards = document.querySelectorAll('.expandable-card');
+    console.log(`Found ${cards.length} expandable cards`);
+    
+    cards.forEach((card, index) => {
+        const button = card.querySelector('.expand-button');
+        const content = card.querySelector('.card-content');
+        console.log(`Card ${index}:`, {
+            hasButton: !!button,
+            hasContent: !!content,
+            isCollapsed: card.classList.contains('collapsed'),
+            cardHeight: card.offsetHeight,
+            contentHeight: content ? content.scrollHeight : 'N/A',
+            maxHeight: getComputedStyle(card).maxHeight
+        });
+    });
+}
+
+// Re-initialize expandable cards after HTMX content loads
+document.addEventListener('htmx:afterSwap', (event) => {
+    // If we're on a park details page and content was swapped
+    if (event.target.id === 'dynamic-content' || 
+        event.target.closest('.park-details-grid')) {
+        setTimeout(() => {
+            console.log('Re-initializing expandable cards after HTMX swap');
+            initializeExpandableCards();
+        }, 200); // Slightly longer delay to ensure content is fully rendered
+    }
+    
+    if (event.target.id === 'parksGrid') {
+        // Remove any duplicate parks that may have been added
+        removeDuplicateParks();
+        
+        // Show the infinite scroll trigger after featured parks load
+        const trigger = document.getElementById('infinite-scroll-trigger');
+        const searchInput = document.querySelector('.hero-search-input');
+        
+        // If search input is empty (showing featured parks), reset and show trigger
+        if (searchInput && searchInput.value.trim() === '' && trigger && hasMoreParks) {
+            currentOffset = 12;
+            hasMoreParks = true;
+            trigger.style.display = 'flex';
+            setupInfiniteScrollTrigger();
+        } else if (searchInput && searchInput.value.trim() !== '' && trigger) {
+            // If there's a search query, hide the infinite scroll trigger
+            trigger.style.display = 'none';
         }
     }
 });

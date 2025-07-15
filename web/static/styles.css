@@ -823,47 +823,109 @@ body {
     white-space: nowrap;
 }
 
-/* Current Alerts Section */
-.current-alerts {
-    margin-bottom: 4rem;
-}
-
-.current-alerts h2 {
-    font-size: 2rem;
-    font-weight: 700;
-    margin-bottom: 2rem;
-    color: #111827;
-}
-
-.alerts-grid {
+.alerts-grid, .alerts-list {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
     gap: 1.5rem;
+    margin-bottom: 2rem;
 }
 
 .alert-card {
-    background: white;
+    background: var(--bg-primary);
     border-radius: 12px;
     padding: 1.5rem;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-    border-left: 4px solid #6b7280;
-    transition: transform 0.2s;
+    box-shadow: 0 4px 16px var(--shadow-light);
+    border: 1px solid var(--border-primary);
+    border-left: 5px solid var(--text-tertiary);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
 }
 
 .alert-card:hover {
-    transform: translateY(-2px);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px var(--shadow-medium);
 }
 
+.alert-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 5px;
+    height: 100%;
+    background: inherit;
+    z-index: 1;
+}
+
+/* Alert Category Styles */
 .alert-card.alert-Danger {
     border-left-color: #ef4444;
+    background: linear-gradient(135deg, 
+        rgba(239, 68, 68, 0.05) 0%, 
+        var(--bg-primary) 100%);
+}
+
+.alert-card.alert-Danger::before {
+    background: linear-gradient(to bottom, #ef4444, #dc2626);
+}
+
+.alert-card.alert-Danger .alert-category {
+    background: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+    border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
 .alert-card.alert-Warning {
     border-left-color: #f59e0b;
+    background: linear-gradient(135deg, 
+        rgba(245, 158, 11, 0.05) 0%, 
+        var(--bg-primary) 100%);
+}
+
+.alert-card.alert-Warning::before {
+    background: linear-gradient(to bottom, #f59e0b, #d97706);
+}
+
+.alert-card.alert-Warning .alert-category {
+    background: rgba(245, 158, 11, 0.1);
+    color: #d97706;
+    border: 1px solid rgba(245, 158, 11, 0.2);
 }
 
 .alert-card.alert-Information {
     border-left-color: #3b82f6;
+    background: linear-gradient(135deg, 
+        rgba(59, 130, 246, 0.05) 0%, 
+        var(--bg-primary) 100%);
+}
+
+.alert-card.alert-Information::before {
+    background: linear-gradient(to bottom, #3b82f6, #2563eb);
+}
+
+.alert-card.alert-Information .alert-category {
+    background: rgba(59, 130, 246, 0.1);
+    color: #2563eb;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+/* Alert Header */
+.alert-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    gap: 1rem;
+}
+
+.alert-header h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.4;
+    margin: 0;
+    flex: 1;
 }
 
 .alert-category {
@@ -871,19 +933,101 @@ body {
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #6b7280;
-    margin-bottom: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    background: var(--bg-tertiary);
+    color: var(--text-tertiary);
+    border: 1px solid var(--border-secondary);
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
+/* Alert Content */
+.alert-card p {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+}
+
+.alert-card p:last-child {
+    margin-bottom: 0;
+}
+
+/* Alert Links */
 .alert-link {
-    color: #16a34a;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--accent-green);
     text-decoration: none;
     font-weight: 500;
     font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--accent-green);
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    margin-top: 0.5rem;
 }
 
 .alert-link:hover {
-    text-decoration: underline;
+    background: var(--accent-green);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.alert-link::after {
+    content: '↗';
+    font-size: 0.8rem;
+    opacity: 0.7;
+}
+
+/* Alert Date */
+.alert-date {
+    font-size: 0.8rem;
+    color: var(--text-tertiary);
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-secondary);
+    font-style: italic;
+}
+
+/* Dark Mode Adjustments */
+[data-theme="dark"] .alert-card.alert-Danger {
+    background: linear-gradient(135deg, 
+        rgba(239, 68, 68, 0.08) 0%, 
+        var(--bg-primary) 100%);
+}
+
+[data-theme="dark"] .alert-card.alert-Danger .alert-category {
+    background: rgba(239, 68, 68, 0.15);
+    color: #fca5a5;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+[data-theme="dark"] .alert-card.alert-Warning {
+    background: linear-gradient(135deg, 
+        rgba(245, 158, 11, 0.08) 0%, 
+        var(--bg-primary) 100%);
+}
+
+[data-theme="dark"] .alert-card.alert-Warning .alert-category {
+    background: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+[data-theme="dark"] .alert-card.alert-Information {
+    background: linear-gradient(135deg, 
+        rgba(59, 130, 246, 0.08) 0%, 
+        var(--bg-primary) 100%);
+}
+
+[data-theme="dark"] .alert-card.alert-Information .alert-category {
+    background: rgba(59, 130, 246, 0.15);
+    color: #93c5fd;
+    border: 1px solid rgba(59, 130, 246, 0.3);
 }
 
 /* Empty State */
@@ -1020,9 +1164,32 @@ body {
     }
 
     /* Alerts Mobile */
-    .alerts-grid {
+    .alerts-grid, .alerts-list {
         grid-template-columns: 1fr;
         gap: 1.25rem;
+    }
+    
+    .alert-card {
+        padding: 1.25rem;
+    }
+    
+    .alert-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+    
+    .alert-header h3 {
+        font-size: 1rem;
+    }
+    
+    .alert-category {
+        align-self: flex-start;
+    }
+    
+    .alert-link {
+        padding: 0.75rem 1rem;
+        font-size: 0.85rem;
     }
     
     .container {
@@ -1043,6 +1210,144 @@ body {
     .parks-grid {
         grid-template-columns: repeat(2, 1fr);
     }
+}
+
+/* ==========================================================================
+   News & Alerts Section
+   ========================================================================== */
+
+.alerts {
+    margin-bottom: 3rem;
+}
+
+.alerts h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    color: var(--text-primary);
+}
+
+.news-releases {
+    margin-bottom: 3rem;
+}
+
+.news-releases h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    color: var(--text-primary);
+}
+
+.news-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 2rem;
+}
+
+.news-card {
+    background: var(--bg-primary);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 16px var(--shadow-light);
+    border: 1px solid var(--border-primary);
+    transition: all 0.3s ease;
+}
+
+.news-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px var(--shadow-medium);
+}
+
+.news-header {
+    margin-bottom: 1rem;
+}
+
+.news-header h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    line-height: 1.4;
+}
+
+.release-date {
+    font-size: 0.85rem;
+    color: var(--text-tertiary);
+    background: var(--bg-tertiary);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    border: 1px solid var(--border-secondary);
+}
+
+.news-abstract {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 1rem;
+}
+
+.news-image {
+    width: 100%;
+    max-height: 200px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin: 1rem 0;
+}
+
+.read-more {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--accent-green);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--accent-green);
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.read-more:hover {
+    background: var(--accent-green);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.read-more::after {
+    content: '→';
+    font-size: 0.9rem;
+}
+
+/* No News State */
+.no-news {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 300px;
+    margin: 2rem 0;
+}
+
+.no-news-content {
+    text-align: center;
+    background: var(--bg-primary);
+    border-radius: 16px;
+    padding: 3rem 2rem;
+    box-shadow: 0 4px 16px var(--shadow-light);
+    border: 1px solid var(--border-primary);
+    max-width: 500px;
+}
+
+.no-news-content h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+}
+
+.no-news-content p {
+    color: var(--text-secondary);
+    line-height: 1.6;
 }
 
 /* ==========================================================================
@@ -1397,7 +1702,7 @@ body {
     background: #f3f4f6;
     padding: 0.25rem 0.75rem;
     border-radius: 20px;
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     color: #6b7280;
 }
 
@@ -2677,5 +2982,153 @@ body {
     .campsite-info {
         flex-direction: column;
         gap: 0.5rem;
+    }
+}
+
+/* ==========================================================================
+   Expandable Cards for Park Details
+   ========================================================================== */
+
+.detail-section {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-primary);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px var(--shadow-light);
+    transition: box-shadow 0.3s ease;
+    position: relative; /* Ensure proper positioning context */
+}
+
+.expandable-card {
+    position: relative;
+    overflow: hidden;
+    /* Remove the detail-section padding when we have an expandable card */
+    margin: -1.5rem;
+    padding: 1.5rem;
+    border-radius: 12px;
+}
+
+.expandable-card.collapsed {
+    max-height: 300px;
+}
+
+.expandable-card .card-content {
+    transition: all 0.3s ease;
+    padding-bottom: 0; /* Let the content flow naturally */
+}
+
+.expandable-card.collapsed .card-content {
+    mask-image: linear-gradient(to bottom, black 0%, black 70%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, black 0%, black 70%, transparent 100%);
+}
+
+.expand-button {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to bottom, transparent 0%, var(--bg-primary) 30%, var(--bg-primary) 100%);
+    border: none;
+    color: var(--accent-green);
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 2rem 1rem 1rem;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    z-index: 10;
+    width: 100%;
+    min-height: 3rem;
+    border-radius: 0 0 12px 12px; /* Match the card border radius */
+}
+
+.expand-button:hover {
+    color: var(--accent-green-hover);
+    background: linear-gradient(to bottom, transparent 0%, var(--bg-secondary) 30%, var(--bg-secondary) 100%);
+}
+
+.expand-button.hidden {
+    display: none !important;
+}
+
+.expand-icon {
+    transition: transform 0.3s ease;
+    font-size: 0.8rem;
+}
+
+.expandable-card:not(.collapsed) .expand-icon {
+    transform: rotate(180deg);
+}
+
+/* Remove the gradient mask when expanded */
+.expandable-card:not(.collapsed) .card-content {
+    mask-image: none;
+    -webkit-mask-image: none;
+    padding-bottom: 3rem; /* Add space for the button when expanded */
+}
+
+/* Specific styles for entrance fees which tend to be longer */
+.fees-list .expandable-card.collapsed {
+    max-height: 250px;
+}
+
+/* Specific styles for operating hours */
+.hours-card .expandable-card.collapsed {
+    max-height: 280px;
+}
+
+/* Specific styles for visitor centers */
+.visitor-centers .expandable-card.collapsed {
+    max-height: 320px;
+}
+
+/* Specific styles for campgrounds info */
+.campgrounds-info .expandable-card.collapsed {
+    max-height: 300px;
+}
+
+/* Specific styles for parking info */
+.parking-info .expandable-card.collapsed {
+    max-height: 280px;
+}
+
+/* Mobile adjustments for expandable cards */
+@media (max-width: 768px) {
+    .expandable-card.collapsed {
+        max-height: 250px;
+    }
+    
+    .fees-list .expandable-card.collapsed {
+        max-height: 200px;
+    }
+    
+    .hours-card .expandable-card.collapsed {
+        max-height: 220px;
+    }
+    
+    .visitor-centers .expandable-card.collapsed {
+        max-height: 250px;
+    }
+    
+    .campgrounds-info .expandable-card.collapsed {
+        max-height: 230px;
+    }
+    
+    .parking-info .expandable-card.collapsed {
+        max-height: 220px;
+    }
+    
+    .expand-button {
+        padding: 1.5rem 1rem 1rem;
+        font-size: 0.85rem;
+        min-height: 2.5rem;
+    }
+    
+    .expandable-card:not(.collapsed) .card-content {
+        padding-bottom: 2.5rem;
     }
 }

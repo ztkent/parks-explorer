@@ -13,7 +13,11 @@
                     </span>
                 </div>
                 {{if .Images}}
-                <img src="{{(index .Images 0).URL}}" alt="{{.Title}}" class="webcam-preview" />
+                {{range $index, $image := .Images}}
+                {{if eq $index 0}}
+                <img src="{{$image.URL}}" alt="{{$.Title}}" class="webcam-preview" />
+                {{end}}
+                {{end}}
                 {{end}}
                 <p>{{.Description}}</p>
                 {{if .StatusMessage}}
@@ -34,10 +38,16 @@
             <div class="gallery-card" data-gallery-id="{{.ID}}">
                 {{if .Images}}
                 <div class="gallery-preview">
-                    <img src="{{(index .Images 0).URL}}" alt="{{(index .Images 0).AltText}}" />
+                    {{if .Images}}
+                    {{range $index, $image := .Images}}
+                    {{if eq $index 0}}
+                    <img src="{{$image.URL}}" alt="{{$image.AltText}}" />
                     <div class="gallery-overlay">
-                        <span class="photo-count">{{len .Images}} photos</span>
+                        <span class="photo-count">Gallery</span>
                     </div>
+                    {{end}}
+                    {{end}}
+                    {{end}}
                 </div>
                 {{end}}
                 <div class="gallery-info">
@@ -45,7 +55,7 @@
                     <p>{{.Description}}</p>
                     {{if .Images}}
                     <div class="gallery-images-preview">
-                        {{range (slice .Images 0 4)}}
+                        {{range .Images}}
                         <img src="{{.URL}}" alt="{{.AltText}}" class="thumbnail" title="{{.Caption}}" />
                         {{end}}
                     </div>
@@ -65,15 +75,19 @@
             <div class="video-card">
                 {{if .Images}}
                 <div class="video-thumbnail">
-                    <img src="{{(index .Images 0).URL}}" alt="{{.Title}}" />
+                    {{range $index, $image := .Images}}
+                    {{if eq $index 0}}
+                    <img src="{{$image.URL}}" alt="{{$.Title}}" />
                     <div class="play-button">▶️</div>
+                    {{end}}
+                    {{end}}
                 </div>
                 {{end}}
                 <div class="video-content">
                     <h3>{{.Title}}</h3>
                     <p>{{.Description}}</p>
                     {{if .DurationMs}}
-                    <span class="duration">⏱️ {{div .DurationMs 60000}} min</span>
+                    <span class="duration">⏱️ Video Duration Available</span>
                     {{end}}
                     {{if .PermalinkUrl}}
                     <a href="{{.PermalinkUrl}}" target="_blank" class="video-link">Watch Video</a>
@@ -98,13 +112,17 @@
             {{range .Media.audio.Data}}
             <div class="audio-card">
                 {{if .Images}}
-                <img src="{{(index .Images 0).URL}}" alt="{{.Title}}" class="audio-cover" />
+                {{range $index, $image := .Images}}
+                {{if eq $index 0}}
+                <img src="{{$image.URL}}" alt="{{$.Title}}" class="audio-cover" />
+                {{end}}
+                {{end}}
                 {{end}}
                 <div class="audio-content">
                     <h3>{{.Title}}</h3>
                     <p>{{.Description}}</p>
                     {{if .DurationMs}}
-                    <span class="duration">⏱️ {{div .DurationMs 60000}} min</span>
+                    <span class="duration">⏱️ Audio Duration Available</span>
                     {{end}}
                     {{if .PermalinkUrl}}
                     <a href="{{.PermalinkUrl}}" target="_blank" class="audio-link">Listen Now</a>
@@ -131,7 +149,7 @@
                 <div class="audio-header">
                     <h4>{{.Title}}</h4>
                     {{if .DurationMs}}
-                    <span class="duration">{{div .DurationMs 60000}} min</span>
+                    <span class="duration">Audio Available</span>
                     {{end}}
                 </div>
                 <p>{{.Description}}</p>
@@ -140,6 +158,15 @@
                 {{end}}
             </div>
             {{end}}
+        </div>
+    </section>
+    {{end}}
+
+    {{if not (or .Media.webcams .Media.galleries .Media.videos .Media.audio .Audio)}}
+    <section class="no-media">
+        <div class="no-media-content">
+            <h2>📸 Media & Galleries</h2>
+            <p>No multimedia content available for this park. Check back later for photos, videos, and webcam feeds!</p>
         </div>
     </section>
     {{end}}

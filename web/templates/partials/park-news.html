@@ -4,7 +4,7 @@
         <h2>Current Alerts</h2>
         <div class="alerts-list">
             {{range .News.alerts.Data}}
-            <div class="alert-card alert-{{.Category | lower}}">
+            <div class="alert-card alert-{{.Category}}">
                 <div class="alert-header">
                     <h3>{{.Title}}</h3>
                     <span class="alert-category">{{.Category}}</span>
@@ -88,8 +88,8 @@
             <div class="event-item">
                 <div class="event-date-block">
                     {{if .DateStart}}
-                    <span class="month">{{slice .DateStart 5 7}}</span>
-                    <span class="day">{{slice .DateStart 8 10}}</span>
+                    <span class="month">{{.DateStart}}</span>
+                    <span class="day">{{.DateStart}}</span>
                     {{end}}
                 </div>
                 <div class="event-details">
