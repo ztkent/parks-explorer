@@ -1,5 +1,7 @@
 <div class="container">
     {{if .News.alerts}}
+    {{if .News.alerts.Data}}
+    {{if gt (len .News.alerts.Data) 0}}
     <section class="alerts">
         <h2>Current Alerts</h2>
         <div class="alerts-list">
@@ -21,15 +23,19 @@
         </div>
     </section>
     {{end}}
+    {{end}}
+    {{end}}
 
-    {{if .NewsReleases}}
+    {{if .News.newsReleases}}
+    {{if .News.newsReleases.Data}}
+    {{if gt (len .News.newsReleases.Data) 0}}
     <section class="news-releases">
         <h2>News & Press Releases</h2>
         <div class="news-list">
-            {{range .NewsReleases.Data}}
+            {{range .News.newsReleases.Data}}
             <article class="news-card">
                 <div class="news-header">
-                    <h3>{{.Title}}</h3>
+                    <h3><a href="{{.URL}}" target="_blank">{{.Title}}</a></h3>
                     {{if .ReleaseDate}}
                     <span class="release-date">📅 {{.ReleaseDate}}</span>
                     {{end}}
@@ -38,7 +44,9 @@
                 <p class="news-abstract">{{.Abstract}}</p>
                 {{end}}
                 {{if .Image}}
+                {{if .Image.URL}}
                 <img src="{{.Image.URL}}" alt="{{.Image.AltText}}" class="news-image" />
+                {{end}}
                 {{end}}
                 {{if .URL}}
                 <a href="{{.URL}}" target="_blank" class="read-more">Read Full Article</a>
@@ -48,27 +56,26 @@
         </div>
     </section>
     {{end}}
+    {{end}}
+    {{end}}
 
     {{if .News.articles}}
+    {{if .News.articles.Data}}
+    {{if gt (len .News.articles.Data) 0}}
     <section class="articles">
         <h2>Educational Articles</h2>
         <div class="articles-grid">
             {{range .News.articles.Data}}
             <div class="article-card">
-                {{if .ListingImage.URL}}
-                <img src="{{.ListingImage.URL}}" alt="{{.ListingImage.Title}}" class="article-image" />
+                {{if .ListingImage}}
+                    {{if .ListingImage.URL}}
+                    <img src="{{.ListingImage.URL}}" alt="{{.ListingImage.AltText}}" class="article-image" />
+                    {{end}}
                 {{end}}
                 <div class="article-content">
-                    <h3>{{.Title}}</h3>
+                    <h3><a href="{{.URL}}" target="_blank">{{.Title}}</a></h3>
                     {{if .ListingDescription}}
                     <p>{{.ListingDescription}}</p>
-                    {{end}}
-                    {{if .Tags}}
-                    <div class="article-tags">
-                        {{range .Tags}}
-                        <span class="tag">{{.}}</span>
-                        {{end}}
-                    </div>
                     {{end}}
                     {{if .URL}}
                     <a href="{{.URL}}" target="_blank" class="read-article">Read More</a>
@@ -79,8 +86,12 @@
         </div>
     </section>
     {{end}}
+    {{end}}
+    {{end}}
 
     {{if .News.events}}
+    {{if .News.events.Data}}
+    {{if gt (len .News.events.Data) 0}}
     <section class="upcoming-events">
         <h2>Upcoming Events & Programs</h2>
         <div class="events-calendar">
@@ -113,8 +124,10 @@
         </div>
     </section>
     {{end}}
+    {{end}}
+    {{end}}
 
-    {{if not (or .News.alerts .NewsReleases .News.articles .News.events)}}
+    {{if not (or (and .News.alerts .News.alerts.Data (gt (len .News.alerts.Data) 0)) (and .News.newsReleases .News.newsReleases.Data (gt (len .News.newsReleases.Data) 0)) (and .News.articles .News.articles.Data (gt (len .News.articles.Data) 0)) (and .News.events .News.events.Data (gt (len .News.events.Data) 0)))}}
     <section class="no-news">
         <div class="no-news-content">
             <h2>📰 News & Updates</h2>

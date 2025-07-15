@@ -1,8 +1,41 @@
 <div class="container">
+    <!-- Park Details Navigation -->
+    <div class="park-details-nav">
+        <div class="details-nav-container">
+            <h3>Quick Navigation</h3>
+            <nav class="details-nav-links">
+                {{if .Details.park}}
+                <a href="#location-contact" class="nav-link">Location & Contact</a>
+                {{end}}
+                {{if .Details.park.OperatingHours}}
+                <a href="#operating-hours" class="nav-link">Hours</a>
+                {{end}}
+                {{if or .Details.park.EntranceFees .Details.fees}}
+                <a href="#fees" class="nav-link">Fees</a>
+                {{end}}
+                {{if .Details.park.WeatherInfo}}
+                <a href="#weather" class="nav-link">Weather</a>
+                {{end}}
+                {{if .Details.park.DirectionsInfo}}
+                <a href="#directions" class="nav-link">Directions</a>
+                {{end}}
+                {{if .Details.visitorCenters}}
+                <a href="#visitor-centers" class="nav-link">Visitor Centers</a>
+                {{end}}
+                {{if .Details.campgrounds}}
+                <a href="#campgrounds" class="nav-link">Campgrounds</a>
+                {{end}}
+                {{if .Details.parkingLots}}
+                <a href="#parking" class="nav-link">Parking</a>
+                {{end}}
+            </nav>
+        </div>
+    </div>
+
     <div class="park-details-grid">
         {{if .Details.park}}
         <!-- Location & Contact -->
-        <div class="detail-section">
+        <div class="detail-section" id="location-contact">
             <h3>Location & Contact</h3>
             {{range .Details.park.Addresses}}
             {{if eq .Type "Physical"}}
@@ -37,144 +70,129 @@
 
         {{if .Details.park.OperatingHours}}
         <!-- Operating Hours -->
-        <div class="detail-section">
+        <div class="detail-section" id="operating-hours">
             <h3>Operating Hours</h3>
-            <div class="expandable-card collapsed">
-                <div class="card-content">
-                    {{range .Details.park.OperatingHours}}
-                    <div class="hours-card">
-                        <h4>{{.Name}}</h4>
-                        {{if .Description}}
-                        <p>{{.Description}}</p>
-                        {{end}}
-                        {{if .StandardHours}}
-                        <div class="hours-grid">
-                            {{with .StandardHours}}
-                            {{if .Monday}}
-                            <div class="day-hours">
-                                <span class="day">Monday:</span>
-                                <span class="hours">{{.Monday}}</span>
-                            </div>
-                            {{end}}
-                            {{if .Tuesday}}
-                            <div class="day-hours">
-                                <span class="day">Tuesday:</span>
-                                <span class="hours">{{.Tuesday}}</span>
-                            </div>
-                            {{end}}
-                            {{if .Wednesday}}
-                            <div class="day-hours">
-                                <span class="day">Wednesday:</span>
-                                <span class="hours">{{.Wednesday}}</span>
-                            </div>
-                            {{end}}
-                            {{if .Thursday}}
-                            <div class="day-hours">
-                                <span class="day">Thursday:</span>
-                                <span class="hours">{{.Thursday}}</span>
-                            </div>
-                            {{end}}
-                            {{if .Friday}}
-                            <div class="day-hours">
-                                <span class="day">Friday:</span>
-                                <span class="hours">{{.Friday}}</span>
-                            </div>
-                            {{end}}
-                            {{if .Saturday}}
-                            <div class="day-hours">
-                                <span class="day">Saturday:</span>
-                                <span class="hours">{{.Saturday}}</span>
-                            </div>
-                            {{end}}
-                            {{if .Sunday}}
-                            <div class="day-hours">
-                                <span class="day">Sunday:</span>
-                                <span class="hours">{{.Sunday}}</span>
-                            </div>
-                            {{end}}
-                            {{end}}
-                        </div>
-                        {{else}}
-                        <p class="no-hours">Standard operating hours not available.</p>
-                        {{end}}
-                        {{if .Exceptions}}
-                        <div class="exceptions">
-                            <h5>Schedule Exceptions:</h5>
-                            {{range .Exceptions}}
-                            {{if .}}
-                            <div class="exception">
-                                <strong>{{with .Name}}{{.}}{{else}}Schedule Exception{{end}}</strong>{{if and .StartDate .EndDate}}: {{.StartDate}} - {{.EndDate}}{{end}}
-                                {{if .ExceptionHours}}
-                                <div class="exception-hours">
-                                    <span>Check with park for specific hours during this period</span>
-                                </div>
-                                {{end}}
-                            </div>
-                            {{end}}
-                            {{end}}
+            {{range .Details.park.OperatingHours}}
+            <div class="hours-card">
+                <h4>{{.Name}}</h4>
+                {{if .Description}}
+                <p>{{.Description}}</p>
+                {{end}}
+                {{if .StandardHours}}
+                <div class="hours-grid">
+                    {{with .StandardHours}}
+                    {{if .Monday}}
+                    <div class="day-hours">
+                        <span class="day">Monday:</span>
+                        <span class="hours">{{.Monday}}</span>
+                    </div>
+                    {{end}}
+                    {{if .Tuesday}}
+                    <div class="day-hours">
+                        <span class="day">Tuesday:</span>
+                        <span class="hours">{{.Tuesday}}</span>
+                    </div>
+                    {{end}}
+                    {{if .Wednesday}}
+                    <div class="day-hours">
+                        <span class="day">Wednesday:</span>
+                        <span class="hours">{{.Wednesday}}</span>
+                    </div>
+                    {{end}}
+                    {{if .Thursday}}
+                    <div class="day-hours">
+                        <span class="day">Thursday:</span>
+                        <span class="hours">{{.Thursday}}</span>
+                    </div>
+                    {{end}}
+                    {{if .Friday}}
+                    <div class="day-hours">
+                        <span class="day">Friday:</span>
+                        <span class="hours">{{.Friday}}</span>
+                    </div>
+                    {{end}}
+                    {{if .Saturday}}
+                    <div class="day-hours">
+                        <span class="day">Saturday:</span>
+                        <span class="hours">{{.Saturday}}</span>
+                    </div>
+                    {{end}}
+                    {{if .Sunday}}
+                    <div class="day-hours">
+                        <span class="day">Sunday:</span>
+                        <span class="hours">{{.Sunday}}</span>
+                    </div>
+                    {{end}}
+                    {{end}}
+                </div>
+                {{else}}
+                <p class="no-hours">Standard operating hours not available.</p>
+                {{end}}
+                {{if .Exceptions}}
+                <div class="exceptions">
+                    <h5>Schedule Exceptions:</h5>
+                    {{range .Exceptions}}
+                    {{if .}}
+                    <div class="exception">
+                        <strong>{{with .Name}}{{.}}{{else}}Schedule Exception{{end}}</strong>{{if and .StartDate .EndDate}}: {{.StartDate}} - {{.EndDate}}{{end}}
+                        {{if .ExceptionHours}}
+                        <div class="exception-hours">
+                            <span>Check with park for specific hours during this period</span>
                         </div>
                         {{end}}
                     </div>
                     {{end}}
+                    {{end}}
                 </div>
-                <button class="expand-button">Show More <span class="expand-icon">▼</span></button>
+                {{end}}
             </div>
+            {{end}}
         </div>
         {{end}}
 
         {{if .Details.park.EntranceFees}}
         <!-- Entrance Fees -->
-        <div class="detail-section">
+        <div class="detail-section" id="fees">
             <h3>Entrance Fees</h3>
-            <div class="expandable-card collapsed">
-                <div class="card-content">
-                    <div class="fees-list">
-                        {{range .Details.park.EntranceFees}}
-                        <div class="fee-card">
-                            <h4>{{.Title}}</h4>
-                            <p class="cost">${{.Cost}}</p>
-                            <p>{{.Description}}</p>
-                        </div>
-                        {{end}}
-                    </div>
+            <div class="fees-list">
+                {{range .Details.park.EntranceFees}}
+                <div class="fee-card">
+                    <h4>{{.Title}}</h4>
+                    <p class="cost">${{.Cost}}</p>
+                    <p>{{.Description}}</p>
                 </div>
-                <button class="expand-button">Show More <span class="expand-icon">▼</span></button>
+                {{end}}
             </div>
         </div>
         {{end}}
 
         {{if .Details.fees}}
         <!-- Additional Fees & Passes -->
-        <div class="detail-section">
+        <div class="detail-section" id="additional-fees">
             <h3>Fees & Passes</h3>
-            <div class="expandable-card collapsed">
-                <div class="card-content">
-                    {{range .Details.fees.Data}}
-                    <div class="fees-info">
-                        <h4>{{.ParkCode}} Fees</h4>
-                        {{if .EntranceFeeDescription}}
-                        <p><strong>Entrance Fees:</strong> {{.EntranceFeeDescription}}</p>
-                        {{end}}
-                        {{if .PaidParkingDescription}}
-                        <p><strong>Parking:</strong> {{.PaidParkingDescription}}</p>
-                        {{end}}
-                        {{if .TimedEntryDescription}}
-                        <p><strong>Timed Entry:</strong> {{.TimedEntryDescription}}</p>
-                        {{end}}
-                        {{if .IsInteragencyPassAccepted}}
-                        <p>✅ Interagency Annual Pass Accepted</p>
-                        {{end}}
-                    </div>
-                    {{end}}
-                </div>
-                <button class="expand-button">Show More <span class="expand-icon">▼</span></button>
+            {{range .Details.fees.Data}}
+            <div class="fees-info">
+                <h4>{{.ParkCode}} Fees</h4>
+                {{if .EntranceFeeDescription}}
+                <p><strong>Entrance Fees:</strong> {{.EntranceFeeDescription}}</p>
+                {{end}}
+                {{if .PaidParkingDescription}}
+                <p><strong>Parking:</strong> {{.PaidParkingDescription}}</p>
+                {{end}}
+                {{if .TimedEntryDescription}}
+                <p><strong>Timed Entry:</strong> {{.TimedEntryDescription}}</p>
+                {{end}}
+                {{if .IsInteragencyPassAccepted}}
+                <p>✅ Interagency Annual Pass Accepted</p>
+                {{end}}
             </div>
+            {{end}}
         </div>
         {{end}}
 
         {{if .Details.park.WeatherInfo}}
         <!-- Weather Information -->
-        <div class="detail-section">
+        <div class="detail-section" id="weather">
             <h3>Weather Information</h3>
             <div class="weather-info">
                 <p>{{.Details.park.WeatherInfo}}</p>
@@ -184,7 +202,7 @@
 
         {{if .Details.park.DirectionsInfo}}
         <!-- Directions -->
-        <div class="detail-section">
+        <div class="detail-section" id="directions">
             <h3>Directions</h3>
             <div class="directions-info">
                 <p>{{.Details.park.DirectionsInfo}}</p>
@@ -197,113 +215,98 @@
 
         {{if .Details.visitorCenters}}
         <!-- Visitor Centers -->
-        <div class="detail-section">
+        <div class="detail-section" id="visitor-centers">
             <h3>Visitor Centers</h3>
-            <div class="expandable-card collapsed">
-                <div class="card-content">
-                    <div class="visitor-centers">
-                        {{range .Details.visitorCenters.Data}}
-                        <div class="visitor-center-card">
-                            <h4>{{.Name}}</h4>
-                            <p>{{.Description}}</p>
-                            {{if .Addresses}}
-                            <p class="address">{{(index .Addresses 0).Line1}}, {{(index .Addresses 0).City}}</p>
-                            {{end}}
-                            {{if .OperatingHours}}
-                            <div class="vc-hours">
-                                {{range .OperatingHours}}
-                                <p><strong>{{.Name}}:</strong> {{.Description}}</p>
-                                {{end}}
-                            </div>
-                            {{end}}
-                            {{if .Amenities}}
-                            <div class="vc-amenities">
-                                <strong>Services:</strong>
-                                {{range .Amenities}}
-                                <span class="amenity-tag">{{.}}</span>
-                                {{end}}
-                            </div>
-                            {{end}}
-                        </div>
+            <div class="visitor-centers">
+                {{range .Details.visitorCenters.Data}}
+                <div class="visitor-center-card">
+                    <h4>{{.Name}}</h4>
+                    <p>{{.Description}}</p>
+                    {{if .Addresses}}
+                    <p class="address">{{(index .Addresses 0).Line1}}, {{(index .Addresses 0).City}}</p>
+                    {{end}}
+                    {{if .OperatingHours}}
+                    <div class="vc-hours">
+                        {{range .OperatingHours}}
+                        <p><strong>{{.Name}}:</strong> {{.Description}}</p>
                         {{end}}
                     </div>
+                    {{end}}
+                    {{if .Amenities}}
+                    <div class="vc-amenities">
+                        <strong>Services:</strong>
+                        {{range .Amenities}}
+                        <span class="amenity-tag">{{.}}</span>
+                        {{end}}
+                    </div>
+                    {{end}}
                 </div>
-                <button class="expand-button">Show More <span class="expand-icon">▼</span></button>
+                {{end}}
             </div>
         </div>
         {{end}}
 
         {{if .Details.campgrounds}}
         <!-- Campgrounds -->
-        <div class="detail-section">
+        <div class="detail-section" id="campgrounds">
             <h3>Campgrounds</h3>
-            <div class="expandable-card collapsed">
-                <div class="card-content">
-                    <div class="campgrounds-info">
-                        {{range .Details.campgrounds.Data}}
-                        <div class="campground-info-card">
-                            <h4>{{.Name}}</h4>
-                            <p>{{.Description}}</p>
-                            {{if .Campsites}}
-                            <div class="campsite-details">
-                                {{if .Campsites.TotalSites}}
-                                <span>🏕️ {{.Campsites.TotalSites}} Total Sites</span>
-                                {{end}}
-                                {{if .Campsites.ElectricalHookups}}
-                                <span>⚡ Electric: {{.Campsites.ElectricalHookups}}</span>
-                                {{end}}
-                                {{if .Campsites.RvOnly}}
-                                <span>🚐 RV Sites: {{.Campsites.RvOnly}}</span>
-                                {{end}}
-                            </div>
-                            {{end}}
-                            {{if .ReservationInfo}}
-                            <p><strong>Reservations:</strong> {{.ReservationInfo}}</p>
-                            {{end}}
-                            {{if .ReservationUrl}}
-                            <a href="{{.ReservationUrl}}" target="_blank" class="reservation-link">Make Reservation</a>
-                            {{end}}
-                        </div>
+            <div class="campgrounds-info">
+                {{range .Details.campgrounds.Data}}
+                <div class="campground-info-card">
+                    <h4>{{.Name}}</h4>
+                    <p>{{.Description}}</p>
+                    {{if .Campsites}}
+                    <div class="campsite-details">
+                        {{if .Campsites.TotalSites}}
+                        <span>🏕️ {{.Campsites.TotalSites}} Total Sites</span>
+                        {{end}}
+                        {{if .Campsites.ElectricalHookups}}
+                        <span>⚡ Electric: {{.Campsites.ElectricalHookups}}</span>
+                        {{end}}
+                        {{if .Campsites.RvOnly}}
+                        <span>🚐 RV Sites: {{.Campsites.RvOnly}}</span>
                         {{end}}
                     </div>
+                    {{end}}
+                    {{if .ReservationInfo}}
+                    <p><strong>Reservations:</strong> {{.ReservationInfo}}</p>
+                    {{end}}
+                    {{if .ReservationUrl}}
+                    <a href="{{.ReservationUrl}}" target="_blank" class="reservation-link">Make Reservation</a>
+                    {{end}}
                 </div>
-                <button class="expand-button">Show More <span class="expand-icon">▼</span></button>
+                {{end}}
             </div>
         </div>
         {{end}}
 
         {{if .Details.parkingLots}}
         <!-- Parking Information -->
-        <div class="detail-section">
+        <div class="detail-section" id="parking">
             <h3>Parking</h3>
-            <div class="expandable-card collapsed">
-                <div class="card-content">
-                    <div class="parking-info">
-                        {{range .Details.parkingLots.Data}}
-                        <div class="parking-card">
-                            <h4>{{.Name}}</h4>
-                            <p>{{.Description}}</p>
-                            {{if .Accessibility}}
-                            <div class="parking-accessibility">
-                                {{if .Accessibility.IsLotAccessibleToDisabled}}
-                                <span>♿ ADA Accessible</span>
-                                {{end}}
-                                {{if .Accessibility.TotalSpaces}}
-                                <span>🅿️ {{.Accessibility.TotalSpaces}} Total Spaces</span>
-                                {{end}}
-                                {{if .Accessibility.NumberofAdaSpaces}}
-                                <span>♿ {{.Accessibility.NumberofAdaSpaces}} ADA Spaces</span>
-                                {{end}}
-                                {{if .Accessibility.NumberOfOversizeVehicleSpaces}}
-                                <span>🚐 {{.Accessibility.NumberOfOversizeVehicleSpaces}} Oversize Spaces</span>
-                                {{end}}
-                            </div>
-                            {{end}}
-                        </div>
+            <div class="parking-info">
+                {{range .Details.parkingLots.Data}}
+                <div class="parking-card">
+                    <h4>{{.Name}}</h4>
+                    <p>{{.Description}}</p>
+                    {{if .Accessibility}}
+                    <div class="parking-accessibility">
+                        {{if .Accessibility.IsLotAccessibleToDisabled}}
+                        <span>♿ ADA Accessible</span>
+                        {{end}}
+                        {{if .Accessibility.TotalSpaces}}
+                        <span>🅿️ {{.Accessibility.TotalSpaces}} Total Spaces</span>
+                        {{end}}
+                        {{if .Accessibility.NumberofAdaSpaces}}
+                        <span>♿ {{.Accessibility.NumberofAdaSpaces}} ADA Spaces</span>
+                        {{end}}
+                        {{if .Accessibility.NumberOfOversizeVehicleSpaces}}
+                        <span>🚐 {{.Accessibility.NumberOfOversizeVehicleSpaces}} Oversize Spaces</span>
                         {{end}}
                     </div>
+                    {{end}}
                 </div>
-                <button class="expand-button">Show More <span class="expand-icon">▼</span></button>
+                {{end}}
             </div>
         </div>
         {{end}}
