@@ -1,57 +1,40 @@
 <div class="container">
-    {{if and .Media.webcams .Media.webcams.Data}}
-        {{if gt (len .Media.webcams.Data) 0}}
-            <section class="live-webcams">
-                <h2>Live Webcams</h2>
-                <div class="webcams-grid">
-                    {{range .Media.webcams.Data}}
-                        <div class="webcam-card">
-                            <div class="webcam-header">
-                                <h3>{{if .Title}}{{.Title}}{{else}}Webcam{{end}}</h3>
-                            </div>
-                            {{if .Images}}
-                                {{range $index, $image := .Images}}
-                                    {{if eq $index 0}}
-                                        <img src="{{$image.URL}}" alt="{{$.Title}}" class="webcam-preview" />
-                                    {{end}}
-                                {{end}}
-                            {{end}}
-                            {{if .Description}}
-                                <p>{{.Description}}</p>
-                            {{end}}
-                            {{if .URL}}
-                                <a href="{{.URL}}" target="_blank" class="webcam-link">View Webcam</a>
-                            {{end}}
-                            <div class="webcam-info">
-                                <small class="webcam-status">
-                                    Status: 
-                                    <span class="status {{if eq .Status "Active"}}live{{else}}offline{{end}}">
-                                        {{.Status}}
-                                    </span>
-                                </small>
-                                {{if .StatusMessage}}
-                                    <small class="webcam-status-message">{{.StatusMessage}}</small>
-                                {{end}}
-                                {{if .Tags}}
-                                    <div class="webcam-tags">
-                                        {{range .Tags}}
-                                            <span class="tag">{{.}}</span>
-                                        {{end}}
-                                    </div>
-                                {{end}}
-                            </div>
+    {{if and .Webcams .Webcams.Data (gt (len .Webcams.Data) 0)}}
+        <section class="live-webcams">
+            <h2>Live Webcams</h2>
+            <div class="webcams-grid">
+                {{range .Webcams.Data}}
+                    <div class="webcam-card">
+                        <div class="webcam-header">
+                            <h3>{{if .Title}}{{.Title}}{{else}}Webcam{{end}}</h3>
                         </div>
-                    {{end}}
-                </div>
-            </section>
-        {{end}}
+                        {{if .Images}}
+                            {{range .Images}}
+                                <img src="{{.URL}}" alt="{{.AltText}}" class="webcam-image" />
+                            {{end}}
+                        {{end}}
+                        {{if .Description}}
+                            <p>{{.Description}}</p>
+                        {{end}}
+                        {{if .URL}}
+                            <a href="{{.URL}}" target="_blank" class="webcam-link">View Webcam</a>
+                        {{end}}
+                        <div class="webcam-info">
+                            {{if .Latitude}}
+                            <span class="coordinates">📍 {{.Latitude}}, {{.Longitude}}</span>
+                            {{end}}
+                        </div>
+                    </div>
+                {{end}}
+            </div>
+        </section>
     {{end}}
 
-    {{if and .Media.galleries .Media.galleries.Data}}
+    {{if and .Galleries .Galleries.Data}}
     <section class="photo-galleries">
         <h2>Photo Galleries</h2>
         <div class="galleries-grid">
-            {{range $gallery := .Media.galleries.Data}}
+            {{range $gallery := .Galleries.Data}}
             <div class="gallery-card" data-gallery-id="{{$gallery.ID}}" onclick="openGallerySlideshow('{{$gallery.ID}}')">
                 <div class="gallery-preview">
                     {{if $gallery.Images}}
@@ -61,15 +44,13 @@
                             {{end}}
                         {{end}}
                     {{end}}
-                    {{if $.Media.galleryAssets}}
-                        {{if index $.Media.galleryAssets $gallery.ID}}
-                            {{$assetResp := index $.Media.galleryAssets $gallery.ID}}
+                    {{if $.GalleryAssets}}
+                        {{if index $.GalleryAssets $gallery.ID}}
+                            {{$assetResp := index $.GalleryAssets $gallery.ID}}
                             {{if $assetResp.Data}}
                                 {{range $index, $asset := $assetResp.Data}}
-                                    {{if and (lt $index 50) (ge $index (len $gallery.Images))}}
-                                        {{if $asset.FileInfo.Url}}
-                                            <img src="{{$asset.FileInfo.Url}}" alt="{{$asset.AltText}}" class="gallery-preview-image" />
-                                        {{end}}
+                                    {{if lt $index 3}}
+                                        <img src="{{$asset.URL}}" alt="{{$asset.AltText}}" class="gallery-preview-image" />
                                     {{end}}
                                 {{end}}
                             {{end}}
@@ -79,9 +60,9 @@
                         <span class="photo-count">
                             {{$galleryImageCount := len $gallery.Images}}
                             {{$assetCount := 0}}
-                            {{if $.Media.galleryAssets}}
-                                {{if index $.Media.galleryAssets $gallery.ID}}
-                                    {{$assetResp := index $.Media.galleryAssets $gallery.ID}}
+                            {{if $.GalleryAssets}}
+                                {{if index $.GalleryAssets $gallery.ID}}
+                                    {{$assetResp := index $.GalleryAssets $gallery.ID}}
                                     {{if $assetResp.Data}}
                                         {{$assetCount = len $assetResp.Data}}
                                     {{end}}
@@ -137,15 +118,15 @@
 
     <!-- Initialize gallery assets data for JavaScript -->
     <script>
-        window.galleryAssetsData = {{if .Media.galleryAssets}}{{.Media.galleryAssets}}{{else}}{}{{end}};
+        window.galleryAssetsData = {{if .GalleryAssets}}{{.GalleryAssets}}{{else}}{}{{end}};
     </script>
     {{end}}
 
-    {{if and .Media.videos .Media.videos.Data}}
+    {{if and .Videos .Videos.Data}}
     <section class="videos">
         <h2>Videos</h2>
         <div class="videos-grid">
-            {{range .Media.videos.Data}}
+            {{range .Videos.Data}}
             <div class="video-card">
                 <div class="video-content">
                     <h3>{{.Title}}</h3>
@@ -172,11 +153,11 @@
     </section>
     {{end}}
 
-    {{if and .Media.audio .Media.audio.Data}}
+    {{if and .Audio .Audio.Data}}
     <section class="audio-content">
         <h2>Audio Content</h2>
         <div class="audio-grid">
-            {{range .Media.audio.Data}}
+            {{range .Audio.Data}}
             <div class="audio-card">
                 {{if .SplashImage.Url}}
                 <img src="{{.SplashImage.Url}}" alt="{{.Title}}" class="audio-cover" />
@@ -206,29 +187,7 @@
     </section>
     {{end}}
 
-    {{if and .Audio .Audio.Data}}
-    <section class="additional-audio">
-        <h2>Audio Tours & Podcasts</h2>
-        <div class="audio-list">
-            {{range .Audio.Data}}
-            <div class="audio-item">
-                <div class="audio-header">
-                    <h4>{{.Title}}</h4>
-                    {{if .DurationMs}}
-                    <span class="duration">Duration: {{formatDuration .DurationMs}}</span>
-                    {{end}}
-                </div>
-                <p>{{.Description}}</p>
-                {{if .PermalinkUrl}}
-                <a href="{{.PermalinkUrl}}" target="_blank" class="listen-link">🎧 Listen</a>
-                {{end}}
-            </div>
-            {{end}}
-        </div>
-    </section>
-    {{end}}
-
-    {{if not (or .Media.webcams .Media.galleries .Media.videos .Media.audio .Audio)}}
+    {{if not (or (and .Webcams .Webcams.Data (gt (len .Webcams.Data) 0)) (and .Galleries .Galleries.Data (gt (len .Galleries.Data) 0)) (and .Videos .Videos.Data (gt (len .Videos.Data) 0)) (and .Audio .Audio.Data (gt (len .Audio.Data) 0)))}}
     <section class="no-media">
         <div class="no-media-content">
             <h2>Media & Galleries</h2>

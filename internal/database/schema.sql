@@ -112,7 +112,33 @@ CREATE TABLE park_details (
     UNIQUE(park_id, data_type)
 );
 
--- Create indexes for better performance
+-- Park Gallery Assets Cache
+CREATE TABLE park_gallery_assets (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    park_id INTEGER NOT NULL,
+    gallery_id TEXT NOT NULL,
+    asset_id TEXT,
+    title TEXT,
+    alt_text TEXT,
+    caption TEXT,
+    credit TEXT,
+    url TEXT,
+    asset_type TEXT, -- 'image', 'video', etc.
+    file_size INTEGER,
+    width INTEGER,
+    height INTEGER,
+    api_data TEXT NOT NULL, -- JSON blob of complete asset data
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    last_fetched_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (park_id) REFERENCES parks(id) ON DELETE CASCADE,
+    UNIQUE(park_id, gallery_id, asset_id)
+);
+
+CREATE INDEX idx_park_gallery_assets_park_id ON park_gallery_assets(park_id);
+CREATE INDEX idx_park_gallery_assets_gallery_id ON park_gallery_assets(park_id, gallery_id);
+CREATE INDEX idx_park_gallery_assets_last_fetched ON park_gallery_assets(last_fetched_at);
+CREATE INDEX idx_park_gallery_assets_type ON park_gallery_assets(asset_type);
 CREATE INDEX idx_parks_park_code ON parks(park_code);
 CREATE INDEX idx_parks_slug ON parks(slug);
 CREATE INDEX idx_parks_last_fetched ON parks(last_fetched_at);

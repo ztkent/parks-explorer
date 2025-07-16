@@ -1,5 +1,5 @@
 <div class="container">
-    {{if .ThingsToDo}}
+    {{if and .ThingsToDo .ThingsToDo.Data (gt (len .ThingsToDo.Data) 0)}}
     <section class="things-to-do">
         <h2>Things To Do</h2>
         <div class="activities-detailed">
@@ -46,7 +46,7 @@
     </section>
     {{end}}
 
-    {{if .Tours}}
+    {{if and .Tours .Tours.Data (gt (len .Tours.Data) 0)}}
     <section class="guided-tours">
         <h2>Guided Tours</h2>
         <div class="tours-grid">
@@ -71,7 +71,7 @@
     </section>
     {{end}}
 
-    {{if .Events}}
+    {{if and .Events .Events.Data (gt (len .Events.Data) 0)}}
     <section class="events">
         <h2>Upcoming Events</h2>
         <div class="events-list">
@@ -87,8 +87,10 @@
                 {{if .Location}}
                 <p class="event-location">📍 {{.Location}}</p>
                 {{end}}
-                {{if .FeeDescription}}
-                <p class="event-fee">💳 {{.FeeDescription}}</p>
+                {{if eq .IsFree "false"}}
+                <p class="event-fee">💳 Fee required</p>
+                {{else if eq .IsFree "true"}}
+                <p class="event-fee">🆓 Free event</p>
                 {{end}}
                 {{if .Times}}
                 <div class="event-times">
@@ -103,7 +105,7 @@
     </section>
     {{end}}
 
-    {{if .Campgrounds}}
+    {{if and .Campgrounds .Campgrounds.Data (gt (len .Campgrounds.Data) 0)}}
     <section class="campgrounds">
         <h2>Camping</h2>
         <div class="campgrounds-grid">
@@ -138,6 +140,22 @@
                     </div>
                     {{end}}
                 </div>
+            </div>
+            {{end}}
+        </div>
+    </section>
+    {{end}}
+
+    {{if and .Activities .Activities.Data (gt (len .Activities.Data) 0)}}
+    <section class="activity-categories">
+        <h2>Activity Categories</h2>
+        <div class="activity-categories-grid">
+            {{range .Activities.Data}}
+            <div class="activity-category-card">
+                <h4>{{.Name}}</h4>
+                {{if .ID}}
+                <span class="activity-id">{{.ID}}</span>
+                {{end}}
             </div>
             {{end}}
         </div>
