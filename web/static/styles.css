@@ -3059,11 +3059,6 @@ html {
     box-shadow: 0 4px 8px rgba(22, 163, 74, 0.3);
 }
 
-.webcam-link::after {
-    content: "📹";
-    font-size: 1rem;
-}
-
 .webcam-tags {
     display: flex;
     flex-wrap: wrap;

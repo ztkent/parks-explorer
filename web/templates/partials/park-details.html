@@ -10,7 +10,15 @@
                 {{if .Details.park.OperatingHours}}
                 <a href="#operating-hours" class="nav-link">Hours</a>
                 {{end}}
-                {{if or .Details.park.EntranceFees .Details.fees}}
+                {{$hasFeeContent := false}}
+                {{if .Details.fees.Data}}
+                    {{range .Details.fees.Data}}
+                        {{if or .EntranceFeeDescription .PaidParkingDescription .TimedEntryDescription .IsInteragencyPassAccepted}}
+                            {{$hasFeeContent = true}}
+                        {{end}}
+                    {{end}}
+                {{end}}
+                {{if or .Details.park.EntranceFees $hasFeeContent}}
                 <a href="#fees" class="nav-link">Fees</a>
                 {{end}}
                 {{if .Details.park.WeatherInfo}}
@@ -19,13 +27,13 @@
                 {{if .Details.park.DirectionsInfo}}
                 <a href="#directions" class="nav-link">Directions</a>
                 {{end}}
-                {{if .Details.visitorCenters}}
+                {{if and .Details.visitorCenters .Details.visitorCenters.Data}}
                 <a href="#visitor-centers" class="nav-link">Visitor Centers</a>
                 {{end}}
-                {{if .Details.campgrounds}}
+                {{if and .Details.campgrounds .Details.campgrounds.Data}}
                 <a href="#campgrounds" class="nav-link">Campgrounds</a>
                 {{end}}
-                {{if .Details.parkingLots}}
+                {{if and .Details.parkingLots .Details.parkingLots.Data}}
                 <a href="#parking" class="nav-link">Parking</a>
                 {{end}}
             </nav>
@@ -134,7 +142,7 @@
                     {{range .Exceptions}}
                     {{if .}}
                     <div class="exception">
-                        <strong>{{with .Name}}{{.}}{{else}}Schedule Exception{{end}}</strong>{{if and .StartDate .EndDate}}: {{.StartDate}} - {{.EndDate}}{{end}}
+                        <strong>{{with .Name}}{{.}}{{else}}Schedule Exception{{end}}</strong>{{if and .StartDate .EndDate}} {{.StartDate}} - {{.EndDate}}{{end}}
                         {{if .ExceptionHours}}
                         <div class="exception-hours">
                             <span>Check with park for specific hours during this period</span>
@@ -166,13 +174,18 @@
         </div>
         {{end}}
 
-        {{if .Details.fees}}
+        {{$hasFeeContent := false}}
+        {{range .Details.fees.Data}}
+            {{if or .EntranceFeeDescription .PaidParkingDescription .TimedEntryDescription .IsInteragencyPassAccepted}}
+                {{$hasFeeContent = true}}
+            {{end}}
+        {{end}}
+        {{if and .Details.fees .Details.fees.Data $hasFeeContent}}
         <!-- Additional Fees & Passes -->
         <div class="detail-section" id="additional-fees">
             <h3>Fees & Passes</h3>
             {{range .Details.fees.Data}}
             <div class="fees-info">
-                <h4>{{.ParkCode}} Fees</h4>
                 {{if .EntranceFeeDescription}}
                 <p><strong>Entrance Fees:</strong> {{.EntranceFeeDescription}}</p>
                 {{end}}
@@ -213,7 +226,7 @@
         </div>
         {{end}}
 
-        {{if .Details.visitorCenters}}
+        {{if and .Details.visitorCenters .Details.visitorCenters.Data}}
         <!-- Visitor Centers -->
         <div class="detail-section" id="visitor-centers">
             <h3>Visitor Centers</h3>
@@ -246,7 +259,7 @@
         </div>
         {{end}}
 
-        {{if .Details.campgrounds}}
+        {{if and .Details.campgrounds .Details.campgrounds.Data}}
         <!-- Campgrounds -->
         <div class="detail-section" id="campgrounds">
             <h3>Campgrounds</h3>
@@ -280,7 +293,7 @@
         </div>
         {{end}}
 
-        {{if .Details.parkingLots}}
+        {{if and .Details.parkingLots .Details.parkingLots.Data}}
         <!-- Parking Information -->
         <div class="detail-section" id="parking">
             <h3>Parking</h3>
