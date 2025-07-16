@@ -90,8 +90,4 @@ func DefineRoutes(r *chi.Mux, dashManager *dashboard.Dashboard, cache *replay.Ca
 		// Template routes
 		r.Get("/templates/{template}", dashManager.TemplateHandler)
 	})
-
-	// Legacy API routes (keep for backward compatibility)
-	r.Get("/park-cams", cache.MiddlewareFunc(dashManager.LiveParkCamsHandler()))
-	r.Get("/park-list", cache.MiddlewareFunc(dashManager.ParkListHandler()))
 }

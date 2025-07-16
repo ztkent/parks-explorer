@@ -1,8 +1,8 @@
 module github.com/ztkent/nps-dashboard
 
-go 1.24
+go 1.24.3
 
-toolchain go1.24.3
+replace github.com/ztkent/go-nps => ../go-nps
 
 require (
 	github.com/go-chi/chi/v5 v5.0.12

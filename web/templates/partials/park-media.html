@@ -1,70 +1,144 @@
 <div class="container">
     {{if .Media.webcams}}
-    <section class="live-webcams">
-        <h2>Live Webcams</h2>
-        <div class="webcams-grid">
-            {{range .Media.webcams.Data}}
-            {{if .IsStreaming}}
-            <div class="webcam-card">
-                <div class="webcam-header">
-                    <h3>{{.Title}}</h3>
-                    <span class="status {{if .IsStreaming}}live{{else}}offline{{end}}">
-                        {{if .IsStreaming}}🔴 Live{{else}}📴 Offline{{end}}
-                    </span>
-                </div>
-                {{if .Images}}
-                {{range $index, $image := .Images}}
-                {{if eq $index 0}}
-                <img src="{{$image.URL}}" alt="{{$.Title}}" class="webcam-preview" />
-                {{end}}
-                {{end}}
-                {{end}}
-                <p>{{.Description}}</p>
-                {{if .StatusMessage}}
-                <p class="status-message">{{.StatusMessage}}</p>
-                {{end}}
-            </div>
+        {{if .Media.webcams.Data}}
+            {{if gt (len .Media.webcams.Data) 0}}
+                <section class="live-webcams">
+                    <h2>Live Webcams</h2>
+                    <div class="webcams-grid">
+                        {{range .Media.webcams.Data}}
+                            <div class="webcam-card">
+                                <div class="webcam-header">
+                                    <h3>{{if .Title}}{{.Title}}{{else}}Webcam{{end}}</h3>
+                                </div>
+                                {{if .Images}}
+                                    {{range $index, $image := .Images}}
+                                        {{if eq $index 0}}
+                                            <img src="{{$image.URL}}" alt="{{$.Title}}" class="webcam-preview" />
+                                        {{end}}
+                                    {{end}}
+                                {{end}}
+                                {{if .Description}}
+                                    <p>{{.Description}}</p>
+                                {{end}}
+                                {{if .URL}}
+                                    <a href="{{.URL}}" target="_blank" class="webcam-link">View Webcam</a>
+                                {{end}}
+                                <div class="webcam-info">
+                                    <small>Status: {{.Status}}</small>
+                                    {{if .StatusMessage}}
+                                        <small>{{.StatusMessage}}</small>
+                                    {{end}}
+                                    {{if .Tags}}
+                                        <div class="webcam-tags">
+                                            {{range .Tags}}
+                                                <span class="tag">{{.}}</span>
+                                            {{end}}
+                                        </div>
+                                    {{end}}
+                                </div>
+                            </div>
+                        {{end}}
+                    </div>
+                </section>
             {{end}}
-            {{end}}
-        </div>
-    </section>
+        {{end}}
     {{end}}
 
     {{if .Media.galleries}}
     <section class="photo-galleries">
         <h2>Photo Galleries</h2>
         <div class="galleries-grid">
-            {{range .Media.galleries.Data}}
-            <div class="gallery-card" data-gallery-id="{{.ID}}">
-                {{if .Images}}
+            {{range $gallery := .Media.galleries.Data}}
+            <div class="gallery-card" data-gallery-id="{{$gallery.ID}}" onclick="openGallerySlideshow('{{$gallery.ID}}')">
                 <div class="gallery-preview">
-                    {{if .Images}}
-                    {{range $index, $image := .Images}}
-                    {{if eq $index 0}}
-                    <img src="{{$image.URL}}" alt="{{$image.AltText}}" />
-                    <div class="gallery-overlay">
-                        <span class="photo-count">Gallery</span>
-                    </div>
-                    {{end}}
-                    {{end}}
-                    {{end}}
-                </div>
-                {{end}}
-                <div class="gallery-info">
-                    <h3>{{.Title}}</h3>
-                    <p>{{.Description}}</p>
-                    {{if .Images}}
-                    <div class="gallery-images-preview">
-                        {{range .Images}}
-                        <img src="{{.URL}}" alt="{{.AltText}}" class="thumbnail" title="{{.Caption}}" />
+                    {{if $gallery.Images}}
+                        {{range $index, $image := $gallery.Images}}
+                            {{if lt $index 3}}
+                                <img src="{{$image.Url}}" alt="{{$image.AltText}}" class="gallery-preview-image" />
+                            {{end}}
                         {{end}}
+                    {{end}}
+                    {{if $.Media.galleryAssets}}
+                        {{if index $.Media.galleryAssets $gallery.ID}}
+                            {{$assetResp := index $.Media.galleryAssets $gallery.ID}}
+                            {{if $assetResp.Data}}
+                                {{range $index, $asset := $assetResp.Data}}
+                                    {{if and (lt $index 6) (ge $index (len $gallery.Images))}}
+                                        {{if $asset.FileInfo.Url}}
+                                            <img src="{{$asset.FileInfo.Url}}" alt="{{$asset.AltText}}" class="gallery-preview-image" />
+                                        {{end}}
+                                    {{end}}
+                                {{end}}
+                            {{end}}
+                        {{end}}
+                    {{end}}
+                    <div class="gallery-overlay">
+                        <span class="photo-count">
+                            {{$galleryImageCount := len $gallery.Images}}
+                            {{$assetCount := 0}}
+                            {{if $.Media.galleryAssets}}
+                                {{if index $.Media.galleryAssets $gallery.ID}}
+                                    {{$assetResp := index $.Media.galleryAssets $gallery.ID}}
+                                    {{if $assetResp.Data}}
+                                        {{$assetCount = len $assetResp.Data}}
+                                    {{end}}
+                                {{end}}
+                            {{end}}
+                            {{if gt $assetCount 0}}
+                                {{$assetCount}} photos
+                            {{else if gt $galleryImageCount 0}}
+                                {{$galleryImageCount}} photos
+                            {{else}}
+                                Gallery
+                            {{end}}
+                        </span>
+                        <span class="view-gallery-text">Click to view gallery</span>
                     </div>
+                </div>
+                <div class="gallery-info">
+                    <h3>{{$gallery.Title}}</h3>
+                    <p>{{$gallery.Description}}</p>
+                    {{if $gallery.AssetCount}}
+                        <p class="asset-count"><strong>{{$gallery.AssetCount}} assets available</strong></p>
                     {{end}}
                 </div>
             </div>
             {{end}}
         </div>
     </section>
+
+    <!-- Gallery Slideshow Modal -->
+    <div id="gallery-slideshow-modal" class="slideshow-modal" onclick="closeGallerySlideshow(event)">
+        <div class="slideshow-container" onclick="event.stopPropagation()">
+            <div class="slideshow-header">
+                <h3 id="slideshow-title"></h3>
+                <button class="slideshow-close" onclick="closeGallerySlideshow()">&times;</button>
+            </div>
+            <div class="slideshow-content">
+                <button class="slideshow-nav prev" onclick="previousSlide()">&lt;</button>
+                <div class="slideshow-image-container">
+                    <img id="slideshow-image" src="" alt="" />
+                    <div class="slideshow-image-info">
+                        <h4 id="slideshow-image-title"></h4>
+                        <p id="slideshow-image-description"></p>
+                        <p id="slideshow-image-credit"></p>
+                    </div>
+                </div>
+                <button class="slideshow-nav next" onclick="nextSlide()">&gt;</button>
+            </div>
+            <div class="slideshow-footer">
+                <div class="slideshow-counter">
+                    <span id="slideshow-current">1</span> / <span id="slideshow-total">1</span>
+                </div>
+                <div class="slideshow-thumbnails" id="slideshow-thumbnails"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Initialize gallery assets data for JavaScript -->
+    <script>
+        window.galleryAssetsData = {{if .Media.galleryAssets}}{{.Media.galleryAssets}}{{else}}{}{{end}};
+    </script>
     {{end}}
 
     {{if .Media.videos}}
@@ -73,21 +147,11 @@
         <div class="videos-grid">
             {{range .Media.videos.Data}}
             <div class="video-card">
-                {{if .Images}}
-                <div class="video-thumbnail">
-                    {{range $index, $image := .Images}}
-                    {{if eq $index 0}}
-                    <img src="{{$image.URL}}" alt="{{$.Title}}" />
-                    <div class="play-button">▶️</div>
-                    {{end}}
-                    {{end}}
-                </div>
-                {{end}}
                 <div class="video-content">
                     <h3>{{.Title}}</h3>
                     <p>{{.Description}}</p>
                     {{if .DurationMs}}
-                    <span class="duration">⏱️ Video Duration Available</span>
+                    <span class="duration">Duration: {{formatDuration .DurationMs}}</span>
                     {{end}}
                     {{if .PermalinkUrl}}
                     <a href="{{.PermalinkUrl}}" target="_blank" class="video-link">Watch Video</a>
@@ -97,6 +161,9 @@
                         <summary>View Transcript</summary>
                         <div class="transcript-content">{{.Transcript}}</div>
                     </details>
+                    {{end}}
+                    {{if .Credit}}
+                    <p class="credit">Credit: {{.Credit}}</p>
                     {{end}}
                 </div>
             </div>
@@ -111,18 +178,14 @@
         <div class="audio-grid">
             {{range .Media.audio.Data}}
             <div class="audio-card">
-                {{if .Images}}
-                {{range $index, $image := .Images}}
-                {{if eq $index 0}}
-                <img src="{{$image.URL}}" alt="{{$.Title}}" class="audio-cover" />
-                {{end}}
-                {{end}}
+                {{if .SplashImage.Url}}
+                <img src="{{.SplashImage.Url}}" alt="{{.Title}}" class="audio-cover" />
                 {{end}}
                 <div class="audio-content">
                     <h3>{{.Title}}</h3>
                     <p>{{.Description}}</p>
                     {{if .DurationMs}}
-                    <span class="duration">⏱️ Audio Duration Available</span>
+                    <span class="duration">Duration: {{formatDuration .DurationMs}}</span>
                     {{end}}
                     {{if .PermalinkUrl}}
                     <a href="{{.PermalinkUrl}}" target="_blank" class="audio-link">Listen Now</a>
@@ -132,6 +195,9 @@
                         <summary>View Transcript</summary>
                         <div class="transcript-content">{{.Transcript}}</div>
                     </details>
+                    {{end}}
+                    {{if .Credit}}
+                    <p class="credit">Credit: {{.Credit}}</p>
                     {{end}}
                 </div>
             </div>
@@ -149,7 +215,7 @@
                 <div class="audio-header">
                     <h4>{{.Title}}</h4>
                     {{if .DurationMs}}
-                    <span class="duration">Audio Available</span>
+                    <span class="duration">Duration: {{formatDuration .DurationMs}}</span>
                     {{end}}
                 </div>
                 <p>{{.Description}}</p>

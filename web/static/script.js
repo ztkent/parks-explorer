@@ -266,3 +266,165 @@ document.addEventListener('htmx:afterSwap', (event) => {
         }
     }
 });
+
+// Gallery Slideshow functionality
+let currentSlideIndex = 0;
+let galleryImages = [];
+
+function openGallerySlideshow(galleryId) {
+    // Collect all images from the gallery
+    const galleryCard = document.querySelector(`[data-gallery-id="${galleryId}"]`);
+    if (!galleryCard) return;
+    
+    const galleryTitle = galleryCard.querySelector('h3').textContent;
+    galleryImages = [];
+    
+    // Get images from gallery preview (these are from the gallery.Images field)
+    const previewImages = galleryCard.querySelectorAll('.gallery-preview-image');
+    previewImages.forEach(img => {
+        galleryImages.push({
+            url: img.src,
+            alt: img.alt,
+            title: img.title || '',
+            description: '',
+            credit: ''
+        });
+    });
+    
+    // Get additional images from gallery assets data if available
+    const mediaData = window.galleryAssetsData || {};
+    if (mediaData[galleryId] && mediaData[galleryId].Data) {
+        mediaData[galleryId].Data.forEach(asset => {
+            if (asset.FileInfo && asset.FileInfo.Url) {
+                // Check if this image is already in the gallery (avoid duplicates)
+                const isDuplicate = galleryImages.some(img => img.url === asset.FileInfo.Url);
+                if (!isDuplicate) {
+                    galleryImages.push({
+                        url: asset.FileInfo.Url,
+                        alt: asset.AltText || '',
+                        title: asset.Title || '',
+                        description: asset.Description || '',
+                        credit: asset.Credit || ''
+                    });
+                }
+            }
+        });
+    }
+    
+    if (galleryImages.length === 0) return;
+    
+    // Setup modal
+    const modal = document.getElementById('gallery-slideshow-modal');
+    const titleElement = document.getElementById('slideshow-title');
+    
+    titleElement.textContent = galleryTitle;
+    currentSlideIndex = 0;
+    
+    // Show modal
+    modal.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+    
+    // Setup slideshow
+    updateSlide();
+    createThumbnails();
+    
+    // Add keyboard navigation
+    document.addEventListener('keydown', handleKeyNavigation);
+}
+
+function closeGallerySlideshow(event) {
+    if (event && event.target !== event.currentTarget && !event.target.classList.contains('slideshow-close')) {
+        return;
+    }
+    
+    const modal = document.getElementById('gallery-slideshow-modal');
+    modal.style.display = 'none';
+    document.body.style.overflow = 'auto';
+    
+    // Remove keyboard navigation
+    document.removeEventListener('keydown', handleKeyNavigation);
+}
+
+function previousSlide() {
+    currentSlideIndex = currentSlideIndex > 0 ? currentSlideIndex - 1 : galleryImages.length - 1;
+    updateSlide();
+}
+
+function nextSlide() {
+    currentSlideIndex = currentSlideIndex < galleryImages.length - 1 ? currentSlideIndex + 1 : 0;
+    updateSlide();
+}
+
+function goToSlide(index) {
+    currentSlideIndex = index;
+    updateSlide();
+}
+
+function updateSlide() {
+    if (galleryImages.length === 0) return;
+    
+    const image = galleryImages[currentSlideIndex];
+    const slideImage = document.getElementById('slideshow-image');
+    const slideTitle = document.getElementById('slideshow-image-title');
+    const slideDescription = document.getElementById('slideshow-image-description');
+    const slideCredit = document.getElementById('slideshow-image-credit');
+    const slideCurrent = document.getElementById('slideshow-current');
+    const slideTotal = document.getElementById('slideshow-total');
+    
+    slideImage.src = image.url;
+    slideImage.alt = image.alt;
+    slideTitle.textContent = image.title;
+    slideDescription.textContent = image.description;
+    slideCredit.textContent = image.credit ? `Credit: ${image.credit}` : '';
+    slideCurrent.textContent = currentSlideIndex + 1;
+    slideTotal.textContent = galleryImages.length;
+    
+    // Update thumbnails
+    updateThumbnailsActive();
+}
+
+function createThumbnails() {
+    const thumbnailsContainer = document.getElementById('slideshow-thumbnails');
+    thumbnailsContainer.innerHTML = '';
+    
+    galleryImages.forEach((image, index) => {
+        const thumbnail = document.createElement('img');
+        thumbnail.src = image.url;
+        thumbnail.alt = image.alt;
+        thumbnail.className = 'slideshow-thumbnail';
+        thumbnail.onclick = () => goToSlide(index);
+        
+        if (index === currentSlideIndex) {
+            thumbnail.classList.add('active');
+        }
+        
+        thumbnailsContainer.appendChild(thumbnail);
+    });
+}
+
+function updateThumbnailsActive() {
+    const thumbnails = document.querySelectorAll('.slideshow-thumbnail');
+    thumbnails.forEach((thumb, index) => {
+        thumb.classList.toggle('active', index === currentSlideIndex);
+    });
+}
+
+function handleKeyNavigation(event) {
+    switch(event.key) {
+        case 'ArrowLeft':
+            event.preventDefault();
+            previousSlide();
+            break;
+        case 'ArrowRight':
+            event.preventDefault();
+            nextSlide();
+            break;
+        case 'Escape':
+            event.preventDefault();
+            closeGallerySlideshow();
+            break;
+    }
+}
+
+// Store gallery assets data globally for slideshow access
+window.galleryAssetsData = {};

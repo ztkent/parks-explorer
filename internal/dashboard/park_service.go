@@ -423,6 +423,30 @@ func (ps *ParkService) GetParkMediaComplete(parkCode string) (map[string]interfa
 		galleries = nil
 	}
 
+	// Fetch gallery assets for each gallery if galleries were successfully retrieved
+	var galleryAssets map[string]interface{}
+	if galleries != nil && len(galleries.Data) > 0 {
+		galleryAssets = make(map[string]interface{})
+		for _, gallery := range galleries.Data {
+			// Only fetch assets if the gallery has assets to avoid unnecessary API calls
+			if gallery.AssetCount > 0 {
+				assets, err := ps.npsApi.GetMultimediaGalleriesAssets("", gallery.ID, []string{parkCode}, nil, "", 0, 50)
+				if err != nil {
+					fmt.Printf("Warning: Failed to fetch assets for gallery %s: %v\n", gallery.ID, err)
+					// Still include an empty assets response to maintain data structure
+					galleryAssets[gallery.ID] = map[string]interface{}{
+						"Data":  []interface{}{},
+						"Total": "0",
+						"Limit": "50",
+						"Start": "0",
+					}
+				} else {
+					galleryAssets[gallery.ID] = assets
+				}
+			}
+		}
+	}
+
 	// Fetch videos
 	videos, err := ps.npsApi.GetMultimediaVideos([]string{parkCode}, nil, "", 0, 10)
 	if err != nil {
@@ -442,10 +466,11 @@ func (ps *ParkService) GetParkMediaComplete(parkCode string) (map[string]interfa
 	}
 
 	return map[string]interface{}{
-		"galleries": galleries,
-		"videos":    videos,
-		"audio":     audio,
-		"webcams":   webcams,
+		"galleries":     galleries,
+		"galleryAssets": galleryAssets,
+		"videos":        videos,
+		"audio":         audio,
+		"webcams":       webcams,
 	}, nil
 }
 

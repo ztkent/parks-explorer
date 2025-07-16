@@ -35,7 +35,7 @@
             {{range .News.newsReleases.Data}}
             <article class="news-card">
                 <div class="news-header">
-                    <h3><a href="{{.URL}}" target="_blank">{{.Title}}</a></h3>
+                    <h3><a href="{{.Url}}" target="_blank">{{.Title}}</a></h3>
                     {{if .ReleaseDate}}
                     <span class="release-date">📅 {{.ReleaseDate}}</span>
                     {{end}}
@@ -44,12 +44,12 @@
                 <p class="news-abstract">{{.Abstract}}</p>
                 {{end}}
                 {{if .Image}}
-                {{if .Image.URL}}
-                <img src="{{.Image.URL}}" alt="{{.Image.AltText}}" class="news-image" />
+                {{if .Image.Url}}
+                <img src="{{.Image.Url}}" alt="{{.Image.AltText}}" class="news-image" />
                 {{end}}
                 {{end}}
-                {{if .URL}}
-                <a href="{{.URL}}" target="_blank" class="read-more">Read Full Article</a>
+                {{if .Url}}
+                <a href="{{.Url}}" target="_blank" class="read-more">Read Full Article</a>
                 {{end}}
             </article>
             {{end}}
@@ -109,14 +109,13 @@
                     {{if .Location}}
                     <p class="event-location">📍 {{.Location}}</p>
                     {{end}}
-                    {{if .FeeDescription}}
-                    <p class="event-fee">💳 {{.FeeDescription}}</p>
+                    {{if and .IsFree (eq .IsFree "false")}}
+                    <p class="event-fee">💳 Fee required</p>
+                    {{else if and .IsFree (eq .IsFree "true")}}
+                    <p class="event-fee">🆓 Free event</p>
                     {{end}}
-                    {{if .TimeStart}}
-                    <p class="event-time">⏰ {{.TimeStart}}{{if .TimeEnd}} - {{.TimeEnd}}{{end}}</p>
-                    {{end}}
-                    {{if .InfoURL}}
-                    <a href="{{.InfoURL}}" target="_blank" class="event-info">More Info</a>
+                    {{if .DateStart}}
+                    <p class="event-time">📅 {{.DateStart}}{{if .DateEnd}} - {{.DateEnd}}{{end}}</p>
                     {{end}}
                 </div>
             </div>

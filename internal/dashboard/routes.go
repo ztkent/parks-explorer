@@ -88,7 +88,8 @@ func (dm *Dashboard) ParkListHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		parks, err := dm.parkService.GetAllParks()
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			log.Printf("Failed to get all parks: %v", err)
+			http.Error(w, fmt.Sprintf("Failed to get parks: %v", err), http.StatusInternalServerError)
 			return
 		}
 		parkList := ParkList{}
@@ -116,7 +117,8 @@ func (dm *Dashboard) EnsureUUIDHandler() http.HandlerFunc {
 			})
 		} else if err != nil {
 			// Some other error occurred
-			http.Error(w, "Failed to read cookie", http.StatusInternalServerError)
+			log.Printf("Failed to read cookie: %v", err)
+			http.Error(w, fmt.Sprintf("Failed to read cookie: %v", err), http.StatusInternalServerError)
 		}
 	}
 }
@@ -137,7 +139,8 @@ func (dm *Dashboard) AvatarProxyHandler(w http.ResponseWriter, r *http.Request) 
 	// Fetch the image from Google
 	resp, err := http.Get(user.AvatarURL)
 	if err != nil {
-		http.Error(w, "Failed to fetch avatar", http.StatusInternalServerError)
+		log.Printf("Failed to fetch avatar from %s: %v", user.AvatarURL, err)
+		http.Error(w, fmt.Sprintf("Failed to fetch avatar: %v", err), http.StatusInternalServerError)
 		return
 	}
 	defer resp.Body.Close()
@@ -404,13 +407,15 @@ func (dm *Dashboard) ParkPageHandler(w http.ResponseWriter, r *http.Request) {
 	// Parse and execute the template from file
 	tmpl, err := template.ParseFiles("web/templates/park.html")
 	if err != nil {
-		http.Error(w, "Failed to load park page template", http.StatusInternalServerError)
+		log.Printf("Failed to load park page template: %v", err)
+		http.Error(w, fmt.Sprintf("Failed to load park page template: %v", err), http.StatusInternalServerError)
 		return
 	}
 
 	err = tmpl.Execute(w, data)
 	if err != nil {
-		http.Error(w, "Failed to render park page", http.StatusInternalServerError)
+		log.Printf("Failed to render park page for %s: %v", park.Name, err)
+		http.Error(w, fmt.Sprintf("Failed to render park page: %v", err), http.StatusInternalServerError)
 		return
 	}
 }
@@ -425,23 +430,27 @@ func (dm *Dashboard) TemplateHandler(w http.ResponseWriter, r *http.Request) {
 	case "header":
 		tmpl, err := template.ParseFiles("web/templates/header.html")
 		if err != nil {
-			http.Error(w, "Failed to load header template", http.StatusInternalServerError)
+			log.Printf("Failed to load header template: %v", err)
+			http.Error(w, fmt.Sprintf("Failed to load header template: %v", err), http.StatusInternalServerError)
 			return
 		}
 		err = tmpl.Execute(w, nil)
 		if err != nil {
-			http.Error(w, "Failed to render header template", http.StatusInternalServerError)
+			log.Printf("Failed to render header template: %v", err)
+			http.Error(w, fmt.Sprintf("Failed to render header template: %v", err), http.StatusInternalServerError)
 			return
 		}
 	case "footer":
 		tmpl, err := template.ParseFiles("web/templates/footer.html")
 		if err != nil {
-			http.Error(w, "Failed to load footer template", http.StatusInternalServerError)
+			log.Printf("Failed to load footer template: %v", err)
+			http.Error(w, fmt.Sprintf("Failed to load footer template: %v", err), http.StatusInternalServerError)
 			return
 		}
 		err = tmpl.Execute(w, nil)
 		if err != nil {
-			http.Error(w, "Failed to render footer template", http.StatusInternalServerError)
+			log.Printf("Failed to render footer template: %v", err)
+			http.Error(w, fmt.Sprintf("Failed to render footer template: %v", err), http.StatusInternalServerError)
 			return
 		}
 	default:
@@ -568,7 +577,8 @@ func (dm *Dashboard) ParkOverviewHandler(w http.ResponseWriter, r *http.Request)
 	// Get comprehensive overview data including all major elements
 	overview, err := dm.parkService.GetParkOverview(parkCode)
 	if err != nil {
-		http.Error(w, "Failed to load park overview", http.StatusInternalServerError)
+		log.Printf("Failed to load park overview for %s: %v", parkCode, err)
+		http.Error(w, fmt.Sprintf("Failed to load park overview: %v", err), http.StatusInternalServerError)
 		return
 	}
 
@@ -581,13 +591,15 @@ func (dm *Dashboard) ParkOverviewHandler(w http.ResponseWriter, r *http.Request)
 	// Parse and execute the overview template
 	tmpl, err := template.ParseFiles("web/templates/partials/park-overview.html")
 	if err != nil {
-		http.Error(w, "Failed to load overview template", http.StatusInternalServerError)
+		log.Printf("Failed to load overview template: %v", err)
+		http.Error(w, fmt.Sprintf("Failed to load overview template: %v", err), http.StatusInternalServerError)
 		return
 	}
 
 	err = tmpl.Execute(w, data)
 	if err != nil {
-		http.Error(w, "Failed to render overview content", http.StatusInternalServerError)
+		log.Printf("Failed to render overview content for park %s: %v", parkCode, err)
+		http.Error(w, fmt.Sprintf("Failed to render overview content: %v", err), http.StatusInternalServerError)
 		return
 	}
 }
@@ -626,13 +638,15 @@ func (dm *Dashboard) ParkActivitiesHandler(w http.ResponseWriter, r *http.Reques
 		},
 	}).ParseFiles("web/templates/partials/park-activities.html")
 	if err != nil {
-		http.Error(w, "Failed to load activities template", http.StatusInternalServerError)
+		log.Printf("Failed to load activities template: %v", err)
+		http.Error(w, fmt.Sprintf("Failed to load activities template: %v", err), http.StatusInternalServerError)
 		return
 	}
 
 	err = tmpl.Execute(w, data)
 	if err != nil {
-		http.Error(w, "Failed to render activities content", http.StatusInternalServerError)
+		log.Printf("Failed to render activities content for park %s: %v", parkCode, err)
+		http.Error(w, fmt.Sprintf("Failed to render activities content: %v", err), http.StatusInternalServerError)
 		return
 	}
 }
@@ -665,15 +679,48 @@ func (dm *Dashboard) ParkMediaHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Parse and execute the media template
-	tmpl, err := template.ParseFiles("web/templates/partials/park-media.html")
+	tmpl, err := template.New("park-media.html").Funcs(template.FuncMap{
+		"formatDuration": func(durationMs interface{}) string {
+			var ms int64
+			switch v := durationMs.(type) {
+			case int:
+				ms = int64(v)
+			case int64:
+				ms = v
+			case float64:
+				ms = int64(v)
+			default:
+				return "Unknown"
+			}
+
+			if ms <= 0 {
+				return "Unknown"
+			}
+
+			seconds := ms / 1000
+			minutes := seconds / 60
+			hours := minutes / 60
+
+			if hours > 0 {
+				remainingMinutes := minutes % 60
+				return fmt.Sprintf("%d:%02d", hours, remainingMinutes)
+			} else if minutes > 0 {
+				return fmt.Sprintf("%d min", minutes)
+			} else {
+				return fmt.Sprintf("%d sec", seconds)
+			}
+		},
+	}).ParseFiles("web/templates/partials/park-media.html")
 	if err != nil {
-		http.Error(w, "Failed to load media template", http.StatusInternalServerError)
+		log.Printf("Failed to load media template: %v", err)
+		http.Error(w, fmt.Sprintf("Failed to load media template: %v", err), http.StatusInternalServerError)
 		return
 	}
 
 	err = tmpl.Execute(w, data)
 	if err != nil {
-		http.Error(w, "Failed to render media content", http.StatusInternalServerError)
+		log.Printf("Failed to render media content for park %s: %v", parkCode, err)
+		http.Error(w, "Failed to render media content: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
@@ -708,13 +755,15 @@ func (dm *Dashboard) ParkNewsHandler(w http.ResponseWriter, r *http.Request) {
 	// Parse and execute the news template
 	tmpl, err := template.ParseFiles("web/templates/partials/park-news.html")
 	if err != nil {
-		http.Error(w, "Failed to load news template", http.StatusInternalServerError)
+		log.Printf("Failed to load news template: %v", err)
+		http.Error(w, fmt.Sprintf("Failed to load news template: %v", err), http.StatusInternalServerError)
 		return
 	}
 
 	err = tmpl.Execute(w, data)
 	if err != nil {
-		http.Error(w, "Failed to render news content", http.StatusInternalServerError)
+		log.Printf("Failed to render news content for park %s: %v", parkCode, err)
+		http.Error(w, fmt.Sprintf("Failed to render news content: %v", err), http.StatusInternalServerError)
 		return
 	}
 }
@@ -750,7 +799,8 @@ func (dm *Dashboard) ParkEnhancedDetailsHandler(w http.ResponseWriter, r *http.R
 	// Parse and execute the details template
 	tmpl, err := template.ParseFiles("web/templates/partials/park-details.html")
 	if err != nil {
-		http.Error(w, "Failed to load details template", http.StatusInternalServerError)
+		log.Printf("Failed to load details template: %v", err)
+		http.Error(w, fmt.Sprintf("Failed to load details template: %v", err), http.StatusInternalServerError)
 		return
 	}
 
