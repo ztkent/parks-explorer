@@ -119,11 +119,11 @@
                 <div class="video-content">
                     <h3>{{.Title}}</h3>
                     <p>{{.Description}}</p>
-                    {{if .DurationMs}}
-                    <span class="duration">Duration: {{formatDuration .DurationMs}}</span>
-                    {{end}}
                     {{if .PermalinkUrl}}
                     <a href="{{.PermalinkUrl}}" target="_blank" class="video-link">Watch Video</a>
+                    {{end}}
+                    {{if .DurationMs}}
+                    <span class="duration">Duration: {{formatDuration .DurationMs}}</span>
                     {{end}}
                     {{if .Transcript}}
                     <details class="transcript">
@@ -153,11 +153,11 @@
                 <div class="audio-content">
                     <h3>{{.Title}}</h3>
                     <p>{{.Description}}</p>
-                    {{if .DurationMs}}
-                    <span class="duration">Duration: {{formatDuration .DurationMs}}</span>
-                    {{end}}
                     {{if .PermalinkUrl}}
                     <a href="{{.PermalinkUrl}}" target="_blank" class="audio-link">Listen Now</a>
+                    {{end}}
+                    {{if .DurationMs}}
+                    <span class="duration">Duration: {{formatDuration .DurationMs}}</span>
                     {{end}}
                     {{if .Transcript}}
                     <details class="transcript">
