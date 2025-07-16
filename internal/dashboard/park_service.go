@@ -325,7 +325,7 @@ func (ps *ParkService) GetParkMedia(parkCode string) (map[string]interface{}, er
 	if galleries, exists := result["galleries"]; exists {
 		if galleryResp, ok := galleries.(nps.MultimediaGalleriesResponse); ok && len(galleryResp.Data) > 0 {
 			galleryAssets := make(map[string]*nps.MultimediaGalleriesAssetsResponse)
-			
+
 			for _, gallery := range galleryResp.Data {
 				// Check if gallery assets are cached and fresh
 				assetKey := fmt.Sprintf("gallery_assets_%s", gallery.ID)
@@ -346,7 +346,7 @@ func (ps *ParkService) GetParkMedia(parkCode string) (map[string]interface{}, er
 					}
 				}
 			}
-			
+
 			if len(galleryAssets) > 0 {
 				result["galleryAssets"] = galleryAssets
 			}
@@ -564,7 +564,7 @@ func (ps *ParkService) GetParkMultimediaAudio(parkCode string) (*nps.MultimediaA
 
 // GetParkMultimediaGalleriesAssets fetches assets for a specific gallery
 func (ps *ParkService) GetParkMultimediaGalleriesAssets(galleryId string, parkCode string) (*nps.MultimediaGalleriesAssetsResponse, error) {
-	return ps.npsApi.GetMultimediaGalleriesAssets("", galleryId, []string{parkCode}, nil, "", 0, 50)
+	return ps.npsApi.GetMultimediaGalleriesAssets("", galleryId, []string{parkCode}, nil, "", 0, 500)
 }
 
 // GetParkEvents fetches events for a specific park, preferring cache
@@ -806,7 +806,7 @@ func (ps *ParkService) fetchMediaFromAPI(parkCode string) (map[string]interface{
 	if galleries != nil && len(galleries.Data) > 0 {
 		galleryAssets := make(map[string]*nps.MultimediaGalleriesAssetsResponse)
 		for _, gallery := range galleries.Data {
-			if assets, err := ps.npsApi.GetMultimediaGalleriesAssets("", gallery.ID, []string{parkCode}, nil, "", 0, 50); err == nil {
+			if assets, err := ps.npsApi.GetMultimediaGalleriesAssets("", gallery.ID, []string{parkCode}, nil, "", 0, 500); err == nil {
 				galleryAssets[gallery.ID] = assets
 			}
 		}

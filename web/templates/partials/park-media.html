@@ -66,7 +66,7 @@
                             {{$assetResp := index $.Media.galleryAssets $gallery.ID}}
                             {{if $assetResp.Data}}
                                 {{range $index, $asset := $assetResp.Data}}
-                                    {{if and (lt $index 6) (ge $index (len $gallery.Images))}}
+                                    {{if and (lt $index 50) (ge $index (len $gallery.Images))}}
                                         {{if $asset.FileInfo.Url}}
                                             <img src="{{$asset.FileInfo.Url}}" alt="{{$asset.AltText}}" class="gallery-preview-image" />
                                         {{end}}

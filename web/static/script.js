@@ -279,35 +279,36 @@ function openGallerySlideshow(galleryId) {
     const galleryTitle = galleryCard.querySelector('h3').textContent;
     galleryImages = [];
     
-    // Get images from gallery preview (these are from the gallery.Images field)
-    const previewImages = galleryCard.querySelectorAll('.gallery-preview-image');
-    previewImages.forEach(img => {
-        galleryImages.push({
-            url: img.src,
-            alt: img.alt,
-            title: img.title || '',
-            description: '',
-            credit: ''
-        });
-    });
-    
-    // Get additional images from gallery assets data if available
+    // First, try to get all images from gallery assets data (this contains ALL images)
     const mediaData = window.galleryAssetsData || {};
+    let hasAssetsData = false;
+    
     if (mediaData[galleryId] && mediaData[galleryId].Data) {
+        hasAssetsData = true;
         mediaData[galleryId].Data.forEach(asset => {
             if (asset.FileInfo && asset.FileInfo.Url) {
-                // Check if this image is already in the gallery (avoid duplicates)
-                const isDuplicate = galleryImages.some(img => img.url === asset.FileInfo.Url);
-                if (!isDuplicate) {
-                    galleryImages.push({
-                        url: asset.FileInfo.Url,
-                        alt: asset.AltText || '',
-                        title: asset.Title || '',
-                        description: asset.Description || '',
-                        credit: asset.Credit || ''
-                    });
-                }
+                galleryImages.push({
+                    url: asset.FileInfo.Url,
+                    alt: asset.AltText || '',
+                    title: asset.Title || '',
+                    description: asset.Description || '',
+                    credit: asset.Credit || ''
+                });
             }
+        });
+    }
+    
+    // If no assets data available, fall back to gallery preview images (limited)
+    if (!hasAssetsData) {
+        const previewImages = galleryCard.querySelectorAll('.gallery-preview-image');
+        previewImages.forEach(img => {
+            galleryImages.push({
+                url: img.src,
+                alt: img.alt,
+                title: img.title || '',
+                description: '',
+                credit: ''
+            });
         });
     }
     
