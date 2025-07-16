@@ -24,9 +24,14 @@
                                     <a href="{{.URL}}" target="_blank" class="webcam-link">View Webcam</a>
                                 {{end}}
                                 <div class="webcam-info">
-                                    <small>Status: {{.Status}}</small>
+                                    <small class="webcam-status">
+                                        Status: 
+                                        <span class="status {{if eq .Status "Active"}}live{{else}}offline{{end}}">
+                                            {{.Status}}
+                                        </span>
+                                    </small>
                                     {{if .StatusMessage}}
-                                        <small>{{.StatusMessage}}</small>
+                                        <small class="webcam-status-message">{{.StatusMessage}}</small>
                                     {{end}}
                                     {{if .Tags}}
                                         <div class="webcam-tags">
@@ -98,9 +103,6 @@
                 <div class="gallery-info">
                     <h3>{{$gallery.Title}}</h3>
                     <p>{{$gallery.Description}}</p>
-                    {{if $gallery.AssetCount}}
-                        <p class="asset-count"><strong>{{$gallery.AssetCount}} assets available</strong></p>
-                    {{end}}
                 </div>
             </div>
             {{end}}
