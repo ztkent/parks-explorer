@@ -1,3 +1,5 @@
 .env
 ref
 .DS_Store
+data/dashboard.db
+nps-dashboard
