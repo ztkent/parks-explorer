@@ -34,14 +34,26 @@ type CachedPark struct {
 
 // ParkImage represents a cached park image
 type ParkImage struct {
-	ID         int    `json:"id"`
-	ParkID     int    `json:"park_id"`
-	URL        string `json:"url"`
-	Title      string `json:"title"`
-	AltText    string `json:"alt_text"`
-	Caption    string `json:"caption"`
-	Credit     string `json:"credit"`
-	ImageOrder int    `json:"image_order"`
+	ID         int       `json:"id"`
+	ParkID     int       `json:"park_id"`
+	URL        string    `json:"url"`
+	Title      string    `json:"title"`
+	AltText    string    `json:"alt_text"`
+	Caption    string    `json:"caption"`
+	Credit     string    `json:"credit"`
+	ImageOrder int       `json:"image_order"`
+	CreatedAt  time.Time `json:"created_at"`
+}
+
+// CachedParkData represents cached park-specific data
+type CachedParkData struct {
+	ID            int       `json:"id"`
+	ParkID        int       `json:"park_id"`
+	DataType      string    `json:"data_type"`
+	APIData       string    `json:"api_data"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
+	LastFetchedAt time.Time `json:"last_fetched_at"`
 }
 
 // UpsertPark inserts or updates a park in the database
@@ -79,31 +91,13 @@ func (db *DB) UpsertPark(parkData interface{}, slug string) (*CachedPark, error)
 	latLong := getString(parkMap, "latLong")
 	relevanceScore := getFloat64(parkMap, "relevanceScore")
 
-	// Upsert park
+	// Upsert park using SQLite syntax
 	query := `
-		INSERT INTO parks (
+		INSERT OR REPLACE INTO parks (
 			park_code, name, full_name, slug, states, designation, description,
 			weather_info, directions_info, url, directions_url, latitude, longitude,
 			lat_long, relevance_score, api_data, updated_at, last_fetched_at
 		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-		ON CONFLICT(park_code) DO UPDATE SET
-			name = excluded.name,
-			full_name = excluded.full_name,
-			slug = excluded.slug,
-			states = excluded.states,
-			designation = excluded.designation,
-			description = excluded.description,
-			weather_info = excluded.weather_info,
-			directions_info = excluded.directions_info,
-			url = excluded.url,
-			directions_url = excluded.directions_url,
-			latitude = excluded.latitude,
-			longitude = excluded.longitude,
-			lat_long = excluded.lat_long,
-			relevance_score = excluded.relevance_score,
-			api_data = excluded.api_data,
-			updated_at = CURRENT_TIMESTAMP,
-			last_fetched_at = CURRENT_TIMESTAMP
 	`
 
 	result, err := db.Exec(query,
@@ -238,7 +232,7 @@ func (db *DB) GetParkBySlug(slug string) (*CachedPark, error) {
 // GetParkImages retrieves images for a park
 func (db *DB) GetParkImages(parkID int) ([]ParkImage, error) {
 	query := `
-		SELECT id, park_id, url, title, alt_text, caption, credit, image_order
+		SELECT id, park_id, url, title, alt_text, caption, credit, image_order, created_at
 		FROM park_images WHERE park_id = ? ORDER BY image_order
 	`
 
@@ -252,7 +246,7 @@ func (db *DB) GetParkImages(parkID int) ([]ParkImage, error) {
 	for rows.Next() {
 		var img ParkImage
 		err := rows.Scan(&img.ID, &img.ParkID, &img.URL, &img.Title,
-			&img.AltText, &img.Caption, &img.Credit, &img.ImageOrder)
+			&img.AltText, &img.Caption, &img.Credit, &img.ImageOrder, &img.CreatedAt)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan image: %w", err)
 		}
@@ -423,4 +417,71 @@ func getFloat64(m map[string]interface{}, key string) float64 {
 		}
 	}
 	return 0
+}
+
+// GetParkIDByCode retrieves park ID by park code
+func (db *DB) GetParkIDByCode(parkCode string) (int, error) {
+	var parkID int
+	query := "SELECT id FROM parks WHERE park_code = ?"
+	err := db.QueryRow(query, parkCode).Scan(&parkID)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get park ID for code %s: %w", parkCode, err)
+	}
+	return parkID, nil
+}
+
+// UpsertParkData inserts or updates cached park data
+func (db *DB) UpsertParkData(parkID int, dataType, tableName string, data interface{}) error {
+	apiDataJSON, err := json.Marshal(data)
+	if err != nil {
+		return fmt.Errorf("failed to marshal data: %w", err)
+	}
+
+	// SQLite UPSERT syntax using INSERT OR REPLACE
+	query := fmt.Sprintf(`
+		INSERT OR REPLACE INTO %s (park_id, data_type, api_data, updated_at, last_fetched_at)
+		VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+	`, tableName)
+
+	_, err = db.Exec(query, parkID, dataType, string(apiDataJSON))
+	if err != nil {
+		return fmt.Errorf("failed to upsert park data: %w", err)
+	}
+	return nil
+}
+
+// GetCachedParkData retrieves cached park data
+func (db *DB) GetCachedParkData(parkID int, dataType, tableName string) (*CachedParkData, error) {
+	query := fmt.Sprintf(`
+		SELECT id, park_id, data_type, api_data, created_at, updated_at, last_fetched_at
+		FROM %s WHERE park_id = ? AND data_type = ?
+	`, tableName)
+
+	var data CachedParkData
+	row := db.QueryRow(query, parkID, dataType)
+	err := row.Scan(
+		&data.ID, &data.ParkID, &data.DataType, &data.APIData,
+		&data.CreatedAt, &data.UpdatedAt, &data.LastFetchedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &data, nil
+}
+
+// IsParkDataStale checks if specific park data needs refreshing
+func (db *DB) IsParkDataStale(parkID int, dataType, tableName string, maxAge time.Duration) (bool, error) {
+	query := fmt.Sprintf(`
+		SELECT last_fetched_at FROM %s 
+		WHERE park_id = ? AND data_type = ?
+	`, tableName)
+
+	var lastFetched time.Time
+	err := db.QueryRow(query, parkID, dataType).Scan(&lastFetched)
+	if err != nil {
+		// If no data exists, it's stale
+		return true, nil
+	}
+
+	return time.Since(lastFetched) > maxAge, nil
 }

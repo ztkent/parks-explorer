@@ -60,9 +60,73 @@ CREATE TABLE park_images (
     FOREIGN KEY (park_id) REFERENCES parks(id) ON DELETE CASCADE
 );
 
+-- Park Activities Cache
+CREATE TABLE park_activities (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    park_id INTEGER NOT NULL,
+    data_type TEXT NOT NULL, -- 'activities', 'things_to_do', 'tours'
+    api_data TEXT NOT NULL, -- JSON blob of API response
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    last_fetched_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (park_id) REFERENCES parks(id) ON DELETE CASCADE,
+    UNIQUE(park_id, data_type)
+);
+
+-- Park Media Cache
+CREATE TABLE park_media (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    park_id INTEGER NOT NULL,
+    data_type TEXT NOT NULL, -- 'galleries', 'videos', 'audio', 'webcams'
+    api_data TEXT NOT NULL, -- JSON blob of API response
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    last_fetched_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (park_id) REFERENCES parks(id) ON DELETE CASCADE,
+    UNIQUE(park_id, data_type)
+);
+
+-- Park News Cache
+CREATE TABLE park_news (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    park_id INTEGER NOT NULL,
+    data_type TEXT NOT NULL, -- 'articles', 'alerts', 'events', 'news_releases'
+    api_data TEXT NOT NULL, -- JSON blob of API response
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    last_fetched_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (park_id) REFERENCES parks(id) ON DELETE CASCADE,
+    UNIQUE(park_id, data_type)
+);
+
+-- Park Details Cache
+CREATE TABLE park_details (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    park_id INTEGER NOT NULL,
+    data_type TEXT NOT NULL, -- 'visitor_centers', 'campgrounds', 'fees', 'amenities', 'parking_lots'
+    api_data TEXT NOT NULL, -- JSON blob of API response
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    last_fetched_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (park_id) REFERENCES parks(id) ON DELETE CASCADE,
+    UNIQUE(park_id, data_type)
+);
+
 -- Create indexes for better performance
 CREATE INDEX idx_parks_park_code ON parks(park_code);
 CREATE INDEX idx_parks_slug ON parks(slug);
 CREATE INDEX idx_parks_last_fetched ON parks(last_fetched_at);
 CREATE INDEX idx_park_images_park_id ON park_images(park_id);
 CREATE INDEX idx_park_images_order ON park_images(park_id, image_order);
+CREATE INDEX idx_park_activities_park_id ON park_activities(park_id);
+CREATE INDEX idx_park_activities_type ON park_activities(park_id, data_type);
+CREATE INDEX idx_park_activities_last_fetched ON park_activities(last_fetched_at);
+CREATE INDEX idx_park_media_park_id ON park_media(park_id);
+CREATE INDEX idx_park_media_type ON park_media(park_id, data_type);
+CREATE INDEX idx_park_media_last_fetched ON park_media(last_fetched_at);
+CREATE INDEX idx_park_news_park_id ON park_news(park_id);
+CREATE INDEX idx_park_news_type ON park_news(park_id, data_type);
+CREATE INDEX idx_park_news_last_fetched ON park_news(last_fetched_at);
+CREATE INDEX idx_park_details_park_id ON park_details(park_id);
+CREATE INDEX idx_park_details_type ON park_details(park_id, data_type);
+CREATE INDEX idx_park_details_last_fetched ON park_details(last_fetched_at);

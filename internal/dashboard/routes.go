@@ -530,17 +530,6 @@ func (dm *Dashboard) ParksHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(html.String()))
 }
 
-// Helper function to create slugs
-func createSlug(text string) string {
-	// Convert to lowercase and replace spaces/special chars with hyphens
-	slug := strings.ToLower(text)
-	slug = strings.ReplaceAll(slug, " ", "-")
-	slug = strings.ReplaceAll(slug, "'", "")
-	slug = strings.ReplaceAll(slug, ".", "")
-	slug = strings.ReplaceAll(slug, "&", "and")
-	return slug
-}
-
 // formatStatesDisplay formats the states string to show only first 5 states when there are more than 5
 func formatStatesDisplay(states string) string {
 	if states == "" {
