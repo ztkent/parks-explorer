@@ -23,15 +23,11 @@ func NewDashboard(apiKey string, dbPath string) *Dashboard {
 
 	// Initialize park service
 	parkService := NewParkService(npsApi, db)
+	go parkService.GetAllParks()
 
 	return &Dashboard{
 		npsApi:      npsApi,
 		db:          db,
 		parkService: parkService,
 	}
-}
-
-// RefreshParkCache manually refreshes the park cache from the API
-func (d *Dashboard) RefreshParkCache() error {
-	return d.parkService.RefreshParksFromAPI()
 }

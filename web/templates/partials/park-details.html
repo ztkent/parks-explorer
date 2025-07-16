@@ -4,36 +4,38 @@
         <div class="details-nav-container">
             <h3>Quick Navigation</h3>
             <nav class="details-nav-links">
-                {{if .Details.park}}
+                {{if .Park}}
                 <a href="#location-contact" class="nav-link">Location & Contact</a>
                 {{end}}
-                {{if .Details.park.OperatingHours}}
+                {{if and .Park .Park.OperatingHours}}
                 <a href="#operating-hours" class="nav-link">Hours</a>
                 {{end}}
                 {{$hasFeeContent := false}}
-                {{if .Details.fees.Data}}
-                    {{range .Details.fees.Data}}
-                        {{if or .EntranceFeeDescription .PaidParkingDescription .TimedEntryDescription .IsInteragencyPassAccepted}}
-                            {{$hasFeeContent = true}}
+                {{if .Fees}}
+                    {{if .Fees.Data}}
+                        {{range .Fees.Data}}
+                            {{if or .EntranceFeeDescription .PaidParkingDescription .TimedEntryDescription .IsInteragencyPassAccepted}}
+                                {{$hasFeeContent = true}}
+                            {{end}}
                         {{end}}
                     {{end}}
                 {{end}}
-                {{if or .Details.park.EntranceFees $hasFeeContent}}
+                {{if or (and .Park .Park.EntranceFees) $hasFeeContent}}
                 <a href="#fees" class="nav-link">Fees</a>
                 {{end}}
-                {{if .Details.park.WeatherInfo}}
+                {{if and .Park .Park.WeatherInfo}}
                 <a href="#weather" class="nav-link">Weather</a>
                 {{end}}
-                {{if .Details.park.DirectionsInfo}}
+                {{if and .Park .Park.DirectionsInfo}}
                 <a href="#directions" class="nav-link">Directions</a>
                 {{end}}
-                {{if and .Details.visitorCenters .Details.visitorCenters.Data}}
+                {{if and .VisitorCenters .VisitorCenters.Data}}
                 <a href="#visitor-centers" class="nav-link">Visitor Centers</a>
                 {{end}}
-                {{if and .Details.campgrounds .Details.campgrounds.Data}}
+                {{if and .Campgrounds .Campgrounds.Data}}
                 <a href="#campgrounds" class="nav-link">Campgrounds</a>
                 {{end}}
-                {{if and .Details.parkingLots .Details.parkingLots.Data}}
+                {{if and .Parking .Parking.Data}}
                 <a href="#parking" class="nav-link">Parking</a>
                 {{end}}
             </nav>
@@ -41,11 +43,11 @@
     </div>
 
     <div class="park-details-grid">
-        {{if .Details.park}}
+        {{if .Park}}
         <!-- Location & Contact -->
         <div class="detail-section" id="location-contact">
             <h3>Location & Contact</h3>
-            {{range .Details.park.Addresses}}
+            {{range .Park.Addresses}}
             {{if eq .Type "Physical"}}
             <div class="address-card">
                 <p><strong>Address:</strong></p>
@@ -56,19 +58,19 @@
             {{end}}
             {{end}}
             
-            {{if .Details.park.Contacts.PhoneNumbers}}
+            {{if .Park.Contacts.PhoneNumbers}}
             <div class="contact-info">
                 <p><strong>Phone:</strong></p>
-                {{range .Details.park.Contacts.PhoneNumbers}}
+                {{range .Park.Contacts.PhoneNumbers}}
                 <p>{{if .Description}}{{.Description}}: {{end}}{{.PhoneNumber}}{{if .Extension}} ext. {{.Extension}}{{end}}</p>
                 {{end}}
             </div>
             {{end}}
 
-            {{if .Details.park.Contacts.EmailAddresses}}
+            {{if .Park.Contacts.EmailAddresses}}
             <div class="contact-info">
                 <p><strong>Email:</strong></p>
-                {{range .Details.park.Contacts.EmailAddresses}}
+                {{range .Park.Contacts.EmailAddresses}}
                 <p>{{if .Description}}{{.Description}}: {{end}}<a href="mailto:{{.EmailAddress}}">{{.EmailAddress}}</a></p>
                 {{end}}
             </div>
@@ -76,11 +78,11 @@
         </div>
         {{end}}
 
-        {{if .Details.park.OperatingHours}}
+        {{if and .Park .Park.OperatingHours}}
         <!-- Operating Hours -->
         <div class="detail-section" id="operating-hours">
             <h3>Operating Hours</h3>
-            {{range .Details.park.OperatingHours}}
+            {{range .Park.OperatingHours}}
             <div class="hours-card">
                 <h4>{{.Name}}</h4>
                 {{if .Description}}
@@ -140,16 +142,10 @@
                 <div class="exceptions">
                     <h5>Schedule Exceptions:</h5>
                     {{range .Exceptions}}
-                    {{if .}}
                     <div class="exception">
-                        <strong>{{with .Name}}{{.}}{{else}}Schedule Exception{{end}}</strong>{{if and .StartDate .EndDate}} {{.StartDate}} - {{.EndDate}}{{end}}
-                        {{if .ExceptionHours}}
-                        <div class="exception-hours">
-                            <span>Check with park for specific hours during this period</span>
-                        </div>
-                        {{end}}
+                        <p><strong>{{.Name}}:</strong> {{.StartDate}} - {{.EndDate}}</p>
+                        <p>{{.ExceptionHours}}</p>
                     </div>
-                    {{end}}
                     {{end}}
                 </div>
                 {{end}}
@@ -158,15 +154,15 @@
         </div>
         {{end}}
 
-        {{if .Details.park.EntranceFees}}
+        {{if and .Park .Park.EntranceFees}}
         <!-- Entrance Fees -->
         <div class="detail-section" id="fees">
             <h3>Entrance Fees</h3>
             <div class="fees-list">
-                {{range .Details.park.EntranceFees}}
+                {{range .Park.EntranceFees}}
                 <div class="fee-card">
                     <h4>{{.Title}}</h4>
-                    <p class="cost">${{.Cost}}</p>
+                    <p class="fee-cost">${{.Cost}}</p>
                     <p>{{.Description}}</p>
                 </div>
                 {{end}}
@@ -174,84 +170,122 @@
         </div>
         {{end}}
 
-        {{$hasFeeContent := false}}
-        {{range .Details.fees.Data}}
-            {{if or .EntranceFeeDescription .PaidParkingDescription .TimedEntryDescription .IsInteragencyPassAccepted}}
-                {{$hasFeeContent = true}}
+        {{if .Fees}}
+            {{if .Fees.Data}}
+                {{$hasAnyFeeInfo := false}}
+                {{range .Fees.Data}}
+                    {{if or .EntranceFeeDescription .PaidParkingDescription .TimedEntryDescription .IsInteragencyPassAccepted .EntrancePassesDescription}}
+                        {{$hasAnyFeeInfo = true}}
+                    {{end}}
+                {{end}}
+                {{if $hasAnyFeeInfo}}
+                <!-- Additional Fees & Passes Information -->
+                <div class="detail-section" id="additional-fees">
+                    <h3>Fees & Passes Information</h3>
+                    {{range .Fees.Data}}
+                        <div class="fees-info">
+                            {{if .EntranceFeeDescription}}
+                            <div class="fee-section">
+                                <h4>Entrance Fees</h4>
+                                <p>{{.EntranceFeeDescription}}</p>
+                            </div>
+                            {{end}}
+                            
+                            {{if .PaidParkingDescription}}
+                            <div class="fee-section">
+                                <h4>Parking Fees</h4>
+                                <p>{{.PaidParkingDescription}}</p>
+                            </div>
+                            {{end}}
+                            
+                            {{if .TimedEntryDescription}}
+                            <div class="fee-section">
+                                <h4>Timed Entry</h4>
+                                <p>{{.TimedEntryDescription}}</p>
+                            </div>
+                            {{end}}
+                            
+                            {{if .EntrancePassesDescription}}
+                            <div class="fee-section">
+                                <h4>Entrance Passes</h4>
+                                <p>{{.EntrancePassesDescription}}</p>
+                            </div>
+                            {{end}}
+                            
+                            {{if .IsInteragencyPassAccepted}}
+                            <div class="fee-section">
+                                <p class="pass-accepted">✅ Interagency Annual Pass Accepted</p>
+                            </div>
+                            {{end}}
+                            
+                            {{if .IsFeeFreePark}}
+                            <div class="fee-section">
+                                <p class="free-park">🆓 This is a fee-free park</p>
+                            </div>
+                            {{end}}
+                            
+                            {{if .Cashless}}
+                            <div class="fee-section">
+                                <p class="cashless-info">💳 Cashless Payment: {{.Cashless}}</p>
+                            </div>
+                            {{end}}
+                        </div>
+                    {{end}}
+                </div>
+                {{end}}
             {{end}}
-        {{end}}
-        {{if and .Details.fees .Details.fees.Data $hasFeeContent}}
-        <!-- Additional Fees & Passes -->
-        <div class="detail-section" id="additional-fees">
-            <h3>Fees & Passes</h3>
-            {{range .Details.fees.Data}}
-            <div class="fees-info">
-                {{if .EntranceFeeDescription}}
-                <p><strong>Entrance Fees:</strong> {{.EntranceFeeDescription}}</p>
-                {{end}}
-                {{if .PaidParkingDescription}}
-                <p><strong>Parking:</strong> {{.PaidParkingDescription}}</p>
-                {{end}}
-                {{if .TimedEntryDescription}}
-                <p><strong>Timed Entry:</strong> {{.TimedEntryDescription}}</p>
-                {{end}}
-                {{if .IsInteragencyPassAccepted}}
-                <p>✅ Interagency Annual Pass Accepted</p>
-                {{end}}
-            </div>
-            {{end}}
-        </div>
         {{end}}
 
-        {{if .Details.park.WeatherInfo}}
+        {{if and .Park .Park.WeatherInfo}}
         <!-- Weather Information -->
         <div class="detail-section" id="weather">
             <h3>Weather Information</h3>
             <div class="weather-info">
-                <p>{{.Details.park.WeatherInfo}}</p>
+                <p>{{.Park.WeatherInfo}}</p>
             </div>
         </div>
         {{end}}
 
-        {{if .Details.park.DirectionsInfo}}
+        {{if and .Park .Park.DirectionsInfo}}
         <!-- Directions -->
         <div class="detail-section" id="directions">
             <h3>Directions</h3>
             <div class="directions-info">
-                <p>{{.Details.park.DirectionsInfo}}</p>
-                {{if .Details.park.DirectionsUrl}}
-                <a href="{{.Details.park.DirectionsUrl}}" target="_blank" class="directions-link">Get Detailed Directions</a>
+                <p>{{.Park.DirectionsInfo}}</p>
+                {{if .Park.DirectionsUrl}}
+                <a href="{{.Park.DirectionsUrl}}" target="_blank" class="directions-link">Get Detailed Directions</a>
                 {{end}}
             </div>
         </div>
         {{end}}
 
-        {{if and .Details.visitorCenters .Details.visitorCenters.Data}}
+        {{if and .VisitorCenters .VisitorCenters.Data}}
         <!-- Visitor Centers -->
         <div class="detail-section" id="visitor-centers">
             <h3>Visitor Centers</h3>
             <div class="visitor-centers">
-                {{range .Details.visitorCenters.Data}}
+                {{range .VisitorCenters.Data}}
                 <div class="visitor-center-card">
                     <h4>{{.Name}}</h4>
                     <p>{{.Description}}</p>
                     {{if .Addresses}}
-                    <p class="address">{{(index .Addresses 0).Line1}}, {{(index .Addresses 0).City}}</p>
-                    {{end}}
-                    {{if .OperatingHours}}
-                    <div class="vc-hours">
-                        {{range .OperatingHours}}
-                        <p><strong>{{.Name}}:</strong> {{.Description}}</p>
-                        {{end}}
+                    {{range .Addresses}}
+                    {{if eq .Type "Physical"}}
+                    <div class="address">
+                        <p>{{.Line1}}, {{.City}}, {{.StateCode}} {{.PostalCode}}</p>
                     </div>
                     {{end}}
-                    {{if .Amenities}}
-                    <div class="vc-amenities">
-                        <strong>Services:</strong>
-                        {{range .Amenities}}
-                        <span class="amenity-tag">{{.}}</span>
-                        {{end}}
-                    </div>
+                    {{end}}
+                    {{end}}
+                    {{if and .Contacts.PhoneNumbers (gt (len .Contacts.PhoneNumbers) 0)}}
+                    {{range .Contacts.PhoneNumbers}}
+                    {{if .PhoneNumber}}
+                    <p class="phone">📞 {{.PhoneNumber}}</p>
+                    {{end}}
+                    {{end}}
+                    {{end}}
+                    {{if .DirectionsInfo}}
+                    <p class="directions">{{.DirectionsInfo}}</p>
                     {{end}}
                 </div>
                 {{end}}
@@ -259,33 +293,36 @@
         </div>
         {{end}}
 
-        {{if and .Details.campgrounds .Details.campgrounds.Data}}
+        {{if and .Campgrounds .Campgrounds.Data}}
         <!-- Campgrounds -->
         <div class="detail-section" id="campgrounds">
             <h3>Campgrounds</h3>
             <div class="campgrounds-info">
-                {{range .Details.campgrounds.Data}}
+                {{range .Campgrounds.Data}}
                 <div class="campground-info-card">
                     <h4>{{.Name}}</h4>
                     <p>{{.Description}}</p>
-                    {{if .Campsites}}
-                    <div class="campsite-details">
-                        {{if .Campsites.TotalSites}}
-                        <span>🏕️ {{.Campsites.TotalSites}} Total Sites</span>
-                        {{end}}
-                        {{if .Campsites.ElectricalHookups}}
-                        <span>⚡ Electric: {{.Campsites.ElectricalHookups}}</span>
-                        {{end}}
-                        {{if .Campsites.RvOnly}}
-                        <span>🚐 RV Sites: {{.Campsites.RvOnly}}</span>
-                        {{end}}
-                    </div>
+                    {{if .Campsites.TotalSites}}
+                    <p><strong>Total Sites:</strong> {{.Campsites.TotalSites}}</p>
                     {{end}}
                     {{if .ReservationInfo}}
                     <p><strong>Reservations:</strong> {{.ReservationInfo}}</p>
                     {{end}}
-                    {{if .ReservationUrl}}
-                    <a href="{{.ReservationUrl}}" target="_blank" class="reservation-link">Make Reservation</a>
+                    {{if .Fees}}
+                    <div class="fees">
+                        <h5>Campground Fees:</h5>
+                        {{range .Fees}}
+                        <div class="fee-item">
+                            <div class="fee-header">
+                                <strong>{{.Title}}</strong>
+                                <span class="fee-cost">${{.Cost}}</span>
+                            </div>
+                            {{if .Description}}
+                            <p class="fee-description">{{.Description}}</p>
+                            {{end}}
+                        </div>
+                        {{end}}
+                    </div>
                     {{end}}
                 </div>
                 {{end}}
@@ -293,28 +330,84 @@
         </div>
         {{end}}
 
-        {{if and .Details.parkingLots .Details.parkingLots.Data}}
+{{if and .Parking .Parking.Data}}
         <!-- Parking Information -->
         <div class="detail-section" id="parking">
             <h3>Parking</h3>
             <div class="parking-info">
-                {{range .Details.parkingLots.Data}}
+                {{range .Parking.Data}}
                 <div class="parking-card">
                     <h4>{{.Name}}</h4>
                     <p>{{.Description}}</p>
-                    {{if .Accessibility}}
-                    <div class="parking-accessibility">
-                        {{if .Accessibility.IsLotAccessibleToDisabled}}
-                        <span>♿ ADA Accessible</span>
+                    {{if .Latitude}}
+                    <p><strong>Location:</strong> {{.Latitude}}, {{.Longitude}}</p>
+                    {{end}}
+                    {{if .Fees}}
+                    <div class="fees">
+                        <h5>Parking Fees:</h5>
+                        {{range .Fees}}
+                        <div class="fee-item">
+                            <div class="fee-header">
+                                <strong>{{.Title}}</strong>
+                                {{if .Cost}}
+                                <span class="fee-cost">${{.Cost}}</span>
+                                {{end}}
+                            </div>
+                            {{if .Description}}
+                            <p class="fee-description">{{.Description}}</p>
+                            {{end}}
+                        </div>
                         {{end}}
+                    </div>
+                    {{end}}
+                    {{if and .Accessibility (or .Accessibility.TotalSpaces .Accessibility.NumberofAdaSpaces .Accessibility.NumberOfOversizeVehicleSpaces .Accessibility.IsLotAccessibleToDisabled)}}
+                    <div class="accessibility-info">
+                        <h5>Accessibility Information:</h5>
                         {{if .Accessibility.TotalSpaces}}
-                        <span>🅿️ {{.Accessibility.TotalSpaces}} Total Spaces</span>
+                        <p><strong>Total Spaces:</strong> {{.Accessibility.TotalSpaces}}</p>
                         {{end}}
                         {{if .Accessibility.NumberofAdaSpaces}}
-                        <span>♿ {{.Accessibility.NumberofAdaSpaces}} ADA Spaces</span>
+                        <p><strong>ADA Spaces:</strong> {{.Accessibility.NumberofAdaSpaces}}</p>
                         {{end}}
                         {{if .Accessibility.NumberOfOversizeVehicleSpaces}}
-                        <span>🚐 {{.Accessibility.NumberOfOversizeVehicleSpaces}} Oversize Spaces</span>
+                        <p><strong>Oversize Vehicle Spaces:</strong> {{.Accessibility.NumberOfOversizeVehicleSpaces}}</p>
+                        {{end}}
+                        {{if .Accessibility.IsLotAccessibleToDisabled}}
+                        <p>♿ ADA Accessible</p>
+                        {{end}}
+                    </div>
+                    {{end}}
+                    {{if .OperatingHours}}
+                    <div class="operating-hours">
+                        <h5>Operating Hours:</h5>
+                        {{range .OperatingHours}}
+                        <div class="hours-section">
+                            <h6>{{.Name}}</h6>
+                            {{if .Description}}
+                            <p>{{.Description}}</p>
+                            {{end}}
+                            {{if .StandardHours}}
+                            <div class="hours-grid">
+                                {{with .StandardHours}}
+                                {{if .Monday}}<div class="day-hours"><span class="day">Monday:</span> <span class="hours">{{.Monday}}</span></div>{{end}}
+                                {{if .Tuesday}}<div class="day-hours"><span class="day">Tuesday:</span> <span class="hours">{{.Tuesday}}</span></div>{{end}}
+                                {{if .Wednesday}}<div class="day-hours"><span class="day">Wednesday:</span> <span class="hours">{{.Wednesday}}</span></div>{{end}}
+                                {{if .Thursday}}<div class="day-hours"><span class="day">Thursday:</span> <span class="hours">{{.Thursday}}</span></div>{{end}}
+                                {{if .Friday}}<div class="day-hours"><span class="day">Friday:</span> <span class="hours">{{.Friday}}</span></div>{{end}}
+                                {{if .Saturday}}<div class="day-hours"><span class="day">Saturday:</span> <span class="hours">{{.Saturday}}</span></div>{{end}}
+                                {{if .Sunday}}<div class="day-hours"><span class="day">Sunday:</span> <span class="hours">{{.Sunday}}</span></div>{{end}}
+                                {{end}}
+                            </div>
+                            {{end}}
+                        </div>
+                        {{end}}
+                    </div>
+                    {{end}}
+                    {{if .Contacts.PhoneNumbers}}
+                    <div class="contact-info">
+                        <h5>Contact Information:</h5>
+                        {{range .Contacts.PhoneNumbers}}
+                        <p>📞 {{.PhoneNumber}}{{if .Extension}} ext. {{.Extension}}{{end}}{{if .Description}} ({{.Description}}){{end}}</p>
                         {{end}}
                     </div>
                     {{end}}

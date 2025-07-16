@@ -1,10 +1,13 @@
 package database
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/ztkent/go-nps"
 )
 
 // Park represents a cached park from the database
@@ -309,16 +312,6 @@ func (db *DB) GetParksWithPagination(offset, limit int) ([]CachedPark, error) {
 	return parks, nil
 }
 
-// GetTotalParksCount returns the total number of parks in the database
-func (db *DB) GetTotalParksCount() (int, error) {
-	var count int
-	err := db.QueryRow("SELECT COUNT(*) FROM parks").Scan(&count)
-	if err != nil {
-		return 0, fmt.Errorf("failed to count parks: %w", err)
-	}
-	return count, nil
-}
-
 // SearchParks searches cached parks by name
 func (db *DB) SearchParks(query string) ([]CachedPark, error) {
 	searchQuery := `
@@ -370,27 +363,6 @@ func (db *DB) SearchParks(query string) ([]CachedPark, error) {
 	}
 
 	return parks, nil
-}
-
-// IsDataStale checks if park data needs refreshing (older than 24 hours)
-func (db *DB) IsDataStale(maxAge time.Duration) (bool, error) {
-	var count int
-	query := `SELECT COUNT(*) FROM parks WHERE last_fetched_at < ?`
-	cutoff := time.Now().Add(-maxAge)
-
-	err := db.QueryRow(query, cutoff).Scan(&count)
-	if err != nil {
-		return false, fmt.Errorf("failed to check data freshness: %w", err)
-	}
-
-	// If we have no parks or some are stale, we need to refresh
-	var totalCount int
-	err = db.QueryRow("SELECT COUNT(*) FROM parks").Scan(&totalCount)
-	if err != nil {
-		return false, fmt.Errorf("failed to count parks: %w", err)
-	}
-
-	return totalCount == 0 || count > 0, nil
 }
 
 // Helper functions for safe type assertions
@@ -473,8 +445,14 @@ func (db *DB) GetCachedParkData(parkID int, dataType, tableName string) (*Cached
 func (db *DB) IsParkDataStale(parkID int, dataType, tableName string, maxAge time.Duration) (bool, error) {
 	query := fmt.Sprintf(`
 		SELECT last_fetched_at FROM %s 
-		WHERE park_id = ? AND data_type = ?
 	`, tableName)
+	if parkID > 0 && dataType != "" {
+		query += "WHERE park_id = ? AND data_type = ?"
+	} else if parkID > 0 {
+		query += "WHERE park_id = ?"
+	} else if dataType != "" {
+		query += "WHERE data_type = ?"
+	}
 
 	var lastFetched time.Time
 	err := db.QueryRow(query, parkID, dataType).Scan(&lastFetched)
@@ -484,4 +462,70 @@ func (db *DB) IsParkDataStale(parkID int, dataType, tableName string, maxAge tim
 	}
 
 	return time.Since(lastFetched) > maxAge, nil
+}
+
+type CachedGalleryAsset struct {
+	ID            int       `json:"id"`
+	ParkID        int       `json:"park_id"`
+	GalleryID     string    `json:"gallery_id"`
+	AssetID       string    `json:"asset_id"`
+	Title         string    `json:"title"`
+	AltText       string    `json:"alt_text"`
+	Caption       string    `json:"caption"`
+	Credit        string    `json:"credit"`
+	URL           string    `json:"url"`
+	AssetType     string    `json:"asset_type"`
+	FileSize      int       `json:"file_size"`
+	Width         int       `json:"width"`
+	Height        int       `json:"height"`
+	APIData       string    `json:"api_data"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
+	LastFetchedAt time.Time `json:"last_fetched_at"`
+}
+
+func (db *DB) IsGalleryAssetsStale(parkID int, galleryID string, maxAge time.Duration) (bool, error) {
+	var lastFetched time.Time
+	query := `SELECT last_fetched_at FROM park_gallery_assets 
+              WHERE park_id = ? AND gallery_id = ? 
+              ORDER BY last_fetched_at DESC LIMIT 1`
+
+	err := db.QueryRow(query, parkID, galleryID).Scan(&lastFetched)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return true, nil // No cached data, so it's stale
+		}
+		return true, err
+	}
+
+	return time.Since(lastFetched) > maxAge, nil
+}
+
+func (db *DB) GetCachedGalleryAssets(parkID int, galleryID string) (*CachedGalleryAsset, error) {
+	var asset CachedGalleryAsset
+	query := `SELECT api_data, last_fetched_at FROM park_gallery_assets 
+              WHERE park_id = ? AND gallery_id = ? 
+              ORDER BY last_fetched_at DESC LIMIT 1`
+
+	err := db.QueryRow(query, parkID, galleryID).Scan(&asset.APIData, &asset.LastFetchedAt)
+	return &asset, err
+}
+
+func (db *DB) UpsertGalleryAssets(parkID int, galleryID string, response *nps.MultimediaGalleriesAssetsResponse) error {
+	// Marshal the entire response to JSON
+	apiDataJSON, err := json.Marshal(response)
+	if err != nil {
+		return fmt.Errorf("failed to marshal gallery assets: %w", err)
+	}
+	query := `
+        INSERT OR REPLACE INTO park_gallery_assets (
+            park_id, gallery_id, api_data, updated_at, last_fetched_at
+        ) VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    `
+
+	_, err = db.Exec(query, parkID, galleryID, string(apiDataJSON))
+	if err != nil {
+		return fmt.Errorf("failed to upsert gallery assets: %w", err)
+	}
+	return nil
 }

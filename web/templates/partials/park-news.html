@@ -1,9 +1,9 @@
 <div class="container">
-    {{if and .News.alerts .News.alerts.Data}}
+    {{if and .Alerts .Alerts.Data}}
     <section class="alerts">
         <h2>Current Alerts</h2>
         <div class="alerts-list">
-            {{range .News.alerts.Data}}
+            {{range .Alerts.Data}}
             <div class="alert-card alert-{{.Category}}">
                 <div class="alert-header">
                     <h3>{{.Title}}</h3>
@@ -22,16 +22,16 @@
     </section>
     {{end}}
 
-    {{if and .News.newsReleases .News.newsReleases.Data}}
+    {{if and .NewsReleases .NewsReleases.Data (gt (len .NewsReleases.Data) 0)}}
     <section class="news-releases">
         <h2>News & Press Releases</h2>
         <div class="news-list">
-            {{range .News.newsReleases.Data}}
+            {{range .NewsReleases.Data}}
             <article class="news-card">
                 <div class="news-header">
                     <h3><a href="{{.Url}}" target="_blank">{{.Title}}</a></h3>
                     {{if .ReleaseDate}}
-                    <span class="release-date">📅 {{.ReleaseDate}}</span>
+                    <span class="release-date">{{.ReleaseDate}}</span>
                     {{end}}
                 </div>
                 {{if .Abstract}}
@@ -51,11 +51,11 @@
     </section>
     {{end}}
 
-    {{if and .News.articles .News.articles.Data}}
+    {{if and .Articles .Articles.Data (gt (len .Articles.Data) 0)}}
     <section class="articles">
         <h2>Educational Articles</h2>
         <div class="articles-grid">
-            {{range .News.articles.Data}}
+            {{range .Articles.Data}}
             <div class="article-card">
                 {{if .ListingImage}}
                     {{if .ListingImage.URL}}
@@ -77,11 +77,11 @@
     </section>
     {{end}}
 
-    {{if and .News.events .News.events.Data}}
+    {{if and .Events .Events.Data  (gt (len .Events.Data) 0)}}
     <section class="upcoming-events">
         <h2>Upcoming Events & Programs</h2>
         <div class="events-calendar">
-            {{range .News.events.Data}}
+            {{range .Events.Data}}
             <div class="event-item">
                 <div class="event-date-block">
                     {{if .DateStart}}
@@ -91,7 +91,7 @@
                 </div>
                 <div class="event-details">
                     <h4>{{.Title}}</h4>
-                    <p>{{.Description}}</p>
+                    <div class="event-description">{{.Description | unescapeHTML}}</div>
                     {{if .Location}}
                     <p class="event-location">📍 {{.Location}}</p>
                     {{end}}
@@ -110,7 +110,7 @@
     </section>
     {{end}}
 
-    {{if not (or (and .News.alerts .News.alerts.Data (gt (len .News.alerts.Data) 0)) (and .News.newsReleases .News.newsReleases.Data (gt (len .News.newsReleases.Data) 0)) (and .News.articles .News.articles.Data (gt (len .News.articles.Data) 0)) (and .News.events .News.events.Data (gt (len .News.events.Data) 0)))}}
+    {{if not (or (and .Alerts .Alerts.Data (gt (len .Alerts.Data) 0)) (and .NewsReleases .NewsReleases.Data (gt (len .NewsReleases.Data) 0)) (and .Articles .Articles.Data (gt (len .Articles.Data) 0)) (and .Events .Events.Data (gt (len .Events.Data) 0)))}}
     <section class="no-news">
         <div class="no-news-content">
             <h2>📰 News & Updates</h2>

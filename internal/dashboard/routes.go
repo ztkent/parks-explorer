@@ -305,70 +305,6 @@ func (dm *Dashboard) ParkSearchHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(html.String()))
 }
 
-// ParkDetailsHandler returns HTML for a specific park's details
-func (dm *Dashboard) ParkDetailsHandler(w http.ResponseWriter, r *http.Request) {
-	slug := r.URL.Path[len("/api/parks/"):]
-	slug = slug[:len(slug)-len("/details")]
-
-	// Get park from cache
-	park, err := dm.parkService.GetParkBySlug(slug)
-	if err != nil {
-		w.Header().Set("Content-Type", "text/html")
-		w.Write([]byte(`<div class="modal-content"><h2>Park not found</h2></div>`))
-		return
-	}
-
-	w.Header().Set("Content-Type", "text/html")
-
-	// Get the first available image
-	imageUrl := ""
-	if len(park.Images) > 0 {
-		imageUrl = park.Images[0].URL
-	}
-
-	// Build park details HTML
-	imageHTML := ""
-	if imageUrl != "" {
-		imageHTML = fmt.Sprintf(`<img src="%s" alt="%s" style="width: 100%%; height: 300px; object-fit: cover; border-radius: 8px; margin-bottom: 1rem;">`, imageUrl, park.Name)
-	}
-
-	description := park.Description
-	if description == "" {
-		description = fmt.Sprintf("Discover the natural beauty and unique features of %s.", park.Name)
-	}
-
-	// Truncate description if it's too long
-	if len(description) > 300 {
-		description = description[:300] + "..."
-	}
-
-	html := fmt.Sprintf(`
-		<div class="modal-content" style="padding: 2rem; max-width: 600px;">
-			<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
-				<h2 style="margin: 0; color: #111827; font-size: 1.8rem;">%s</h2>
-				<button onclick="closeModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #6b7280;">&times;</button>
-			</div>
-			%s
-			<p style="color: #6b7280; line-height: 1.6; margin-bottom: 1.5rem;">%s</p>
-			<div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-				<div style="background: #f3f4f6; padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.9rem;">
-					<strong>State(s):</strong> %s
-				</div>
-				<div style="background: #f3f4f6; padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.9rem;">
-					<strong>Designation:</strong> %s
-				</div>
-			</div>
-			<div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e5e7eb;">
-				<a href="%s" target="_blank" style="background: #16a34a; color: white; padding: 0.75rem 1.5rem; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-block;">
-					Visit Official Site
-				</a>
-			</div>
-		</div>
-	`, park.Name, imageHTML, description, formatStatesDisplay(park.States), park.Designation, park.URL)
-
-	w.Write([]byte(html))
-}
-
 // ParkPageHandler returns a full HTML page for a specific park
 func (dm *Dashboard) ParkPageHandler(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
@@ -563,18 +499,21 @@ func (dm *Dashboard) ParkOverviewHandler(w http.ResponseWriter, r *http.Request)
 
 	w.Header().Set("Content-Type", "text/html")
 
-	// Get comprehensive overview data including all major elements
-	overview, err := dm.parkService.GetParkOverview(parkCode)
-	if err != nil {
-		log.Printf("Failed to load park overview for %s: %v", parkCode, err)
-		http.Error(w, fmt.Sprintf("Failed to load park overview: %v", err), http.StatusInternalServerError)
-		return
-	}
-
+	thingsToDo, _ := dm.parkService.GetParkThingsToDo(parkCode)
+	activities, _ := dm.parkService.GetParkActivities(parkCode)
+	visitorCenters, _ := dm.parkService.GetParkVisitorCenters(parkCode)
+	amenities, _ := dm.parkService.GetParkAmenities(parkCode)
+	tours, _ := dm.parkService.GetParkTours(parkCode)
+	events, _ := dm.parkService.GetParkEvents(parkCode)
 	// Prepare data for the template with proper structure
 	data := map[string]interface{}{
-		"Overview": overview,
-		"ParkCode": parkCode,
+		"ThingsToDo":     thingsToDo,
+		"Activities":     activities,
+		"VisitorCenters": visitorCenters,
+		"Amenities":      amenities,
+		"ParkTours":      tours,
+		"ParkEvents":     events,
+		"ParkCode":       parkCode,
 	}
 
 	// Parse and execute the overview template
@@ -650,21 +589,19 @@ func (dm *Dashboard) ParkMediaHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/html")
 
-	// Get comprehensive media data leveraging all multimedia endpoints
-	// Galleries: images with credits, captions, alt text, crops for different aspect ratios
-	// Videos: duration, transcripts, permalinks, descriptions
-	// Audio: multimedia audio content with descriptions and metadata
-	// Webcams: live feeds with streaming status, images, descriptions, coordinates
-	mediaData, _ := dm.parkService.GetParkMediaComplete(parkCode)
-
-	// Additional specific media fetches for enhanced content
+	// 	mediaTypes := []string{"galleries", "videos", "audio", "webcams"}
+	galleries, _ := dm.parkService.GetParkMultimediaGalleries(parkCode)
+	videos, _ := dm.parkService.GetParkMultimediaVideos(parkCode)
 	audio, _ := dm.parkService.GetParkMultimediaAudio(parkCode)
+	webcams, _ := dm.parkService.GetParkWebcams(parkCode)
 
 	// Comprehensive media data structure
 	data := map[string]interface{}{
-		"Media":    mediaData, // Includes galleries, videos, audio, webcams
-		"Audio":    audio,     // Additional audio content with detailed metadata
-		"ParkCode": parkCode,
+		"Galleries": galleries, // Comprehensive gallery data with detailed metadata
+		"Videos":    videos,    // Comprehensive video data with detailed metadata
+		"Audio":     audio,     // Additional audio content with detailed metadata
+		"Webcams":   webcams,   // Live webcam feeds with detailed metadata
+		"ParkCode":  parkCode,
 	}
 
 	// Parse and execute the media template
@@ -699,6 +636,12 @@ func (dm *Dashboard) ParkMediaHandler(w http.ResponseWriter, r *http.Request) {
 				return fmt.Sprintf("%d sec", seconds)
 			}
 		},
+		"add": func(a, b int) int {
+			return a + b
+		},
+		"sub": func(a, b int) int {
+			return a - b
+		},
 	}).ParseFiles("web/templates/partials/park-media.html")
 	if err != nil {
 		log.Printf("Failed to load media template: %v", err)
@@ -723,26 +666,25 @@ func (dm *Dashboard) ParkNewsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "text/html")
-
-	// Get comprehensive news data leveraging all news and information endpoints
-	// News releases: official announcements with full content and metadata
-	// Articles: educational content with images, descriptions, and URLs
-	// Alerts: current warnings, closures, and important information with categories
-	// Events: upcoming programs and activities with dates, descriptions, and details
-	newsData, _ := dm.parkService.GetParkNewsComplete(parkCode)
-
-	// Additional specific news fetches for enhanced content
 	newsReleases, _ := dm.parkService.GetParkNewsReleases(parkCode)
+	articles, _ := dm.parkService.GetParkArticles(parkCode)
+	alerts, _ := dm.parkService.GetParkAlerts(parkCode)
+	events, _ := dm.parkService.GetParkEvents(parkCode)
 
-	// Comprehensive news data structure with all available fields
 	data := map[string]interface{}{
-		"News":         newsData,     // Includes articles, alerts, events from complete method
 		"NewsReleases": newsReleases, // Official press releases with detailed content
+		"Articles":     articles,     // In-depth articles with full text, images, and metadata
+		"Alerts":       alerts,       // Critical alerts with full descriptions, categories, and
+		"Events":       events,       // Upcoming events with full details, including dates,
 		"ParkCode":     parkCode,
 	}
 
 	// Parse and execute the news template
-	tmpl, err := template.ParseFiles("web/templates/partials/park-news.html")
+	tmpl, err := template.New("park-news.html").Funcs(template.FuncMap{
+		"unescapeHTML": func(s string) template.HTML {
+			return template.HTML(s)
+		},
+	}).ParseFiles("web/templates/partials/park-news.html")
 	if err != nil {
 		log.Printf("Failed to load news template: %v", err)
 		http.Error(w, fmt.Sprintf("Failed to load news template: %v", err), http.StatusInternalServerError)
@@ -758,7 +700,7 @@ func (dm *Dashboard) ParkNewsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // ParkEnhancedDetailsHandler returns comprehensive park details and facilities information
-func (dm *Dashboard) ParkEnhancedDetailsHandler(w http.ResponseWriter, r *http.Request) {
+func (dm *Dashboard) ParkDetailsHandler(w http.ResponseWriter, r *http.Request) {
 	parkCode := chi.URLParam(r, "parkCode")
 	if parkCode == "" {
 		http.Error(w, "Park code required", http.StatusBadRequest)
@@ -767,22 +709,18 @@ func (dm *Dashboard) ParkEnhancedDetailsHandler(w http.ResponseWriter, r *http.R
 
 	w.Header().Set("Content-Type", "text/html")
 
-	// Get comprehensive enhanced details leveraging all facilities and information endpoints
-	// Park details: addresses, contacts, operating hours, entrance fees, weather info, directions
-	// Visitor centers: locations, services, operating hours, contacts, amenities
-	// Campgrounds: sites, amenities, reservations, accessibility, fees
-	// Fees and passes: entrance fees, annual passes, descriptions, costs
-	// Parking lots: locations, accessibility, capacity, fees
-	detailsData, _ := dm.parkService.GetParkEnhancedDetails(parkCode)
-
-	// Additional specific detail fetches for comprehensive information
-	amenities, _ := dm.parkService.GetParkAmenities(parkCode)
+	visitors_centers, _ := dm.parkService.GetParkVisitorCenters(parkCode)
+	campgrounds, _ := dm.parkService.GetParkCampgrounds(parkCode)
+	fees, _ := dm.parkService.GetParkFees(parkCode)
+	parking, _ := dm.parkService.GetParkParking(parkCode)
 
 	// Comprehensive details data structure with all available NPS API fields
 	data := map[string]interface{}{
-		"Details":   detailsData, // Includes park info, visitor centers, campgrounds, fees, parking
-		"Amenities": amenities,   // Detailed amenity information with descriptions
-		"ParkCode":  parkCode,
+		"VisitorCenters": visitors_centers,
+		"Campgrounds":    campgrounds,
+		"Fees":           fees,
+		"Parking":        parking,
+		"ParkCode":       parkCode,
 	}
 
 	// Parse and execute the details template
