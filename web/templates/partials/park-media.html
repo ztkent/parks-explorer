@@ -39,20 +39,8 @@
                 <div class="gallery-preview">
                     {{if $gallery.Images}}
                         {{range $index, $image := $gallery.Images}}
-                            {{if lt $index 3}}
+                            {{if lt $index 50}}
                                 <img src="{{$image.Url}}" alt="{{$image.AltText}}" class="gallery-preview-image" />
-                            {{end}}
-                        {{end}}
-                    {{end}}
-                    {{if $.GalleryAssets}}
-                        {{if index $.GalleryAssets $gallery.ID}}
-                            {{$assetResp := index $.GalleryAssets $gallery.ID}}
-                            {{if $assetResp.Data}}
-                                {{range $index, $asset := $assetResp.Data}}
-                                    {{if lt $index 3}}
-                                        <img src="{{$asset.URL}}" alt="{{$asset.AltText}}" class="gallery-preview-image" />
-                                    {{end}}
-                                {{end}}
                             {{end}}
                         {{end}}
                     {{end}}

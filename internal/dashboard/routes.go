@@ -505,7 +505,6 @@ func (dm *Dashboard) ParkOverviewHandler(w http.ResponseWriter, r *http.Request)
 	amenities, _ := dm.parkService.GetParkAmenities(parkCode)
 	tours, _ := dm.parkService.GetParkTours(parkCode)
 	events, _ := dm.parkService.GetParkEvents(parkCode)
-	alerts, _ := dm.parkService.GetParkAlerts(parkCode)
 	// Prepare data for the template with proper structure
 	data := map[string]interface{}{
 		"ThingsToDo":     thingsToDo,
@@ -514,7 +513,6 @@ func (dm *Dashboard) ParkOverviewHandler(w http.ResponseWriter, r *http.Request)
 		"Amenities":      amenities,
 		"ParkTours":      tours,
 		"ParkEvents":     events,
-		"ParkAlerts":     alerts,
 		"ParkCode":       parkCode,
 	}
 
@@ -637,6 +635,12 @@ func (dm *Dashboard) ParkMediaHandler(w http.ResponseWriter, r *http.Request) {
 			} else {
 				return fmt.Sprintf("%d sec", seconds)
 			}
+		},
+		"add": func(a, b int) int {
+			return a + b
+		},
+		"sub": func(a, b int) int {
+			return a - b
 		},
 	}).ParseFiles("web/templates/partials/park-media.html")
 	if err != nil {

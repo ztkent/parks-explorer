@@ -149,20 +149,6 @@
         </section>
     {{end}}
 
-    {{/* Park Amenities Section */}}
-    {{if and .Amenities .Amenities.Data (gt (len .Amenities.Data) 0)}}
-        <section class="park-amenities">
-            <h2>Park Amenities</h2>
-            <div class="amenities-grid">
-                {{range .Amenities.Data}}
-                    <div class="amenity-card">
-                        <h4>{{if .Name}}{{.Name}}{{else}}Amenity{{end}}</h4>
-                    </div>
-                {{end}}
-            </div>
-        </section>
-    {{end}}
-
     {{/* Featured Tours Section */}}
     {{if and .ParkTours .ParkTours.Data (gt (len .ParkTours.Data) 0)}}
         <section class="featured-tours">
@@ -192,16 +178,14 @@
         </section>
     {{end}}
 
-    {{/* Current Alerts Section */}}
-    {{if and .ParkAlerts .ParkAlerts.Data (gt (len .ParkAlerts.Data) 0)}}
-        <section class="current-alerts">
-            <h2>Current Alerts</h2>
-            <div class="alerts-preview">
-                {{range .ParkAlerts.Data}}
-                    <div class="alert-preview alert-{{.Category}}">
-                        <h4>{{.Title}}</h4>
-                        <p>{{.Description}}</p>
-                        <span class="alert-category">{{.Category}}</span>
+    {{/* Park Amenities Section */}}
+    {{if and .Amenities .Amenities.Data (gt (len .Amenities.Data) 0)}}
+        <section class="park-amenities">
+            <h2>Park Amenities</h2>
+            <div class="amenities-grid">
+                {{range .Amenities.Data}}
+                    <div class="amenity-card">
+                        <h4>{{if .Name}}{{.Name}}{{else}}Amenity{{end}}</h4>
                     </div>
                 {{end}}
             </div>
