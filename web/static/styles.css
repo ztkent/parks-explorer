@@ -1794,10 +1794,11 @@ body {
 }
 
 .event-end-date {
-    background: #f3f4f6;
-    color: #6b7280;
+    background: #16a34a;
+    color: white;
     padding: 0.25rem 0.75rem;
     border-radius: 20px;
+    font-weight: 500;
 }
 
 .event-location,

@@ -1,55 +1,53 @@
 <div class="container">
-    {{if .Media.webcams}}
-        {{if .Media.webcams.Data}}
-            {{if gt (len .Media.webcams.Data) 0}}
-                <section class="live-webcams">
-                    <h2>Live Webcams</h2>
-                    <div class="webcams-grid">
-                        {{range .Media.webcams.Data}}
-                            <div class="webcam-card">
-                                <div class="webcam-header">
-                                    <h3>{{if .Title}}{{.Title}}{{else}}Webcam{{end}}</h3>
-                                </div>
-                                {{if .Images}}
-                                    {{range $index, $image := .Images}}
-                                        {{if eq $index 0}}
-                                            <img src="{{$image.URL}}" alt="{{$.Title}}" class="webcam-preview" />
-                                        {{end}}
-                                    {{end}}
-                                {{end}}
-                                {{if .Description}}
-                                    <p>{{.Description}}</p>
-                                {{end}}
-                                {{if .URL}}
-                                    <a href="{{.URL}}" target="_blank" class="webcam-link">View Webcam</a>
-                                {{end}}
-                                <div class="webcam-info">
-                                    <small class="webcam-status">
-                                        Status: 
-                                        <span class="status {{if eq .Status "Active"}}live{{else}}offline{{end}}">
-                                            {{.Status}}
-                                        </span>
-                                    </small>
-                                    {{if .StatusMessage}}
-                                        <small class="webcam-status-message">{{.StatusMessage}}</small>
-                                    {{end}}
-                                    {{if .Tags}}
-                                        <div class="webcam-tags">
-                                            {{range .Tags}}
-                                                <span class="tag">{{.}}</span>
-                                            {{end}}
-                                        </div>
-                                    {{end}}
-                                </div>
+    {{if and .Media.webcams .Media.webcams.Data}}
+        {{if gt (len .Media.webcams.Data) 0}}
+            <section class="live-webcams">
+                <h2>Live Webcams</h2>
+                <div class="webcams-grid">
+                    {{range .Media.webcams.Data}}
+                        <div class="webcam-card">
+                            <div class="webcam-header">
+                                <h3>{{if .Title}}{{.Title}}{{else}}Webcam{{end}}</h3>
                             </div>
-                        {{end}}
-                    </div>
-                </section>
-            {{end}}
+                            {{if .Images}}
+                                {{range $index, $image := .Images}}
+                                    {{if eq $index 0}}
+                                        <img src="{{$image.URL}}" alt="{{$.Title}}" class="webcam-preview" />
+                                    {{end}}
+                                {{end}}
+                            {{end}}
+                            {{if .Description}}
+                                <p>{{.Description}}</p>
+                            {{end}}
+                            {{if .URL}}
+                                <a href="{{.URL}}" target="_blank" class="webcam-link">View Webcam</a>
+                            {{end}}
+                            <div class="webcam-info">
+                                <small class="webcam-status">
+                                    Status: 
+                                    <span class="status {{if eq .Status "Active"}}live{{else}}offline{{end}}">
+                                        {{.Status}}
+                                    </span>
+                                </small>
+                                {{if .StatusMessage}}
+                                    <small class="webcam-status-message">{{.StatusMessage}}</small>
+                                {{end}}
+                                {{if .Tags}}
+                                    <div class="webcam-tags">
+                                        {{range .Tags}}
+                                            <span class="tag">{{.}}</span>
+                                        {{end}}
+                                    </div>
+                                {{end}}
+                            </div>
+                        </div>
+                    {{end}}
+                </div>
+            </section>
         {{end}}
     {{end}}
 
-    {{if .Media.galleries}}
+    {{if and .Media.galleries .Media.galleries.Data}}
     <section class="photo-galleries">
         <h2>Photo Galleries</h2>
         <div class="galleries-grid">
@@ -143,7 +141,7 @@
     </script>
     {{end}}
 
-    {{if .Media.videos}}
+    {{if and .Media.videos .Media.videos.Data}}
     <section class="videos">
         <h2>Videos</h2>
         <div class="videos-grid">
@@ -174,7 +172,7 @@
     </section>
     {{end}}
 
-    {{if .Media.audio}}
+    {{if and .Media.audio .Media.audio.Data}}
     <section class="audio-content">
         <h2>Audio Content</h2>
         <div class="audio-grid">
@@ -208,7 +206,7 @@
     </section>
     {{end}}
 
-    {{if .Audio}}
+    {{if and .Audio .Audio.Data}}
     <section class="additional-audio">
         <h2>Audio Tours & Podcasts</h2>
         <div class="audio-list">
@@ -233,7 +231,7 @@
     {{if not (or .Media.webcams .Media.galleries .Media.videos .Media.audio .Audio)}}
     <section class="no-media">
         <div class="no-media-content">
-            <h2>📸 Media & Galleries</h2>
+            <h2>Media & Galleries</h2>
             <p>No multimedia content available for this park. Check back later for photos, videos, and webcam feeds!</p>
         </div>
     </section>

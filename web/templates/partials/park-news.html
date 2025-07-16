@@ -1,7 +1,5 @@
 <div class="container">
-    {{if .News.alerts}}
-    {{if .News.alerts.Data}}
-    {{if gt (len .News.alerts.Data) 0}}
+    {{if and .News.alerts .News.alerts.Data}}
     <section class="alerts">
         <h2>Current Alerts</h2>
         <div class="alerts-list">
@@ -23,12 +21,8 @@
         </div>
     </section>
     {{end}}
-    {{end}}
-    {{end}}
 
-    {{if .News.newsReleases}}
-    {{if .News.newsReleases.Data}}
-    {{if gt (len .News.newsReleases.Data) 0}}
+    {{if and .News.newsReleases .News.newsReleases.Data}}
     <section class="news-releases">
         <h2>News & Press Releases</h2>
         <div class="news-list">
@@ -56,12 +50,8 @@
         </div>
     </section>
     {{end}}
-    {{end}}
-    {{end}}
 
-    {{if .News.articles}}
-    {{if .News.articles.Data}}
-    {{if gt (len .News.articles.Data) 0}}
+    {{if and .News.articles .News.articles.Data}}
     <section class="articles">
         <h2>Educational Articles</h2>
         <div class="articles-grid">
@@ -86,12 +76,8 @@
         </div>
     </section>
     {{end}}
-    {{end}}
-    {{end}}
 
-    {{if .News.events}}
-    {{if .News.events.Data}}
-    {{if gt (len .News.events.Data) 0}}
+    {{if and .News.events .News.events.Data}}
     <section class="upcoming-events">
         <h2>Upcoming Events & Programs</h2>
         <div class="events-calendar">
@@ -122,8 +108,6 @@
             {{end}}
         </div>
     </section>
-    {{end}}
-    {{end}}
     {{end}}
 
     {{if not (or (and .News.alerts .News.alerts.Data (gt (len .News.alerts.Data) 0)) (and .News.newsReleases .News.newsReleases.Data (gt (len .News.newsReleases.Data) 0)) (and .News.articles .News.articles.Data (gt (len .News.articles.Data) 0)) (and .News.events .News.events.Data (gt (len .News.events.Data) 0)))}}
