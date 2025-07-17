@@ -968,6 +968,42 @@ func matchesDifficulty(activity nps.ThingsToDo, difficulty string) bool {
 
 // EventsPageHandler returns the full Events page
 func (dm *Dashboard) EventsPageHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html")
+
+	// Get available parks for filter dropdown
+	parks, err := dm.parkService.GetAllParks()
+	if err != nil {
+		log.Printf("Failed to get parks for Events page: %v", err)
+		parks = []database.CachedPark{}
+	}
+
+	// Get unique states from parks
+	statesMap := make(map[string]bool)
+	for _, park := range parks {
+		states := strings.Split(park.States, ",")
+		for _, state := range states {
+			state = strings.TrimSpace(state)
+			if state != "" {
+				statesMap[state] = true
+			}
+		}
+	}
+
+	states := make([]string, 0, len(statesMap))
+	for state := range statesMap {
+		states = append(states, state)
+	}
+
+	// Sort states alphabetically
+	sort.Strings(states)
+
+	// Execute the template with parks and states data
+	data := map[string]interface{}{
+		"CurrentPage": "events",
+		"Parks":       parks,
+		"States":      states,
+	}
+
 	// Load and parse the events template
 	tmpl, err := template.ParseFiles("web/templates/events.html")
 	if err != nil {
@@ -976,14 +1012,6 @@ func (dm *Dashboard) EventsPageHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Execute the template with basic data
-	data := struct {
-		CurrentPage string
-	}{
-		CurrentPage: "events",
-	}
-
-	w.Header().Set("Content-Type", "text/html")
 	if err := tmpl.Execute(w, data); err != nil {
 		log.Printf("Error executing events template: %v", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
@@ -1039,6 +1067,16 @@ func (dm *Dashboard) EventsSearchHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	// Create a map of all unique 'event types' for filtering
+	eventTypesMap := make(map[string]bool)
+	for _, event := range eventsData.Data {
+		if event.Types != nil {
+			for _, eventType := range event.Types {
+				eventTypesMap[eventType] = true
+			}
+		}
+	}
+
 	// Determine date range description for display
 	var dateRange string
 	if dateStart != "" && dateEnd != "" {
@@ -1085,6 +1123,34 @@ func (dm *Dashboard) EventsSearchHandler(w http.ResponseWriter, r *http.Request)
 			event.Dates = futureDates
 		}
 	}
+	// Remove any duplicate events based on ID
+	uniqueEvents := make(map[string]nps.Event)
+	for _, event := range data.EventsData.Data {
+		if event.Title != "" {
+			// Use event ID as key to ensure uniqueness
+			uniqueEvents[event.Title] = event
+		} else if event.EventID != "" {
+			// Fallback to EventID if ID is not available
+			uniqueEvents[event.EventID] = event
+		}
+	}
+
+	data.EventsData.Data = make([]nps.Event, 0, len(uniqueEvents))
+	for _, event := range uniqueEvents {
+		data.EventsData.Data = append(data.EventsData.Data, event)
+	}
+
+	// Sort events by start date
+	sort.Slice(data.EventsData.Data, func(i, j int) bool {
+		if len(data.EventsData.Data[i].Dates) > 0 && len(data.EventsData.Data[j].Dates) > 0 {
+			dateI, errI := time.Parse("2006-01-02", data.EventsData.Data[i].Dates[0])
+			dateJ, errJ := time.Parse("2006-01-02", data.EventsData.Data[j].Dates[0])
+			if errI == nil && errJ == nil {
+				return dateI.Before(dateJ)
+			}
+		}
+		return data.EventsData.Data[i].Title < data.EventsData.Data[j].Title
+	})
 
 	// Load and parse the events results template
 	tmpl, err := template.New("events-results.html").Funcs(template.FuncMap{
@@ -1099,6 +1165,15 @@ func (dm *Dashboard) EventsSearchHandler(w http.ResponseWriter, r *http.Request)
 				return t.Format("January 2, 2006")
 			}
 			return dateStr
+		},
+		"fullImageURL": func(url string) string {
+			if strings.HasPrefix(url, "http") {
+				return url
+			}
+			if strings.HasPrefix(url, "/") {
+				return "https://www.nps.gov" + url
+			}
+			return url
 		},
 		"lower": strings.ToLower,
 		"atoi": func(s string) int {
@@ -1129,23 +1204,230 @@ func (dm *Dashboard) EventsSearchHandler(w http.ResponseWriter, r *http.Request)
 func (dm *Dashboard) EventDetailsHandler(w http.ResponseWriter, r *http.Request) {
 	eventID := chi.URLParam(r, "eventID")
 
-	// For now, return a simple message - this would be expanded to fetch full event details
-	// The NPS API doesn't provide a direct endpoint for individual event details,
-	// so we'd need to search and filter by event ID
-	data := struct {
-		EventID string
-		Message string
-	}{
-		EventID: eventID,
-		Message: "Event details would be displayed here. This requires additional implementation to fetch detailed event information.",
+	if eventID == "" {
+		http.Error(w, "Event ID required", http.StatusBadRequest)
+		return
 	}
 
-	// Simple template response
+	// Try to get the event by ID first
+	targetEvent, err := dm.parkService.GetEventByID(eventID)
+	if err != nil {
+		// Fallback: search for the event in recent events
+		eventsData, searchErr := dm.parkService.SearchEvents("", "", "", "", "", "", 100, 0)
+		if searchErr != nil {
+			log.Printf("Error searching for event %s: %v", eventID, searchErr)
+			http.Error(w, "Error fetching event details", http.StatusInternalServerError)
+			return
+		}
+
+		// Find the specific event by ID
+		for _, event := range eventsData.Data {
+			if event.ID == eventID || event.EventID == eventID {
+				targetEvent = &event
+				break
+			}
+		}
+	}
+
+	if targetEvent == nil {
+		http.Error(w, "Event not found", http.StatusNotFound)
+		return
+	}
+
 	w.Header().Set("Content-Type", "text/html")
-	fmt.Fprintf(w, `
-	<div class="event-detail">
-		<h4>Event ID: %s</h4>
-		<p>%s</p>
+
+	// Create comprehensive template data
+	data := map[string]interface{}{
+		"Event": targetEvent,
+	}
+
+	// Create template with helper functions
+	tmpl := template.New("event-details").Funcs(template.FuncMap{
+		"unescapeHTML": func(s string) template.HTML {
+			return template.HTML(s)
+		},
+		"formatEventDate": func(dateStr string) string {
+			if t, err := time.Parse("2006-01-02", dateStr); err == nil {
+				return t.Format("January 2, 2006")
+			}
+			if t, err := time.Parse("2006-01-02T15:04:05Z", dateStr); err == nil {
+				return t.Format("January 2, 2006")
+			}
+			return dateStr
+		},
+		"fullImageURL": func(url string) string {
+			if strings.HasPrefix(url, "http") {
+				return url
+			}
+			if strings.HasPrefix(url, "/") {
+				return "https://www.nps.gov" + url
+			}
+			return url
+		},
+		"formatDateTime": func(dateStr string) string {
+			if t, err := time.Parse("2006-01-02T15:04:05Z", dateStr); err == nil {
+				return t.Format("January 2, 2006 at 3:04 PM")
+			}
+			if t, err := time.Parse("2006-01-02", dateStr); err == nil {
+				return t.Format("January 2, 2006")
+			}
+			return dateStr
+		},
+	})
+
+	// Inline template for event details modal
+	templateHTML := `
+	<div class="event-detail-content">
+		<h3>{{.Event.Title}}</h3>
+		
+		{{if .Event.Images}}
+		<div class="event-detail-images">
+			{{range .Event.Images}}
+			<div class="event-detail-image">
+				<img src="{{fullImageURL .Url}}" alt="{{.AltText}}" title="{{.Title}}">
+				{{if .Caption}}<p class="image-caption">{{.Caption}} {{if .Credit}}({{.Credit}}){{end}}</p>{{end}}
+			</div>
+			{{end}}
+		</div>
+		{{end}}
+
+		{{if .Event.Description}}
+		<div class="event-detail-description">
+			{{.Event.Description | unescapeHTML}}
+		</div>
+		{{end}}
+
+		<div class="event-detail-info">
+			{{if .Event.ParkFullName}}
+			<div class="detail-row">
+				<strong>Location:</strong> {{.Event.ParkFullName}}
+				{{if .Event.Location}} - {{.Event.Location}}{{end}}
+			</div>
+			{{end}}
+
+			{{if .Event.DateStart}}
+			<div class="detail-row">
+				<strong>Date:</strong>
+				{{if .Event.DateEnd}}
+					{{if eq .Event.DateStart .Event.DateEnd}}
+						{{.Event.DateStart | formatEventDate}}
+					{{else}}
+						{{.Event.DateStart | formatEventDate}} - {{.Event.DateEnd | formatEventDate}}
+					{{end}}
+				{{else}}
+					{{.Event.DateStart | formatEventDate}}
+				{{end}}
+			</div>
+			{{end}}
+
+			{{if .Event.Times}}
+			<div class="detail-row">
+				<strong>Times:</strong>
+				<ul class="event-times-list">
+				{{range .Event.Times}}
+					<li>{{.TimeStart}}{{if .TimeEnd}} - {{.TimeEnd}}{{end}}</li>
+				{{end}}
+				</ul>
+			</div>
+			{{end}}
+
+			{{if .Event.Category}}
+			<div class="detail-row">
+				<strong>Category:</strong> {{.Event.Category}}
+			</div>
+			{{end}}
+
+			{{if .Event.Types}}
+			<div class="detail-row">
+				<strong>Event Types:</strong> {{range $index, $type := .Event.Types}}{{if $index}}, {{end}}{{$type}}{{end}}
+			</div>
+			{{end}}
+
+			<div class="detail-row">
+				<strong>Cost:</strong> {{if eq .Event.IsFree "true"}}Free{{else}}Fee Required{{end}}
+			</div>
+
+			{{if .Event.FeeInfo}}
+			<div class="detail-row">
+				<strong>Fee Information:</strong> {{.Event.FeeInfo}}
+			</div>
+			{{end}}
+
+			{{if eq .Event.IsRegresRequired "true"}}
+			<div class="detail-row">
+				<strong>Registration:</strong> Required
+			</div>
+			{{end}}
+
+			{{if .Event.RegresInfo}}
+			<div class="detail-row">
+				<strong>Registration Info:</strong> {{.Event.RegresInfo}}
+			</div>
+			{{end}}
+
+			{{if .Event.RegresUrl}}
+			<div class="detail-row">
+				<strong>Registration:</strong> <a href="{{.Event.RegresUrl}}" target="_blank" rel="noopener">Register Here</a>
+			</div>
+			{{end}}
+
+			{{if .Event.ContactName}}
+			<div class="detail-row">
+				<strong>Contact:</strong> {{.Event.ContactName}}
+				{{if .Event.ContactTelephoneNumber}} - {{.Event.ContactTelephoneNumber}}{{end}}
+				{{if .Event.ContactEmailAddress}} - {{.Event.ContactEmailAddress}}{{end}}
+			</div>
+			{{end}}
+
+			{{if eq .Event.IsRecurring "true"}}
+			<div class="detail-row">
+				<strong>Recurring:</strong> Yes
+				{{if .Event.RecurrenceDateStart}} ({{.Event.RecurrenceDateStart | formatEventDate}}{{if .Event.RecurrenceDateEnd}} - {{.Event.RecurrenceDateEnd | formatEventDate}}{{end}}){{end}}
+			</div>
+			{{end}}
+
+			{{if .Event.Tags}}
+			<div class="detail-row">
+				<strong>Tags:</strong>
+				<div class="event-detail-tags">
+					{{range .Event.Tags}}
+					<span class="event-detail-tag">{{.}}</span>
+					{{end}}
+				</div>
+			</div>
+			{{end}}
+
+			{{if .Event.InfoUrl}}
+			<div class="detail-row">
+				<strong>More Information:</strong> <a href="{{.Event.InfoUrl}}" target="_blank" rel="noopener">Event Details</a>
+			</div>
+			{{end}}
+
+			{{if .Event.Dates}}
+			<div class="detail-row">
+				<strong>Additional Dates:</strong>
+				<div class="event-additional-dates">
+					{{range .Event.Dates}}
+					<span class="additional-date">{{. | formatEventDate}}</span>
+					{{end}}
+				</div>
+			</div>
+			{{end}}
+		</div>
 	</div>
-	`, html.EscapeString(data.EventID), html.EscapeString(data.Message))
+	`
+
+	tmpl, err = tmpl.Parse(templateHTML)
+	if err != nil {
+		log.Printf("Error parsing event details template: %v", err)
+		http.Error(w, "Error rendering event details", http.StatusInternalServerError)
+		return
+	}
+
+	err = tmpl.Execute(w, data)
+	if err != nil {
+		log.Printf("Error executing event details template: %v", err)
+		http.Error(w, "Error rendering event details", http.StatusInternalServerError)
+		return
+	}
 }

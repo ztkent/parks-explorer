@@ -76,35 +76,55 @@
         <!-- Search and Filter Section -->
         <section class="events-filters">
             <div class="filters-container">
-                <div class="search-controls">
-                    <!-- Filter Controls -->
-                    <div class="filter-controls">
-                        <!-- Park Filter -->
+                <!-- Filter Controls -->
+                <div class="filter-controls">
+                    <!-- Park Filter -->
+                    <div class="filter-group">
+                        <label for="park-filter">Park</label>
                         <select id="park-filter" 
                                 class="filter-select">
                             <option value="">All Parks</option>
-                            <!-- Options will be loaded dynamically -->
+                            {{range .Parks}}
+                            <option value="{{.ParkCode}}">{{.Name}}</option>
+                            {{end}}
                         </select>
+                    </div>
 
-                        <!-- State Filter -->
+                    <!-- State Filter -->
+                    <div class="filter-group">
+                        <label for="state-filter">State</label>
                         <select id="state-filter" 
                                 class="filter-select">
                             <option value="">All States</option>
-                            <!-- Options will be loaded dynamically -->
+                            {{range .States}}
+                            <option value="{{.}}">{{.}}</option>
+                            {{end}}
                         </select>
+                    </div>
 
-                        <!-- Event Type Filter -->
+                    <!-- Event Type Filter -->
+                    <div class="filter-group">
+                        <label for="event-type-filter">Event Type</label>
                         <select id="event-type-filter" 
                                 class="filter-select">
                             <option value="">All Event Types</option>
-                            <option value="guided-tour">Guided Tours</option>
-                            <option value="educational">Educational Programs</option>
-                            <option value="cultural">Cultural Events</option>
-                            <option value="recreation">Recreation Activities</option>
-                            <option value="special">Special Events</option>
+                            <option value="Hike">Hike</option>
+                            <option value="History">Living History</option>
+                            <option value="Cultural/Craft Demonstration">Cultural/Craft Demonstration</option>
+                            <option value="Exhibition/Show">Exhibition/Show</option>
+                            <option value="Other">Other</option>
+                            <option value="Tour">Guided Tour</option>
+                            <option value="Talk">Talk</option>
+                            <option value="Children">Children's Program</option>
+                            <option value="Walk">Walk</option>
+                            <option value="Volunteer">Volunteer Event</option>
+                            <option value="Performance">Performance</option>
                         </select>
+                    </div>
 
-                        <!-- Date Range Filter -->
+                    <!-- Date Range Filter -->
+                    <div class="filter-group">
+                        <label for="date-range-filter">Date Range</label>
                         <select id="date-range-filter" 
                                 class="filter-select">
                             <option value="">All Dates</option>

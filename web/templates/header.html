@@ -11,8 +11,8 @@
         </div>
         <nav class="nav-links">
             <a href="/things-to-do" class="nav-link{{if eq .CurrentPage "things-to-do"}} active{{end}}">Things to Do</a>
+            <a href="/" class="nav-link{{if eq .CurrentPage "learn-more"}} active{{end}}">Camping</a>
             <a href="/events" class="nav-link{{if eq .CurrentPage "events"}} active{{end}}">Events</a>
-            <a href="/" class="nav-link{{if eq .CurrentPage "learn-more"}} active{{end}}">Learn More</a>
             <a href="/" class="nav-link{{if eq .CurrentPage "news"}} active{{end}}">News</a>
         </nav>
     </div>
@@ -50,8 +50,8 @@
     <nav class="mobile-nav" id="mobile-nav">
         <ul>
             <li><a href="/things-to-do" onclick="closeMobileMenu()" class="{{if eq .CurrentPage "things-to-do"}}active{{end}}">Things to Do</a></li>
+            <li><a href="/" onclick="closeMobileMenu()" class="{{if eq .CurrentPage "learn-more"}}active{{end}}">Camping</a></li>
             <li><a href="/events" onclick="closeMobileMenu()" class="{{if eq .CurrentPage "events"}}active{{end}}">Events</a></li>
-            <li><a href="/" onclick="closeMobileMenu()" class="{{if eq .CurrentPage "learn-more"}}active{{end}}">Learn More</a></li>
             <li><a href="/" onclick="closeMobileMenu()" class="{{if eq .CurrentPage "news"}}active{{end}}">News</a></li>
         </ul>
     </nav>

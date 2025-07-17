@@ -15,19 +15,25 @@
             <div class="event-card">
                 <div class="event-header">
                     <h3 class="event-title">{{.Title}}</h3>
+                </div>
+
+                <div class="event-content">
                     <div class="event-meta">
                         {{if .Category}}
                         <span class="event-category">{{.Category}}</span>
                         {{end}}
                         {{if eq .IsFree "true"}}
                         <span class="event-fee free">Free</span>
-                        {{else if eq .IsFree "false"}}
+                        {{else}}
                         <span class="event-fee paid">Fee Required</span>
                         {{end}}
+                        {{if .Types}}
+                        {{range .Types}}
+                        <span class="event-type">{{.}}</span>
+                        {{end}}
+                        {{end}}
                     </div>
-                </div>
 
-                <div class="event-content">
                     {{if .Description}}
                     <p class="event-description">{{.Description | unescapeHTML}}</p>
                     {{end}}
@@ -57,10 +63,26 @@
                         </div>
                         {{end}}
 
+                        {{if .ParkFullName}}
+                        <div class="event-detail">
+                            <span class="detail-icon">🏞️</span>
+                            <span class="detail-text">{{.ParkFullName}}</span>
+                        </div>
+                        {{end}}
+
                         {{if eq .IsAllDay "true"}}
                         <div class="event-detail">
                             <span class="detail-icon">🕐</span>
                             <span class="detail-text">All Day Event</span>
+                        </div>
+                        {{else if .Times}}
+                        <div class="event-detail">
+                            <span class="detail-icon">🕐</span>
+                            <span class="detail-text">
+                                {{range $index, $time := .Times}}
+                                    {{if $index}}, {{end}}{{$time.TimeStart}}{{if $time.TimeEnd}} - {{$time.TimeEnd}}{{end}}
+                                {{end}}
+                            </span>
                         </div>
                         {{end}}
 
@@ -70,7 +92,57 @@
                             <span class="detail-text">Recurring Event</span>
                         </div>
                         {{end}}
+
+                        {{if .ContactName}}
+                        <div class="event-detail">
+                            <span class="detail-icon">👤</span>
+                            <span class="detail-text">Contact: {{.ContactName}}</span>
+                        </div>
+                        {{end}}
+
+                        {{if .ContactTelephoneNumber}}
+                        <div class="event-detail">
+                            <span class="detail-icon">📞</span>
+                            <span class="detail-text">{{.ContactTelephoneNumber}}</span>
+                        </div>
+                        {{end}}
+
+                        {{if .ContactEmailAddress}}
+                        <div class="event-detail">
+                            <span class="detail-icon">📧</span>
+                            <span class="detail-text">{{.ContactEmailAddress}}</span>
+                        </div>
+                        {{end}}
+
+                        {{if .FeeInfo}}
+                        <div class="event-detail">
+                            <span class="detail-icon">�</span>
+                            <span class="detail-text">{{.FeeInfo}}</span>
+                        </div>
+                        {{end}}
+
+                        {{if eq .IsRegresRequired "true"}}
+                        <div class="event-detail">
+                            <span class="detail-icon">✅</span>
+                            <span class="detail-text">Registration Required</span>
+                        </div>
+                        {{end}}
+
+                        {{if .RegresInfo}}
+                        <div class="event-detail">
+                            <span class="detail-icon">ℹ️</span>
+                            <span class="detail-text">{{.RegresInfo}}</span>
+                        </div>
+                        {{end}}
                     </div>
+
+                    {{if .Tags}}
+                    <div class="event-tags">
+                        {{range .Tags}}
+                        <span class="event-tag">{{.}}</span>
+                        {{end}}
+                    </div>
+                    {{end}}
 
                     {{if .Dates}}
                     <div class="event-dates">
@@ -84,31 +156,30 @@
                     {{end}}
                 </div>
 
-                {{if .EventID}}
+                {{if or .EventID .ID}}
                 <div class="event-footer">
                     <button class="event-details-btn" 
-                            hx-get="/api/events/{{.EventID}}/details"
+                            hx-get="/api/events/{{if .ID}}{{.ID}}{{else}}{{.EventID}}{{end}}/details"
                             hx-target="#event-modal-content"
                             hx-trigger="click"
                             onclick="openEventModal()">
                         View Details
                     </button>
+                    {{if .RegresUrl}}
+                    <a href="{{.RegresUrl}}" target="_blank" rel="noopener" class="event-register-btn">
+                        Register
+                    </a>
+                    {{end}}
+                    {{if .InfoUrl}}
+                    <a href="{{.InfoUrl}}" target="_blank" rel="noopener" class="event-info-btn">
+                        More Info
+                    </a>
+                    {{end}}
                 </div>
                 {{end}}
             </div>
             {{end}}
         </div>
-
-        <!-- Load More Button -->
-        {{if gt (atoi .EventsData.Total) (len .EventsData.Data)}}
-        <div class="load-more-container">
-            <button class="load-more-btn"
-                    onclick="loadMoreEvents({{add (atoi .EventsData.PageNumber) 1}})">
-                Load More Events
-            </button>
-        </div>
-        {{end}}
-
     {{else}}
         <!-- Empty State -->
         <div class="empty-state">
@@ -127,10 +198,6 @@
 <!-- Event Details Modal -->
 <div id="event-modal" class="modal" onclick="closeEventModal(event)">
     <div class="modal-container" onclick="event.stopPropagation()">
-        <div class="modal-header">
-            <h3>Event Details</h3>
-            <button class="modal-close" onclick="closeEventModal()">&times;</button>
-        </div>
         <div class="modal-content" id="event-modal-content">
             <!-- Event details will be loaded here -->
         </div>

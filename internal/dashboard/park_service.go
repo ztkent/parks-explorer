@@ -891,6 +891,40 @@ func (ps *ParkService) SearchEvents(query, parkCode, stateCode, eventType, dateS
 	)
 }
 
+// GetEventByID searches for a specific event by ID
+func (ps *ParkService) GetEventByID(eventID string) (*nps.Event, error) {
+	// Since NPS API doesn't have a direct endpoint for individual events,
+	// we search with the ID parameter
+	response, err := ps.npsApi.GetEvents(
+		nil,     // parkCode
+		nil,     // stateCode
+		nil,     // organization
+		nil,     // subject
+		nil,     // portal
+		nil,     // tagsAll
+		nil,     // tagsOne
+		nil,     // tagsNone
+		"",      // dateStart
+		"",      // dateEnd
+		nil,     // eventType
+		eventID, // id
+		"",      // q
+		1,       // pageSize
+		0,       // pageNumber
+		true,    // expandRecurring
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(response.Data) == 0 {
+		return nil, fmt.Errorf("event not found")
+	}
+
+	return &response.Data[0], nil
+}
+
 // SearchThingsToDo searches for things to do with filters
 func (ps *ParkService) SearchThingsToDo(activityId, parkCode, stateCode, query string, limit, start int) (*nps.ThingsToDoResponse, error) {
 	// If no specific filters are provided, get general things to do
