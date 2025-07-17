@@ -28,6 +28,9 @@ function closeMobileMenu() {
 
 // Enhanced UX functionality
 document.addEventListener('DOMContentLoaded', () => {
+    initializeTheme();
+    applyTheme(localStorage.getItem('theme') || 'light');
+
     // Close mobile menu and dropdowns when clicking outside
     document.addEventListener('click', function(event) {
         const mobileNav = document.getElementById('mobile-nav');
@@ -243,9 +246,7 @@ function removeDuplicateParks() {
 }
 
 // Re-initialize after HTMX content loads
-document.addEventListener('htmx:afterSwap', (event) => {
-    console.log('HTMX afterSwap event:', event.target.id, event.target.className);
-    
+document.addEventListener('htmx:afterSwap', (event) => {    
     if (event.target.id === 'parksGrid') {
         // Remove any duplicate parks that may have been added
         removeDuplicateParks();
@@ -429,3 +430,33 @@ function handleKeyNavigation(event) {
 
 // Store gallery assets data globally for slideshow access
 window.galleryAssetsData = {};
+
+// Add this at the beginning of the file, after the existing functions
+
+// Theme management functionality
+function initializeTheme() {
+    // Listen for system theme changes
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    mediaQuery.addEventListener('change', (e) => {
+        if (!localStorage.getItem('theme')) {
+            applyTheme(e.matches ? 'dark' : 'light');
+        }
+    });
+}
+
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    
+    applyTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+}
+
+function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    // Update meta theme-color for mobile browsers
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    if (metaThemeColor) {
+        metaThemeColor.setAttribute('content', theme === 'dark' ? '#1a1a1a' : '#2d5016');
+    }
+}

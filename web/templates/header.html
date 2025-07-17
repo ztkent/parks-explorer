@@ -16,6 +16,24 @@
     </div>
     
     <div class="header-right">
+        <!-- Theme Toggle Button -->
+        <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode">
+            <svg class="theme-icon sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="5"></circle>
+                <path d="m12 1 0 6"></path>
+                <path d="m12 17 0 6"></path>
+                <path d="m4.22 4.22 4.24 4.24"></path>
+                <path d="m15.54 15.54 4.24 4.24"></path>
+                <path d="m1 12 6 0"></path>
+                <path d="m17 12 6 0"></path>
+                <path d="m4.22 19.78 4.24-4.24"></path>
+                <path d="m15.54 8.46 4.24-4.24"></path>
+            </svg>
+            <svg class="theme-icon moon-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+        </button>
+        
         <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
         
         <!-- Authentication Section -->
@@ -29,7 +47,6 @@
     <!-- Mobile Navigation Menu -->
     <nav class="mobile-nav" id="mobile-nav">
         <ul>
-            <li><a href="/" onclick="closeMobileMenu()">Plan Your Visit</a></li>
             <li><a href="/" onclick="closeMobileMenu()">Things to Do</a></li>
             <li><a href="/" onclick="closeMobileMenu()">Get Involved</a></li>
             <li><a href="/" onclick="closeMobileMenu()">Learn More</a></li>
