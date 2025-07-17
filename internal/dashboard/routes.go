@@ -13,6 +13,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -369,11 +370,11 @@ func (dm *Dashboard) TemplateHandler(w http.ResponseWriter, r *http.Request) {
 	case "header":
 		// Determine current page from referer or other context
 		currentPage := getCurrentPageFromRequest(r)
-		
+
 		data := map[string]interface{}{
 			"CurrentPage": currentPage,
 		}
-		
+
 		tmpl, err := template.ParseFiles("web/templates/header.html")
 		if err != nil {
 			log.Printf("Failed to load header template: %v", err)
@@ -422,18 +423,18 @@ func getCurrentPageFromRequest(r *http.Request) string {
 			return "news"
 		}
 	}
-	
+
 	// Fallback: check if there's a specific header or query parameter
 	currentPage := r.Header.Get("X-Current-Page")
 	if currentPage != "" {
 		return currentPage
 	}
-	
+
 	currentPage = r.URL.Query().Get("current-page")
 	if currentPage != "" {
 		return currentPage
 	}
-	
+
 	// Default to home if we can't determine
 	return "home"
 }
@@ -920,6 +921,9 @@ func (dm *Dashboard) ThingsToDoSearchHandler(w http.ResponseWriter, r *http.Requ
 		"add": func(a, b int) int {
 			return a + b
 		},
+		"unescapeHTML": func(s string) template.HTML {
+			return template.HTML(s)
+		},
 	})
 
 	tmpl, err = tmpl.ParseFiles("web/templates/partials/things-to-do-results.html")
@@ -960,4 +964,188 @@ func matchesDifficulty(activity nps.ThingsToDo, difficulty string) bool {
 	default:
 		return true
 	}
+}
+
+// EventsPageHandler returns the full Events page
+func (dm *Dashboard) EventsPageHandler(w http.ResponseWriter, r *http.Request) {
+	// Load and parse the events template
+	tmpl, err := template.ParseFiles("web/templates/events.html")
+	if err != nil {
+		log.Printf("Error parsing events template: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	// Execute the template with basic data
+	data := struct {
+		CurrentPage string
+	}{
+		CurrentPage: "events",
+	}
+
+	w.Header().Set("Content-Type", "text/html")
+	if err := tmpl.Execute(w, data); err != nil {
+		log.Printf("Error executing events template: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+	}
+}
+
+// EventsSearchHandler handles search and filtering for events
+func (dm *Dashboard) EventsSearchHandler(w http.ResponseWriter, r *http.Request) {
+	// Parse query parameters
+	query := r.URL.Query().Get("q")
+	parkCode := r.URL.Query().Get("park")
+	stateCode := r.URL.Query().Get("state")
+	eventType := r.URL.Query().Get("event_type")
+	dateStart := r.URL.Query().Get("date_start")
+	dateEnd := r.URL.Query().Get("date_end")
+	date := r.URL.Query().Get("date") // Single date selection
+
+	limitStr := r.URL.Query().Get("limit")
+	startStr := r.URL.Query().Get("start")
+
+	limit := 50
+	start := 0
+
+	if limitStr != "" {
+		if l, err := strconv.Atoi(limitStr); err == nil {
+			limit = l
+		}
+	}
+	if startStr != "" {
+		if s, err := strconv.Atoi(startStr); err == nil {
+			start = s
+		}
+	}
+
+	// Handle single date selection
+	if date != "" {
+		dateStart = date
+		dateEnd = date
+	}
+
+	// If no date range specified, default to next 3 months
+	if dateStart == "" && dateEnd == "" {
+		now := time.Now()
+		dateStart = now.Format("2006-01-02")
+		dateEnd = now.AddDate(0, 3, 0).Format("2006-01-02")
+	}
+
+	// Search events using the park service
+	eventsData, err := dm.parkService.SearchEvents(query, parkCode, stateCode, eventType, dateStart, dateEnd, limit, start)
+	if err != nil {
+		log.Printf("Error searching events: %v", err)
+		http.Error(w, "Error searching events", http.StatusInternalServerError)
+		return
+	}
+
+	// Determine date range description for display
+	var dateRange string
+	if dateStart != "" && dateEnd != "" {
+		if dateStart == dateEnd {
+			if t, err := time.Parse("2006-01-02", dateStart); err == nil {
+				dateRange = t.Format("January 2, 2006")
+			}
+		} else {
+			if t1, err1 := time.Parse("2006-01-02", dateStart); err1 == nil {
+				if t2, err2 := time.Parse("2006-01-02", dateEnd); err2 == nil {
+					dateRange = fmt.Sprintf("%s - %s",
+						t1.Format("January 2, 2006"),
+						t2.Format("January 2, 2006"))
+				}
+			}
+		}
+	}
+
+	// Create template data
+	data := struct {
+		EventsData *nps.EventResponse
+		DateRange  string
+	}{
+		EventsData: eventsData,
+		DateRange:  dateRange,
+	}
+
+	// Process events to filter future dates and limit additional dates
+	today := time.Now().Format("2006-01-02")
+	for i := range data.EventsData.Data {
+		event := &data.EventsData.Data[i]
+		if len(event.Dates) > 0 {
+			// Filter dates to only include future dates
+			var futureDates []string
+			for _, dateStr := range event.Dates {
+				if dateStr >= today {
+					futureDates = append(futureDates, dateStr)
+					// Limit to 10 additional dates
+					if len(futureDates) >= 10 {
+						break
+					}
+				}
+			}
+			event.Dates = futureDates
+		}
+	}
+
+	// Load and parse the events results template
+	tmpl, err := template.New("events-results.html").Funcs(template.FuncMap{
+		"unescapeHTML": func(s string) template.HTML {
+			return template.HTML(html.UnescapeString(s))
+		},
+		"formatEventDate": func(dateStr string) string {
+			if t, err := time.Parse("2006-01-02", dateStr); err == nil {
+				return t.Format("January 2, 2006")
+			}
+			if t, err := time.Parse("2006-01-02T15:04:05Z", dateStr); err == nil {
+				return t.Format("January 2, 2006")
+			}
+			return dateStr
+		},
+		"lower": strings.ToLower,
+		"atoi": func(s string) int {
+			if i, err := strconv.Atoi(s); err == nil {
+				return i
+			}
+			return 0
+		},
+		"add": func(a, b int) int {
+			return a + b
+		},
+	}).ParseFiles("web/templates/partials/events-results.html")
+
+	if err != nil {
+		log.Printf("Error parsing events results template: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html")
+	if err := tmpl.Execute(w, data); err != nil {
+		log.Printf("Error executing events results template: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+	}
+}
+
+// EventDetailsHandler returns detailed information for a specific event
+func (dm *Dashboard) EventDetailsHandler(w http.ResponseWriter, r *http.Request) {
+	eventID := chi.URLParam(r, "eventID")
+
+	// For now, return a simple message - this would be expanded to fetch full event details
+	// The NPS API doesn't provide a direct endpoint for individual event details,
+	// so we'd need to search and filter by event ID
+	data := struct {
+		EventID string
+		Message string
+	}{
+		EventID: eventID,
+		Message: "Event details would be displayed here. This requires additional implementation to fetch detailed event information.",
+	}
+
+	// Simple template response
+	w.Header().Set("Content-Type", "text/html")
+	fmt.Fprintf(w, `
+	<div class="event-detail">
+		<h4>Event ID: %s</h4>
+		<p>%s</p>
+	</div>
+	`, html.EscapeString(data.EventID), html.EscapeString(data.Message))
 }

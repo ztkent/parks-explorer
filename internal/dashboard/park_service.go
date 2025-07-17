@@ -30,6 +30,17 @@ func NewParkService(npsApi nps.NpsApi, db *database.DB) *ParkService {
 	}
 }
 
+// GetEventsWithFilters fetches events with filtering options
+func (ps *ParkService) GetEventsWithFilters(parkCodes []string, stateCodes []string, dateStart, dateEnd string, eventTypes []string, query string, pageSize, pageNumber int) (*nps.EventResponse, error) {
+	// Ensure we always use today as the minimum start date to avoid showing past events
+	today := time.Now().Format("2006-01-02")
+	if dateStart == "" || dateStart < today {
+		dateStart = today
+	}
+
+	return ps.npsApi.GetEvents(parkCodes, stateCodes, nil, nil, nil, nil, nil, nil, dateStart, dateEnd, eventTypes, "", query, pageSize, pageNumber, false)
+}
+
 // GetAllParks returns all parks, using cache when possible
 func (ps *ParkService) GetAllParks() ([]database.CachedPark, error) {
 	// First try to get cached parks
@@ -201,15 +212,17 @@ func (ps *ParkService) GetParkAlerts(parkCode string) (*nps.AlertResponse, error
 func (ps *ParkService) GetParkEventsList(parkCode string) (*nps.EventResponse, error) {
 	// Get park ID first
 	parkID, err := ps.db.GetParkIDByCode(parkCode)
+	today := time.Now().Format("2006-01-02")
+
 	if err != nil {
-		return ps.npsApi.GetEvents([]string{parkCode}, nil, nil, nil, nil, nil, nil, nil, "", "", nil, "", "", 10, 0, false)
+		return ps.npsApi.GetEvents([]string{parkCode}, nil, nil, nil, nil, nil, nil, nil, today, "", nil, "", "", 10, 0, false)
 	}
 
 	// Check if cached data is fresh
 	stale, err := ps.db.IsParkDataStale(parkID, "events", "park_news", 24*time.Hour)
 	if err != nil || stale {
 		// Fetch fresh data from API
-		response, err := ps.npsApi.GetEvents([]string{parkCode}, nil, nil, nil, nil, nil, nil, nil, "", "", nil, "", "", 10, 0, false)
+		response, err := ps.npsApi.GetEvents([]string{parkCode}, nil, nil, nil, nil, nil, nil, nil, today, "", nil, "", "", 10, 0, false)
 		if err == nil {
 			// Cache the response
 			ps.db.UpsertParkData(parkID, "events", "park_news", response)
@@ -220,12 +233,12 @@ func (ps *ParkService) GetParkEventsList(parkCode string) (*nps.EventResponse, e
 	// Return cached data
 	cachedData, err := ps.db.GetCachedParkData(parkID, "events", "park_news")
 	if err != nil {
-		return ps.npsApi.GetEvents([]string{parkCode}, nil, nil, nil, nil, nil, nil, nil, "", "", nil, "", "", 10, 0, false)
+		return ps.npsApi.GetEvents([]string{parkCode}, nil, nil, nil, nil, nil, nil, nil, today, "", nil, "", "", 10, 0, false)
 	}
 
 	var response nps.EventResponse
 	if err := json.Unmarshal([]byte(cachedData.APIData), &response); err != nil {
-		return ps.npsApi.GetEvents([]string{parkCode}, nil, nil, nil, nil, nil, nil, nil, "", "", nil, "", "", 10, 0, false)
+		return ps.npsApi.GetEvents([]string{parkCode}, nil, nil, nil, nil, nil, nil, nil, today, "", nil, "", "", 10, 0, false)
 	}
 
 	return &response, nil
@@ -720,15 +733,17 @@ func (ps *ParkService) GetParkWebcams(parkCode string) (*nps.WebcamResponse, err
 func (ps *ParkService) GetParkEvents(parkCode string) (*nps.EventResponse, error) {
 	// Get park ID first
 	parkID, err := ps.db.GetParkIDByCode(parkCode)
+	today := time.Now().Format("2006-01-02")
+
 	if err != nil {
-		return ps.npsApi.GetEvents([]string{parkCode}, nil, nil, nil, nil, nil, nil, nil, "", "", nil, "", "", 10, 0, false)
+		return ps.npsApi.GetEvents([]string{parkCode}, nil, nil, nil, nil, nil, nil, nil, today, "", nil, "", "", 10, 0, false)
 	}
 
 	// Check if cached data is fresh
 	stale, err := ps.db.IsParkDataStale(parkID, "events", "park_news", 24*time.Hour)
 	if err != nil || stale {
 		// Fetch fresh data from API
-		response, err := ps.npsApi.GetEvents([]string{parkCode}, nil, nil, nil, nil, nil, nil, nil, "", "", nil, "", "", 10, 0, false)
+		response, err := ps.npsApi.GetEvents([]string{parkCode}, nil, nil, nil, nil, nil, nil, nil, today, "", nil, "", "", 10, 0, false)
 		if err == nil {
 			// Cache the response
 			ps.db.UpsertParkData(parkID, "events", "park_news", response)
@@ -739,12 +754,12 @@ func (ps *ParkService) GetParkEvents(parkCode string) (*nps.EventResponse, error
 	// Return cached data
 	cachedData, err := ps.db.GetCachedParkData(parkID, "events", "park_news")
 	if err != nil {
-		return ps.npsApi.GetEvents([]string{parkCode}, nil, nil, nil, nil, nil, nil, nil, "", "", nil, "", "", 10, 0, false)
+		return ps.npsApi.GetEvents([]string{parkCode}, nil, nil, nil, nil, nil, nil, nil, today, "", nil, "", "", 10, 0, false)
 	}
 
 	var response nps.EventResponse
 	if err := json.Unmarshal([]byte(cachedData.APIData), &response); err != nil {
-		return ps.npsApi.GetEvents([]string{parkCode}, nil, nil, nil, nil, nil, nil, nil, "", "", nil, "", "", 10, 0, false)
+		return ps.npsApi.GetEvents([]string{parkCode}, nil, nil, nil, nil, nil, nil, nil, today, "", nil, "", "", 10, 0, false)
 	}
 
 	return &response, nil
@@ -787,6 +802,93 @@ func (ps *ParkService) GetParkCampgrounds(parkCode string) (*nps.CampgroundData,
 // GetAllActivities fetches all available activities from the NPS API
 func (ps *ParkService) GetAllActivities() (*nps.ActivityResponse, error) {
 	return ps.npsApi.GetActivities("", "", 500, 0, "name")
+}
+
+// GetEventsWithDateRange fetches events with optional date filtering
+func (ps *ParkService) GetEventsWithDateRange(parkCode, stateCode, dateStart, dateEnd string, pageSize, pageNumber int) (*nps.EventResponse, error) {
+	var parkCodes []string
+	var stateCodes []string
+
+	if parkCode != "" {
+		parkCodes = []string{parkCode}
+	}
+	if stateCode != "" {
+		stateCodes = []string{stateCode}
+	}
+
+	// Ensure we always use today as the minimum start date to avoid showing past events
+	today := time.Now().Format("2006-01-02")
+	if dateStart == "" || dateStart < today {
+		dateStart = today
+	}
+
+	return ps.npsApi.GetEvents(
+		parkCodes,  // parkCode
+		stateCodes, // stateCode
+		nil,        // organization
+		nil,        // subject
+		nil,        // portal
+		nil,        // tagsAll
+		nil,        // tagsOne
+		nil,        // tagsNone
+		dateStart,  // dateStart
+		dateEnd,    // dateEnd
+		nil,        // eventType
+		"",         // id
+		"",         // q
+		pageSize,   // pageSize
+		pageNumber, // pageNumber
+		true,       // expandRecurring
+	)
+}
+
+// SearchEvents searches for events with filters
+func (ps *ParkService) SearchEvents(query, parkCode, stateCode, eventType, dateStart, dateEnd string, limit, start int) (*nps.EventResponse, error) {
+	var parkCodes []string
+	var stateCodes []string
+	var eventTypes []string
+
+	if parkCode != "" {
+		parkCodes = []string{parkCode}
+	}
+	if stateCode != "" {
+		stateCodes = []string{stateCode}
+	}
+	if eventType != "" {
+		eventTypes = []string{eventType}
+	}
+
+	// Ensure we always use today as the minimum start date to avoid showing past events
+	today := time.Now().Format("2006-01-02")
+	if dateStart == "" || dateStart < today {
+		dateStart = today
+	}
+
+	pageSize := limit
+	if pageSize == 0 {
+		pageSize = 50
+	}
+
+	pageNumber := start / pageSize
+
+	return ps.npsApi.GetEvents(
+		parkCodes,  // parkCode
+		stateCodes, // stateCode
+		nil,        // organization
+		nil,        // subject
+		nil,        // portal
+		nil,        // tagsAll
+		nil,        // tagsOne
+		nil,        // tagsNone
+		dateStart,  // dateStart
+		dateEnd,    // dateEnd
+		eventTypes, // eventType
+		"",         // id
+		query,      // q
+		pageSize,   // pageSize
+		pageNumber, // pageNumber
+		true,       // expandRecurring
+	)
 }
 
 // SearchThingsToDo searches for things to do with filters

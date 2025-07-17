@@ -4241,7 +4241,7 @@ html {
 
 .things-to-do-hero {
     background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), 
-                url('https://images.unsplash.com/photo-1624049321569-f483adecb8fa?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');z
+                url('https://images.unsplash.com/photo-1624049321569-f483adecb8fa?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
@@ -4369,11 +4369,15 @@ html {
 .things-to-do-results {
     padding: 2rem;
     background: var(--bg-primary);
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
 }
 
 .results-container {
     max-width: 1200px;
     margin: 0 auto;
+    width: 100%;
 }
 
 .results-header {
@@ -4399,19 +4403,38 @@ html {
 .activities-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 2rem;
+    gap: 1.5rem;
     margin-bottom: 2rem;
+    max-width: 100%;
+    width: 100%;
+}
+
+/* Activities Container */
+.activities-container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0;
+}
+
+@media (min-width: 640px) {
+    .activities-grid {
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 1.5rem;
+    }
 }
 
 @media (min-width: 768px) {
     .activities-grid {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 2rem;
     }
 }
 
 @media (min-width: 1024px) {
     .activities-grid {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+        gap: 2rem;
     }
 }
 
@@ -4423,6 +4446,10 @@ html {
     box-shadow: 0 2px 8px var(--shadow-light);
     transition: all 0.3s ease;
     border: 1px solid var(--border-primary);
+    height: fit-content;
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 .activity-card:hover {
@@ -4445,6 +4472,7 @@ html {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
+    margin-bottom: 0.5rem;
 }
 
 .topic-tag {
@@ -4454,29 +4482,46 @@ html {
     border-radius: 20px;
     font-size: 0.8rem;
     font-weight: 500;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .activity-content {
     margin-bottom: 1rem;
+    flex-grow: 1;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 .activity-description {
     color: var(--text-secondary);
     line-height: 1.6;
     margin-bottom: 1rem;
+    word-wrap: break-word;
+    hyphens: auto;
 }
 
 .activity-meta {
     margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
 }
 
 .meta-item {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 0.5rem;
     margin-bottom: 0.5rem;
     font-size: 0.9rem;
     color: var(--text-secondary);
+    word-wrap: break-word;
+}
+
+.meta-text {
+    flex: 1;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 .meta-icon {
@@ -4489,12 +4534,16 @@ html {
     margin-bottom: 0.75rem;
     font-size: 0.9rem;
     color: var(--text-secondary);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    line-height: 1.5;
 }
 
 .park-link {
     color: var(--primary-color);
     text-decoration: none;
     font-weight: 500;
+    word-wrap: break-word;
 }
 
 .park-link:hover {
@@ -4508,18 +4557,22 @@ html {
 }
 
 .activity-link {
-    display: inline-block;
-    padding: 0.5rem 1rem;
-    background: var(--primary-color);
-    color: white;
-    text-decoration: none;
-    border-radius: 6px;
-    font-weight: 500;
-    transition: background-color 0.3s ease;
+  display: inline-block;
+  padding: 0.25rem .5rem;
+  background: var(--accent-green);
+  color: white;
+  text-decoration: none;
+  border: none;
+  border-radius: 8px;
+  font-weight: 200;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 .activity-link:hover {
-    background: var(--primary-hover);
+    background: var(--accent-green-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px var(--shadow-medium);
 }
 
 /* Load More Button */
@@ -4615,6 +4668,10 @@ html {
         padding: 1rem;
     }
     
+    .things-to-do-results {
+        padding: 1rem;
+    }
+    
     .results-header {
         flex-direction: column;
         align-items: flex-start;
@@ -4623,5 +4680,642 @@ html {
     
     .activity-card {
         padding: 1rem;
+        margin-bottom: 0;
+    }
+    
+    .activities-grid {
+        gap: 1rem;
+    }
+    
+    .activity-topics {
+        gap: 0.25rem;
+    }
+    
+    .topic-tag {
+        font-size: 0.75rem;
+        padding: 0.2rem 0.5rem;
+    }
+}
+
+/* ===== EVENTS PAGE STYLES ===== */
+.events-page {
+    min-height: 100vh;
+    padding-top: 80px;
+}
+
+/* Events Hero Section */
+.events-hero {
+    background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), 
+                url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');
+    color: white;
+    padding: 4rem 0;
+    text-align: center;
+}
+
+.events-hero-content {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+.events-hero-title {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.events-hero-description {
+    font-size: 1.25rem;
+    opacity: 0.9;
+    line-height: 1.6;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Events Filters Section */
+.events-filters {
+    background: var(--card-background);
+    border-bottom: 1px solid var(--border-color);
+    padding: 2rem 0;
+    top: 80px;
+    z-index: 100;
+}
+
+.filters-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+.search-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.search-group {
+    flex: 1;
+}
+
+.search-group input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    background: var(--input-background);
+    color: var(--text-color);
+    transition: all 0.3s ease;
+}
+
+.search-group input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(45, 80, 22, 0.1);
+}
+
+.filter-controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.filter-select {
+    padding: 0.75rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--input-background);
+    color: var(--text-color);
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(45, 80, 22, 0.1);
+}
+
+.date-filter {
+    font-family: inherit;
+}
+
+/* Events Main Content */
+.events-main-content {
+    padding: 2rem 0;
+    background: var(--background-color);
+}
+
+.events-content-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    display: grid;
+    grid-template-columns: 400px 1fr;
+    gap: 2rem;
+    align-items: start;
+}
+
+/* Calendar Section */
+.events-calendar-section {
+    background: var(--card-background);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: var(--card-shadow);
+    top: 200px;
+}
+
+.calendar-container {
+    width: 100%;
+}
+
+.calendar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    padding: 0 0.5rem;
+}
+
+.calendar-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--heading-color);
+    margin: 0;
+}
+
+.calendar-nav-btn {
+    background: var(--text-tertiary);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+}
+
+.calendar-nav-btn:hover {
+  background: var(--text-secondary);
+  transform: scale(1.05);
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  background: var(--shadow-light);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.calendar-day-header {
+  background: var(--text-tertiary);
+  color: white;
+  padding: 0.75rem 0.5rem;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.calendar-day {
+    background: var(--card-background);
+    padding: 0.75rem 0.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.calendar-day:hover {
+    background: var(--hover-color);
+}
+
+.calendar-day.today {
+  background: var(--text-tertiary);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.calendar-day.selected {
+  background: var(--text-tertiary);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.calendar-day.empty {
+    background: var(--muted-background);
+    cursor: default;
+    color: var(--muted-text);
+}
+
+.calendar-day.other-month {
+    background: var(--muted-background);
+    color: var(--muted-text);
+    opacity: 0.6;
+}
+
+/* Events List Section */
+.events-list-section {
+    background: var(--card-background);
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: var(--shadow-light);
+    min-height: 600px;
+}
+
+/* Events Results */
+.events-container {
+    width: 100%;
+}
+
+.results-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.results-header h2 {
+    color: var(--heading-color);
+    margin: 0 0 0.5rem 0;
+    font-size: 1.5rem;
+}
+
+.results-info {
+    color: var(--muted-text);
+    font-size: 0.9rem;
+}
+
+.events-grid {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.event-card {
+    background: var(--card-background);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.event-card:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+}
+
+.event-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    gap: 1rem;
+}
+
+.event-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--heading-color);
+    margin: 0;
+    line-height: 1.3;
+    flex: 1;
+}
+
+.event-category {
+  background: var(--text-tertiary);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.event-content {
+    margin-bottom: 1rem;
+}
+
+.event-description {
+    color: var(--text-color);
+    line-height: 1.6;
+    margin-bottom: 1rem;
+}
+
+.event-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--muted-text);
+    font-size: 0.9rem;
+}
+
+.meta-icon {
+    color: var(--primary-color);
+    flex-shrink: 0;
+}
+
+.event-free .meta-icon {
+    color: var(--success-color);
+}
+
+.event-fee .meta-icon {
+    color: var(--warning-color);
+}
+
+.event-dates {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.event-dates h4 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--heading-color);
+    margin: 0 0 0.5rem 0;
+}
+
+.dates-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.date-chip {
+    background: var(--muted-background);
+    color: var(--text-color);
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    border: 1px solid var(--border-color);
+}
+
+.event-footer {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+}
+
+.event-details-btn {
+  background: var(--text-tertiary);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.event-details-btn:hover {
+  background: var(--text-secondary);
+  transform: translateY(-1px);
+}
+
+/* Load More Button */
+.load-more-container {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.load-more-btn {
+    background: var(--secondary-color);
+    color: white;
+    border: none;
+    padding: 0.75rem 2rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.load-more-btn:hover {
+    background: var(--secondary-dark);
+    transform: translateY(-2px);
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+}
+
+.empty-state-content {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.empty-state-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.empty-state-icon svg {
+    width: 64px;
+    height: 64px;
+    color: var(--muted-text);
+}
+
+.empty-state h2 {
+    color: var(--heading-color);
+    margin-bottom: 1rem;
+}
+
+.empty-state p {
+    color: var(--muted-text);
+    margin-bottom: 2rem;
+    line-height: 1.6;
+}
+
+.clear-filters-btn {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.clear-filters-btn:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+}
+
+/* Event Details Modal */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    animation: fadeIn 0.3s ease;
+}
+
+.modal-container {
+    background: var(--card-background);
+    margin: 5% auto;
+    padding: 0;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow: hidden;
+    animation: slideIn 0.3s ease;
+}
+
+.modal-header {
+    background: var(--primary-color);
+    color: white;
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.3s ease;
+}
+
+.modal-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.modal-content {
+    padding: 2rem;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from { transform: translateY(-30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 1024px) {
+    .events-content-container {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .events-calendar-section {
+        position: static;
+        order: 2;
+    }
+    
+    .events-list-section {
+        order: 1;
+    }
+}
+
+@media (max-width: 768px) {
+    .events-hero {
+        padding: 3rem 0;
+    }
+    
+    .events-hero-title {
+        font-size: 2.5rem;
+    }
+    
+    .events-hero-description {
+        font-size: 1.1rem;
+    }
+    
+    .filter-controls {
+        grid-template-columns: 1fr;
+    }
+    
+    .events-content-container {
+        padding: 0 1rem;
+    }
+    
+    .events-calendar-section,
+    .events-list-section {
+        padding: 1.5rem;
+    }
+    
+    .calendar-grid {
+        gap: 1px;
+    }
+    
+    .calendar-day {
+        padding: 0.5rem 0.25rem;
+        font-size: 0.8rem;
+        min-height: 35px;
+    }
+    
+    .event-card {
+        padding: 1.25rem;
+    }
+    
+    .event-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+    
+    .event-meta {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .modal-container {
+        width: 95%;
+        margin: 10% auto;
     }
 }

@@ -25,30 +25,30 @@
 
                 <div class="activity-content">
                     {{if .ShortDescription}}
-                    <p class="activity-description">{{.ShortDescription}}</p>
+                    <p class="activity-description">{{.ShortDescription | unescapeHTML}}</p>
                     {{else if .LongDescription}}
-                    <p class="activity-description">{{.LongDescription | truncate 200}}</p>
+                    <p class="activity-description">{{.LongDescription | truncate 200 | unescapeHTML}}</p>
                     {{end}}
 
                     <div class="activity-meta">
                         {{if .LocationDescription}}
                         <div class="meta-item">
                             <span class="meta-icon">📍</span>
-                            <span class="meta-text">{{.LocationDescription}}</span>
+                            <span class="meta-text">{{.LocationDescription | unescapeHTML}}</span>
                         </div>
                         {{end}}
 
                         {{if .DurationDescription}}
                         <div class="meta-item">
                             <span class="meta-icon">⏱️</span>
-                            <span class="meta-text">{{.DurationDescription}}</span>
+                            <span class="meta-text">{{.DurationDescription | unescapeHTML}}</span>
                         </div>
                         {{end}}
 
                         {{if eq .DoFeesApply "Yes"}}
                         <div class="meta-item">
                             <span class="meta-icon">💳</span>
-                            <span class="meta-text">{{.FeeDescription}}</span>
+                            <span class="meta-text">{{.FeeDescription | unescapeHTML}}</span>
                         </div>
                         {{end}}
 

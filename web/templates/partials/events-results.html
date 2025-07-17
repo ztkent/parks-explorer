@@ -1,0 +1,169 @@
+<div class="events-container">
+    {{if and .EventsData .EventsData.Data (gt (len .EventsData.Data) 0)}}
+        <!-- Results Header -->
+        <div class="results-header">
+            <h2>Found {{.EventsData.Total}} Events</h2>
+            <div class="results-info">
+                Showing {{len .EventsData.Data}} events
+                {{if .DateRange}}for {{.DateRange}}{{end}}
+            </div>
+        </div>
+
+        <!-- Events Grid -->
+        <div class="events-grid">
+            {{range .EventsData.Data}}
+            <div class="event-card">
+                <div class="event-header">
+                    <h3 class="event-title">{{.Title}}</h3>
+                    <div class="event-meta">
+                        {{if .Category}}
+                        <span class="event-category">{{.Category}}</span>
+                        {{end}}
+                        {{if eq .IsFree "true"}}
+                        <span class="event-fee free">Free</span>
+                        {{else if eq .IsFree "false"}}
+                        <span class="event-fee paid">Fee Required</span>
+                        {{end}}
+                    </div>
+                </div>
+
+                <div class="event-content">
+                    {{if .Description}}
+                    <p class="event-description">{{.Description | unescapeHTML}}</p>
+                    {{end}}
+
+                    <div class="event-details">
+                        {{if .DateStart}}
+                        <div class="event-detail">
+                            <span class="detail-icon">📅</span>
+                            <span class="detail-text">
+                                {{if .DateEnd}}
+                                    {{if eq .DateStart .DateEnd}}
+                                        {{.DateStart | formatEventDate}}
+                                    {{else}}
+                                        {{.DateStart | formatEventDate}} - {{.DateEnd | formatEventDate}}
+                                    {{end}}
+                                {{else}}
+                                    {{.DateStart | formatEventDate}}
+                                {{end}}
+                            </span>
+                        </div>
+                        {{end}}
+
+                        {{if .Location}}
+                        <div class="event-detail">
+                            <span class="detail-icon">📍</span>
+                            <span class="detail-text">{{.Location}}</span>
+                        </div>
+                        {{end}}
+
+                        {{if eq .IsAllDay "true"}}
+                        <div class="event-detail">
+                            <span class="detail-icon">🕐</span>
+                            <span class="detail-text">All Day Event</span>
+                        </div>
+                        {{end}}
+
+                        {{if eq .IsRecurring "true"}}
+                        <div class="event-detail">
+                            <span class="detail-icon">🔄</span>
+                            <span class="detail-text">Recurring Event</span>
+                        </div>
+                        {{end}}
+                    </div>
+
+                    {{if .Dates}}
+                    <div class="event-dates">
+                        <h4>Additional Dates:</h4>
+                        <div class="dates-list">
+                            {{range .Dates}}
+                            <span class="event-date-pill">{{. | formatEventDate}}</span>
+                            {{end}}
+                        </div>
+                    </div>
+                    {{end}}
+                </div>
+
+                {{if .EventID}}
+                <div class="event-footer">
+                    <button class="event-details-btn" 
+                            hx-get="/api/events/{{.EventID}}/details"
+                            hx-target="#event-modal-content"
+                            hx-trigger="click"
+                            onclick="openEventModal()">
+                        View Details
+                    </button>
+                </div>
+                {{end}}
+            </div>
+            {{end}}
+        </div>
+
+        <!-- Load More Button -->
+        {{if gt (atoi .EventsData.Total) (len .EventsData.Data)}}
+        <div class="load-more-container">
+            <button class="load-more-btn"
+                    hx-get="/api/events/search"
+                    hx-include=".filter-select, #event-search"
+                    hx-vals='{"page": "{{add (atoi .EventsData.PageNumber) 1}}"}'
+                    hx-target="#events-results .events-grid"
+                    hx-swap="beforeend">
+                Load More Events
+            </button>
+        </div>
+        {{end}}
+
+    {{else}}
+        <!-- Empty State -->
+        <div class="empty-state">
+            <div class="empty-state-content">
+                <div class="empty-state-icon">📅</div>
+                <h2>No Events Found</h2>
+                <p>Try adjusting your search criteria or date range to find more events.</p>
+                <button class="clear-filters-btn" onclick="clearAllFilters()">
+                    Clear All Filters
+                </button>
+            </div>
+        </div>
+    {{end}}
+</div>
+
+<!-- Event Details Modal -->
+<div id="event-modal" class="modal" onclick="closeEventModal(event)">
+    <div class="modal-container" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <h3>Event Details</h3>
+            <button class="modal-close" onclick="closeEventModal()">&times;</button>
+        </div>
+        <div class="modal-content" id="event-modal-content">
+            <!-- Event details will be loaded here -->
+        </div>
+    </div>
+</div>
+
+<script>
+    function openEventModal() {
+        const modal = document.getElementById('event-modal');
+        if (modal) {
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function closeEventModal(event) {
+        const modal = document.getElementById('event-modal');
+        if (!modal) return;
+        
+        if (!event || event.target === modal || event.target.classList.contains('modal-close')) {
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+    }
+
+    // Close modal with escape key
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            closeEventModal();
+        }
+    });
+</script>
