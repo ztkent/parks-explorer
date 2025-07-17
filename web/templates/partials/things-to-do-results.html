@@ -1,0 +1,134 @@
+<div class="activities-container">
+    {{if and .ThingsToDoData .ThingsToDoData.Data (gt (len .ThingsToDoData.Data) 0)}}
+        <!-- Results Header -->
+        <div class="results-header">
+            <h2>Found {{.ThingsToDoData.Total}} Activities</h2>
+            <div class="results-info">
+                Showing {{len .ThingsToDoData.Data}} activities
+            </div>
+        </div>
+
+        <!-- Activity Grid -->
+        <div class="activities-grid">
+            {{range .ThingsToDoData.Data}}
+            <div class="activity-card">
+                <div class="activity-header">
+                    <h3 class="activity-title">{{.Title}}</h3>
+                    {{if .Topics}}
+                    <div class="activity-topics">
+                        {{range .Topics}}
+                        <span class="topic-tag">{{.Name}}</span>
+                        {{end}}
+                    </div>
+                    {{end}}
+                </div>
+
+                <div class="activity-content">
+                    {{if .ShortDescription}}
+                    <p class="activity-description">{{.ShortDescription}}</p>
+                    {{else if .LongDescription}}
+                    <p class="activity-description">{{.LongDescription | truncate 200}}</p>
+                    {{end}}
+
+                    <div class="activity-meta">
+                        {{if .LocationDescription}}
+                        <div class="meta-item">
+                            <span class="meta-icon">📍</span>
+                            <span class="meta-text">{{.LocationDescription}}</span>
+                        </div>
+                        {{end}}
+
+                        {{if .DurationDescription}}
+                        <div class="meta-item">
+                            <span class="meta-icon">⏱️</span>
+                            <span class="meta-text">{{.DurationDescription}}</span>
+                        </div>
+                        {{end}}
+
+                        {{if eq .DoFeesApply "Yes"}}
+                        <div class="meta-item">
+                            <span class="meta-icon">💳</span>
+                            <span class="meta-text">{{.FeeDescription}}</span>
+                        </div>
+                        {{end}}
+
+                        {{if eq .ArePetsPermitted "Yes"}}
+                        <div class="meta-item">
+                            <span class="meta-icon">🐕</span>
+                            <span class="meta-text">Pet Friendly</span>
+                        </div>
+                        {{end}}
+
+                        {{if eq .IsReservationRequired "Yes"}}
+                        <div class="meta-item">
+                            <span class="meta-icon">📋</span>
+                            <span class="meta-text">Reservation Required</span>
+                        </div>
+                        {{end}}
+                    </div>
+
+                    {{if .Activities}}
+                    <div class="activity-types">
+                        <strong>Activities:</strong>
+                        {{range $i, $activity := .Activities}}
+                            {{if $i}}, {{end}}{{$activity.Name}}
+                        {{end}}
+                    </div>
+                    {{end}}
+
+                    {{if .Season}}
+                    <div class="activity-season">
+                        <strong>Best Season:</strong>
+                        {{range $i, $season := .Season}}
+                            {{if $i}}, {{end}}{{$season}}
+                        {{end}}
+                    </div>
+                    {{end}}
+
+                    {{if .RelatedParks}}
+                    <div class="related-parks">
+                        <strong>Parks:</strong>
+                        {{range $i, $park := .RelatedParks}}
+                            {{if $i}}, {{end}}
+                            <a href="/parks/{{slugify $park.Name}}" class="park-link">{{$park.Name}}</a>
+                        {{end}}
+                    </div>
+                    {{end}}
+                </div>
+
+                {{if .URL}}
+                <div class="activity-footer">
+                    <a href="{{.URL}}" target="_blank" class="activity-link">Learn More</a>
+                </div>
+                {{end}}
+            </div>
+            {{end}}
+        </div>
+
+        <!-- Load More Button -->
+        {{if gt (atoi .ThingsToDoData.Total) (len .ThingsToDoData.Data)}}
+        <div class="load-more-container">
+            <button class="load-more-btn"
+                    hx-get="/api/things-to-do/search"
+                    hx-include=".filter-select, #activity-search"
+                    hx-vals='{"start": "{{add (atoi .ThingsToDoData.Start) (len .ThingsToDoData.Data)}}"}'
+                    hx-target="#activities-results .activities-grid"
+                    hx-swap="beforeend">
+                Load More Activities
+            </button>
+        </div>
+        {{end}}
+
+    {{else}}
+        <!-- Empty State -->
+        <div class="empty-state">
+            <div class="empty-state-content">
+                <h2>No Activities Found</h2>
+                <p>Try adjusting your search criteria or clear your filters to see more activities.</p>
+                <button class="clear-filters-btn" onclick="clearAllFilters()">
+                    Clear All Filters
+                </button>
+            </div>
+        </div>
+    {{end}}
+</div>

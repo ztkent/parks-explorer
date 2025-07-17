@@ -46,6 +46,7 @@
     <div id="header-container"
          hx-get="/api/templates/header"
          hx-trigger="load"
+         hx-headers='{"X-Current-Page": "home"}'
          hx-swap="innerHTML">
     </div>
 

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Things to Do - Parks Explorer</title>
+    
+    <!-- Favicon and App Icons -->
+    <link rel="icon" href="/static/assets/favicon.ico" sizes="any">
+    <link rel="icon" type="image/webp" sizes="16x16" href="/static/assets/favicon-16x16.webp">
+    <link rel="icon" type="image/webp" sizes="32x32" href="/static/assets/favicon-32x32.webp">
+    <link rel="icon" type="image/webp" sizes="48x48" href="/static/assets/favicon-48x48.webp">
+    <link rel="icon" type="image/webp" sizes="96x96" href="/static/assets/favicon-96x96.webp">
+    <link rel="icon" type="image/webp" sizes="144x144" href="/static/assets/favicon-144x144.webp">
+    
+    <!-- Fallback PNG icons for browsers that don't support WebP -->
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/assets/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/assets/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="/static/assets/favicon-96x96.png">
+    
+    <!-- Apple Touch Icon -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/assets/apple-touch-icon.webp">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/assets/apple-touch-icon.png">
+    
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/static/site.webmanifest">
+    
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#2d5016">
+    <meta name="msapplication-TileColor" content="#e2e2e2ff">
+    <meta name="msapplication-TileImage" content="/static/assets/favicon-144x144.webp">
+    
+    <link rel="stylesheet" href="/static/styles.css">
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script>
+        // Trigger auth change event after page loads to refresh authentication status
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                document.body.dispatchEvent(new Event('authChange'));
+            }, 100);
+        });
+    </script>
+</head>
+<body>
+    <!-- Header loaded via HTMX -->
+    <div id="header-container"
+         hx-get="/api/templates/header"
+         hx-trigger="load"
+         hx-headers='{"X-Current-Page": "things-to-do"}'
+         hx-swap="innerHTML">
+    </div>
+
+    <main class="things-to-do-page">
+        <!-- Hero Section -->
+        <section class="things-to-do-hero">
+            <div class="things-to-do-hero-content">
+                <h1 class="things-to-do-hero-title">Things to Do</h1>
+                <p class="things-to-do-hero-description">
+                    Explore a variety of activities available in our national parks, from hiking and camping to bird watching and stargazing. 
+                    Use the filters below to find activities that match your interests and skill level.
+                </p>
+            </div>
+        </section>
+
+        <!-- Search and Filter Section -->
+        <section class="things-to-do-filters">
+            <div class="filters-container">
+                <!-- Filter Controls -->
+                <div class="filter-controls">
+                    <!-- Park Filter -->
+                    <div class="filter-group">
+                        <label for="park-filter">Park</label>
+                        <select id="park-filter" 
+                                name="parkCode" 
+                                class="filter-select"
+                                hx-get="/api/things-to-do/search"
+                                hx-trigger="change"
+                                hx-target="#activities-results"
+                                hx-include=".filter-select, #activity-search">
+                            <option value="">All Parks</option>
+                            {{range .Parks}}
+                            <option value="{{.ParkCode}}">{{.Name}}</option>
+                            {{end}}
+                        </select>
+                    </div>
+
+                    <!-- State Filter -->
+                    <div class="filter-group">
+                        <label for="state-filter">State</label>
+                        <select id="state-filter" 
+                                name="stateCode" 
+                                class="filter-select"
+                                hx-get="/api/things-to-do/search"
+                                hx-trigger="change"
+                                hx-target="#activities-results"
+                                hx-include=".filter-select, #activity-search">
+                            <option value="">All States</option>
+                            {{range .States}}
+                            <option value="{{.}}">{{.}}</option>
+                            {{end}}
+                        </select>
+                    </div>
+
+                    <!-- Activity Type Filter -->
+                    <div class="filter-group">
+                        <label for="activity-filter">Activity Type</label>
+                        <select id="activity-filter" 
+                                name="activityId" 
+                                class="filter-select"
+                                hx-get="/api/things-to-do/search"
+                                hx-trigger="change"
+                                hx-target="#activities-results"
+                                hx-include=".filter-select, #activity-search">
+                            <option value="">All Activities</option>
+                            {{range .Activities}}
+                            <option value="{{.ID}}">{{.Name}}</option>
+                            {{end}}
+                        </select>
+                    </div>
+
+                    <!-- Difficulty Filter -->
+                    <div class="filter-group">
+                        <label for="difficulty-filter">Difficulty</label>
+                        <select id="difficulty-filter" 
+                                name="difficulty" 
+                                class="filter-select"
+                                hx-get="/api/things-to-do/search"
+                                hx-trigger="change"
+                                hx-target="#activities-results"
+                                hx-include=".filter-select, #activity-search">
+                            <option value="">Any Difficulty</option>
+                            <option value="easy">Easy</option>
+                            <option value="moderate">Moderate</option>
+                            <option value="difficult">Difficult</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Clear Filters Button -->
+                <button class="clear-filters-btn" onclick="clearAllFilters()">
+                    Clear All Filters
+                </button>
+            </div>
+        </section>
+
+        <!-- Results Section -->
+        <section class="things-to-do-results">
+            <div class="results-container">
+                <div id="activities-results"
+                     hx-get="/api/things-to-do/search"
+                     hx-trigger="load"
+                     hx-indicator="#loading-indicator">
+                    <!-- Loading state -->
+                    <div id="loading-indicator" class="loading-container">
+                        <div class="loading-spinner"></div>
+                        <p>Loading activities...</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer loaded via HTMX -->
+    <div id="footer-container"
+         hx-get="/api/templates/footer"
+         hx-trigger="load"
+         hx-swap="innerHTML">
+    </div>
+
+    <script src="/static/script.js"></script>
+    <script>
+        function clearAllFilters() {
+            // Reset all filter inputs
+            document.getElementById('activity-search').value = '';
+            document.getElementById('park-filter').value = '';
+            document.getElementById('state-filter').value = '';
+            document.getElementById('activity-filter').value = '';
+            document.getElementById('difficulty-filter').value = '';
+            
+            // Trigger search with cleared filters
+            htmx.ajax('GET', '/api/things-to-do/search', {
+                target: '#activities-results',
+                swap: 'innerHTML'
+            });
+        }
+    </script>
+</body>
+</html>

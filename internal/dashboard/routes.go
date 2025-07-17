@@ -10,11 +10,14 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/ztkent/go-nps"
+	"github.com/ztkent/nps-dashboard/internal/database"
 )
 
 // ParkPageData represents the data structure for the park page template
@@ -364,13 +367,20 @@ func (dm *Dashboard) TemplateHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch templateName {
 	case "header":
+		// Determine current page from referer or other context
+		currentPage := getCurrentPageFromRequest(r)
+		
+		data := map[string]interface{}{
+			"CurrentPage": currentPage,
+		}
+		
 		tmpl, err := template.ParseFiles("web/templates/header.html")
 		if err != nil {
 			log.Printf("Failed to load header template: %v", err)
 			http.Error(w, fmt.Sprintf("Failed to load header template: %v", err), http.StatusInternalServerError)
 			return
 		}
-		err = tmpl.Execute(w, nil)
+		err = tmpl.Execute(w, data)
 		if err != nil {
 			log.Printf("Failed to render header template: %v", err)
 			http.Error(w, fmt.Sprintf("Failed to render header template: %v", err), http.StatusInternalServerError)
@@ -392,6 +402,40 @@ func (dm *Dashboard) TemplateHandler(w http.ResponseWriter, r *http.Request) {
 	default:
 		http.NotFound(w, r)
 	}
+}
+
+// getCurrentPageFromRequest determines the current page based on the request
+func getCurrentPageFromRequest(r *http.Request) string {
+	// Try to get referer header first
+	referer := r.Header.Get("Referer")
+	if referer != "" {
+		if strings.Contains(referer, "/things-to-do") {
+			return "things-to-do"
+		}
+		if strings.Contains(referer, "/get-involved") {
+			return "get-involved"
+		}
+		if strings.Contains(referer, "/learn-more") {
+			return "learn-more"
+		}
+		if strings.Contains(referer, "/news") {
+			return "news"
+		}
+	}
+	
+	// Fallback: check if there's a specific header or query parameter
+	currentPage := r.Header.Get("X-Current-Page")
+	if currentPage != "" {
+		return currentPage
+	}
+	
+	currentPage = r.URL.Query().Get("current-page")
+	if currentPage != "" {
+		return currentPage
+	}
+	
+	// Default to home if we can't determine
+	return "home"
 }
 
 // ParksHandler returns HTML for parks with pagination support
@@ -736,5 +780,184 @@ func (dm *Dashboard) ParkDetailsHandler(w http.ResponseWriter, r *http.Request) 
 		log.Printf("Template execution error for park %s: %v", parkCode, err)
 		http.Error(w, "Failed to render park details", http.StatusInternalServerError)
 		return
+	}
+}
+
+// ThingsToDoPageHandler returns the full Things To Do page
+func (dm *Dashboard) ThingsToDoPageHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html")
+
+	// Get available parks for filter dropdown
+	parks, err := dm.parkService.GetAllParks()
+	if err != nil {
+		log.Printf("Failed to get parks for Things To Do page: %v", err)
+		parks = []database.CachedPark{}
+	}
+
+	// Get available activities for filter dropdown
+	activities, err := dm.parkService.GetAllActivities()
+	if err != nil {
+		log.Printf("Failed to get activities for Things To Do page: %v", err)
+		activities = &nps.ActivityResponse{Data: []nps.Activity{}}
+	}
+
+	// Get unique states from parks
+	statesMap := make(map[string]bool)
+	for _, park := range parks {
+		states := strings.Split(park.States, ",")
+		for _, state := range states {
+			state = strings.TrimSpace(state)
+			if state != "" {
+				statesMap[state] = true
+			}
+		}
+	}
+
+	states := make([]string, 0, len(statesMap))
+	for state := range statesMap {
+		states = append(states, state)
+	}
+
+	// Sort states alphabetically
+	sort.Strings(states)
+
+	data := map[string]interface{}{
+		"Parks":      parks,
+		"Activities": activities.Data,
+		"States":     states,
+	}
+
+	tmpl, err := template.ParseFiles("web/templates/things-to-do.html")
+	if err != nil {
+		log.Printf("Failed to load Things To Do template: %v", err)
+		http.Error(w, fmt.Sprintf("Failed to load Things To Do template: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	err = tmpl.Execute(w, data)
+	if err != nil {
+		log.Printf("Failed to render Things To Do page: %v", err)
+		http.Error(w, fmt.Sprintf("Failed to render Things To Do page: %v", err), http.StatusInternalServerError)
+		return
+	}
+}
+
+// ThingsToDoSearchHandler handles search and filtering for things to do
+func (dm *Dashboard) ThingsToDoSearchHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html")
+
+	// Parse query parameters
+	query := r.URL.Query().Get("q")
+	if searchInput := r.URL.Query().Get("activity-search"); searchInput != "" {
+		query = searchInput
+	}
+
+	parkCode := r.URL.Query().Get("parkCode")
+	stateCode := r.URL.Query().Get("stateCode")
+	activityId := r.URL.Query().Get("activityId")
+	difficulty := r.URL.Query().Get("difficulty")
+
+	startStr := r.URL.Query().Get("start")
+	limitStr := r.URL.Query().Get("limit")
+
+	start := 0
+	limit := 3500
+
+	if startStr != "" {
+		if parsedStart, err := strconv.Atoi(startStr); err == nil && parsedStart >= 0 {
+			start = parsedStart
+		}
+	}
+
+	if limitStr != "" {
+		if parsedLimit, err := strconv.Atoi(limitStr); err == nil && parsedLimit > 0 && parsedLimit <= 500 {
+			limit = parsedLimit
+		}
+	}
+
+	// Call NPS API with filters
+	thingsToDoResponse, err := dm.parkService.SearchThingsToDo(activityId, parkCode, stateCode, query, limit, start)
+	if err != nil {
+		log.Printf("Failed to search things to do: %v", err)
+		thingsToDoResponse = &nps.ThingsToDoResponse{
+			Total: "0",
+			Data:  []nps.ThingsToDo{},
+			Limit: strconv.Itoa(limit),
+			Start: strconv.Itoa(start),
+		}
+	}
+
+	// Filter by difficulty if specified (this might need to be done client-side since NPS API doesn't have difficulty filter)
+	if difficulty != "" && thingsToDoResponse != nil {
+		filteredData := []nps.ThingsToDo{}
+		for _, activity := range thingsToDoResponse.Data {
+			if matchesDifficulty(activity, difficulty) {
+				filteredData = append(filteredData, activity)
+			}
+		}
+		thingsToDoResponse.Data = filteredData
+	}
+
+	data := map[string]interface{}{
+		"ThingsToDoData": thingsToDoResponse,
+	}
+
+	// Create template with function map and parse the file
+	tmpl := template.New("things-to-do-results.html").Funcs(template.FuncMap{
+		"truncate": func(s string, length int) string {
+			if len(s) <= length {
+				return s
+			}
+			return s[:length] + "..."
+		},
+		"slugify": func(s string) string {
+			return strings.ToLower(strings.ReplaceAll(strings.TrimSpace(s), " ", "-"))
+		},
+		"atoi": func(s string) int {
+			i, _ := strconv.Atoi(s)
+			return i
+		},
+		"add": func(a, b int) int {
+			return a + b
+		},
+	})
+
+	tmpl, err = tmpl.ParseFiles("web/templates/partials/things-to-do-results.html")
+
+	if err != nil {
+		log.Printf("Failed to load Things To Do results template: %v", err)
+		http.Error(w, fmt.Sprintf("Failed to load Things To Do results template: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	err = tmpl.Execute(w, data)
+	if err != nil {
+		log.Printf("Failed to render Things To Do results: %v", err)
+		http.Error(w, fmt.Sprintf("Failed to render Things To Do results: %v", err), http.StatusInternalServerError)
+		return
+	}
+}
+
+// Helper function to match difficulty (since NPS API doesn't provide difficulty levels)
+func matchesDifficulty(activity nps.ThingsToDo, difficulty string) bool {
+	description := strings.ToLower(activity.LongDescription + " " + activity.ShortDescription + " " + activity.ActivityDescription)
+
+	switch difficulty {
+	case "easy":
+		return strings.Contains(description, "easy") ||
+			strings.Contains(description, "beginner") ||
+			strings.Contains(description, "gentle") ||
+			strings.Contains(description, "accessible")
+	case "moderate":
+		return strings.Contains(description, "moderate") ||
+			strings.Contains(description, "intermediate") ||
+			strings.Contains(description, "some experience")
+	case "difficult":
+		return strings.Contains(description, "difficult") ||
+			strings.Contains(description, "challenging") ||
+			strings.Contains(description, "advanced") ||
+			strings.Contains(description, "strenuous")
+	default:
+		return true
 	}
 }

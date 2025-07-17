@@ -32,55 +32,53 @@ func NewParkService(npsApi nps.NpsApi, db *database.DB) *ParkService {
 
 // GetAllParks returns all parks, using cache when possible
 func (ps *ParkService) GetAllParks() ([]database.CachedPark, error) {
-	// Check if cached data is fresh
-	stale, err := ps.db.IsParkDataStale(0, "", "parks", 24*time.Hour)
-	if err != nil || stale {
-		// Fetch fresh data from API
+	// First try to get cached parks
+	parks, err := ps.db.GetAllParks()
+	if err != nil || len(parks) == 0 {
+		// If no cached parks or error, fetch from API
 		res, err := ps.npsApi.GetParks(nil, nil, 0, 500, "", nil)
-		if err == nil {
-			// Cache the response
-			for _, park := range res.Data {
-				slug := createSlug(park.Name)
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch parks from API: %w", err)
+		}
 
-				// Convert park to map for easier handling
-				parkMap := map[string]interface{}{
-					"parkCode":       park.ParkCode,
-					"name":           park.Name,
-					"fullName":       park.FullName,
-					"states":         park.States,
-					"designation":    park.Designation,
-					"description":    park.Description,
-					"weatherInfo":    park.WeatherInfo,
-					"directionsInfo": park.DirectionsInfo,
-					"url":            park.Url,
-					"directionsUrl":  park.DirectionsUrl,
-					"latitude":       park.Latitude,
-					"longitude":      park.Longitude,
-					"latLong":        park.LatLong,
-					"relevanceScore": park.RelevanceScore,
-					"images":         convertImagesToInterface(park.Images),
-				}
+		// Cache the response
+		for _, park := range res.Data {
+			slug := createSlug(park.Name)
 
-				_, err := ps.db.UpsertPark(parkMap, slug)
-				if err != nil {
-					fmt.Printf("Warning: Failed to cache park %s: %v\n", park.Name, err)
-					continue
-				}
+			// Convert park to map for easier handling
+			parkMap := map[string]interface{}{
+				"parkCode":       park.ParkCode,
+				"name":           park.Name,
+				"fullName":       park.FullName,
+				"states":         park.States,
+				"designation":    park.Designation,
+				"description":    park.Description,
+				"weatherInfo":    park.WeatherInfo,
+				"directionsInfo": park.DirectionsInfo,
+				"url":            park.Url,
+				"directionsUrl":  park.DirectionsUrl,
+				"latitude":       park.Latitude,
+				"longitude":      park.Longitude,
+				"latLong":        park.LatLong,
+				"relevanceScore": park.RelevanceScore,
+				"images":         convertImagesToInterface(park.Images),
 			}
+
+			_, err := ps.db.UpsertPark(parkMap, slug)
+			if err != nil {
+				fmt.Printf("Warning: Failed to cache park %s: %v\n", park.Name, err)
+				continue
+			}
+		}
+
+		// Get the cached parks after insertion
+		parks, err = ps.db.GetAllParks()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get cached parks after API fetch: %w", err)
 		}
 	}
 
-	// Return cached data
-	cachedData, err := ps.db.GetCachedParkData(0, "", "parks")
-	if err != nil {
-		return nil, fmt.Errorf("failed to get cached parks: %w", err)
-	}
-
-	var response []database.CachedPark
-	if err := json.Unmarshal([]byte(cachedData.APIData), &response); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal cached parks: %w", err)
-	}
-	return response, nil
+	return parks, nil
 }
 
 func convertImagesToInterface(images []struct {
@@ -784,6 +782,58 @@ func (ps *ParkService) GetParkCampgrounds(parkCode string) (*nps.CampgroundData,
 	}
 
 	return &response, nil
+}
+
+// GetAllActivities fetches all available activities from the NPS API
+func (ps *ParkService) GetAllActivities() (*nps.ActivityResponse, error) {
+	return ps.npsApi.GetActivities("", "", 500, 0, "name")
+}
+
+// SearchThingsToDo searches for things to do with filters
+func (ps *ParkService) SearchThingsToDo(activityId, parkCode, stateCode, query string, limit, start int) (*nps.ThingsToDoResponse, error) {
+	// If no specific filters are provided, get general things to do
+	if activityId == "" && parkCode == "" && stateCode == "" && query == "" {
+		// Get some popular things to do by default
+		return ps.npsApi.GetThingsToDo("", "", "", "", limit, start, nil)
+	}
+
+	// Get things to do without activity filter first
+	// The NPS API doesn't support direct activity filtering, so we'll filter client-side
+	response, err := ps.npsApi.GetThingsToDo("", parkCode, stateCode, query, limit*2, start, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	// If no activity filter is specified, return the results as-is
+	if activityId == "" {
+		return response, nil
+	}
+
+	// Filter results by activity ID
+	var filteredResults []nps.ThingsToDo
+	for _, item := range response.Data {
+		for _, activity := range item.Activities {
+			if activity.ID == activityId {
+				filteredResults = append(filteredResults, item)
+				break
+			}
+		}
+	}
+
+	// Limit the results to the requested amount
+	if len(filteredResults) > limit {
+		filteredResults = filteredResults[:limit]
+	}
+
+	// Create a new response with filtered data
+	filteredResponse := &nps.ThingsToDoResponse{
+		Total: fmt.Sprintf("%d", len(filteredResults)),
+		Data:  filteredResults,
+		Limit: response.Limit,
+		Start: response.Start,
+	}
+
+	return filteredResponse, nil
 }
 
 // createSlug creates a URL-friendly slug from text

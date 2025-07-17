@@ -118,6 +118,21 @@ body {
     margin-right: 0.5rem;
 }
 
+/* Logo link styling - remove default link appearance */
+.logo a {
+    display: flex;
+    align-items: center;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-decoration: none;
+    transition: opacity 0.2s ease;
+}
+
+.logo a:hover {
+    opacity: 0.8;
+}
+
 /* Desktop Navigation */
 .nav-links {
     display: flex;
@@ -142,6 +157,26 @@ body {
 .nav-links a:hover,
 .nav-link:hover {
     color: var(--accent-green);
+}
+
+/* Active navigation link styling */
+.nav-links a.active,
+.nav-link.active {
+    color: var(--text-primary);
+    font-weight: 600;
+    position: relative;
+}
+
+.nav-links a.active::after,
+.nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--accent-green);
+    border-radius: 1px;
 }
 
 /* Mobile Menu Button */
@@ -202,6 +237,14 @@ body {
 .mobile-nav a:hover {
     background-color: var(--bg-tertiary);
     color: var(--accent-green);
+}
+
+/* Active mobile navigation link styling */
+.mobile-nav a.active {
+    background-color: var(--bg-tertiary);
+    color: var(--accent-green);
+    font-weight: 600;
+    border-left: 3px solid var(--accent-green);
 }
 
 .theme-toggle {
@@ -4187,3 +4230,398 @@ html {
     }
 }
 
+/* ==========================================================================
+   Things To Do Page Styles
+   ========================================================================== */
+
+/* Things To Do Page Styles */
+.things-to-do-page {
+    min-height: 100vh;
+}
+
+.things-to-do-hero {
+    background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), 
+                url('https://images.unsplash.com/photo-1624049321569-f483adecb8fa?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');z
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    height: 500px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: white;
+    position: relative;
+}
+
+.things-to-do-hero-content {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+.things-to-do-hero-title {
+    font-size: 3.5rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+.things-to-do-hero-description {
+    font-size: 1.25rem;
+    line-height: 1.6;
+    margin-bottom: 0;
+    opacity: 0.95;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Filters Section */
+.things-to-do-filters {
+    background: var(--bg-secondary);
+    padding: 2rem;
+    border-bottom: 1px solid var(--border-primary);
+}
+
+.filters-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.filters-container h3 {
+    text-align: center;
+    margin-bottom: 2rem;
+    color: var(--text-primary);
+    font-size: 1.5rem;
+}
+
+.filter-group {
+    margin-bottom: 1rem;
+}
+
+.filter-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.filter-input,
+.filter-select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid var(--border-primary);
+    border-radius: 8px;
+    font-size: 1rem;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    transition: border-color 0.3s ease;
+}
+
+.filter-input:focus,
+.filter-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(45, 80, 22, 0.1);
+}
+
+.filter-controls {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+@media (min-width: 768px) {
+    .filter-controls {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1024px) {
+    .filter-controls {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+.clear-filters-btn {
+    display: block;
+    margin: 0 auto;
+    padding: 0.75rem 2rem;
+    background: var(--accent-green);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.clear-filters-btn:hover {
+    background: var(--accent-green-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px var(--shadow-medium);
+}
+
+/* Results Section */
+.things-to-do-results {
+    padding: 2rem;
+    background: var(--bg-primary);
+}
+
+.results-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-primary);
+}
+
+.results-header h2 {
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.results-info {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+/* Activity Grid */
+.activities-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+@media (min-width: 768px) {
+    .activities-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1024px) {
+    .activities-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* Activity Cards */
+.activity-card {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px var(--shadow-light);
+    transition: all 0.3s ease;
+    border: 1px solid var(--border-primary);
+}
+
+.activity-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px var(--shadow-medium);
+}
+
+.activity-header {
+    margin-bottom: 1rem;
+}
+
+.activity-title {
+    color: var(--text-primary);
+    margin: 0 0 0.5rem 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.activity-topics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.topic-tag {
+    background: rgba(45, 80, 22, 0.1);
+    color: var(--primary-color);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.activity-content {
+    margin-bottom: 1rem;
+}
+
+.activity-description {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 1rem;
+}
+
+.activity-meta {
+    margin-bottom: 1rem;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.meta-icon {
+    font-size: 1rem;
+}
+
+.activity-types,
+.activity-season,
+.related-parks {
+    margin-bottom: 0.75rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.park-link {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.park-link:hover {
+    text-decoration: underline;
+}
+
+.activity-footer {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-primary);
+}
+
+.activity-link {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    background: var(--primary-color);
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+}
+
+.activity-link:hover {
+    background: var(--primary-hover);
+}
+
+/* Load More Button */
+.load-more-container {
+    text-align: center;
+    margin-top: 2rem;
+}
+
+.load-more-btn {
+    padding: 1rem 2rem;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.load-more-btn:hover {
+    background: var(--primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px var(--shadow-medium);
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+}
+
+.empty-state-content {
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.empty-state h2 {
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+}
+
+.empty-state p {
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+    line-height: 1.6;
+}
+
+/* Loading State */
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    text-align: center;
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--border-primary);
+    border-top: 4px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .things-to-do-hero {
+        height: 400px;
+        background-attachment: scroll;
+    }
+    
+    .things-to-do-hero-content {
+        padding: 0 1rem;
+    }
+    
+    .things-to-do-hero-title {
+        font-size: 2.5rem;
+    }
+    
+    .things-to-do-hero-description {
+        font-size: 1.1rem;
+    }
+    
+    .things-to-do-filters {
+        padding: 1rem;
+    }
+    
+    .results-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .activity-card {
+        padding: 1rem;
+    }
+}
