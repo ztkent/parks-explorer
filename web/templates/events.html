@@ -81,33 +81,21 @@
                     <div class="filter-controls">
                         <!-- Park Filter -->
                         <select id="park-filter" 
-                                class="filter-select"
-                                hx-get="/api/events/search"
-                                hx-target="#events-results"
-                                hx-trigger="change"
-                                hx-include="#event-search, .filter-select">
+                                class="filter-select">
                             <option value="">All Parks</option>
                             <!-- Options will be loaded dynamically -->
                         </select>
 
                         <!-- State Filter -->
                         <select id="state-filter" 
-                                class="filter-select"
-                                hx-get="/api/events/search"
-                                hx-target="#events-results"
-                                hx-trigger="change"
-                                hx-include="#event-search, .filter-select">
+                                class="filter-select">
                             <option value="">All States</option>
                             <!-- Options will be loaded dynamically -->
                         </select>
 
                         <!-- Event Type Filter -->
                         <select id="event-type-filter" 
-                                class="filter-select"
-                                hx-get="/api/events/search"
-                                hx-target="#events-results"
-                                hx-trigger="change"
-                                hx-include="#event-search, .filter-select">
+                                class="filter-select">
                             <option value="">All Event Types</option>
                             <option value="guided-tour">Guided Tours</option>
                             <option value="educational">Educational Programs</option>
@@ -118,11 +106,7 @@
 
                         <!-- Date Range Filter -->
                         <select id="date-range-filter" 
-                                class="filter-select"
-                                hx-get="/api/events/search"
-                                hx-target="#events-results"
-                                hx-trigger="change"
-                                hx-include="#event-search, .filter-select">
+                                class="filter-select">
                             <option value="">All Dates</option>
                             <option value="today">Today</option>
                             <option value="this-week">This Week</option>
@@ -145,6 +129,10 @@
                             <button class="calendar-nav-btn" id="prev-month" onclick="navigateMonth(-1)">‹</button>
                             <h3 class="calendar-title" id="calendar-title">July 2024</h3>
                             <button class="calendar-nav-btn" id="next-month" onclick="navigateMonth(1)">›</button>
+                        </div>
+                        
+                        <div class="calendar-help">
+                            <p>Select an end date to view events from today through your chosen date</p>
                         </div>
                         
                         <div class="calendar-grid" id="calendar-grid">
@@ -177,7 +165,7 @@
     <script>
         // Calendar functionality
         let currentDate = new Date();
-        let selectedDate = null;
+        let selectedEndDate = null;
 
         function initializeCalendar() {
             const calendarGrid = document.getElementById('calendar-grid');
@@ -187,7 +175,7 @@
                 return;
             }
             updateCalendar();
-            loadEventsForDate(currentDate);
+            loadEventsFromTodayToDefault();
         }
 
         function navigateMonth(direction) {
@@ -235,6 +223,7 @@
             const firstDay = new Date(year, month, 1).getDay();
             const daysInMonth = new Date(year, month + 1, 0).getDate();
             const today = new Date();
+            today.setHours(0, 0, 0, 0); // Reset time for accurate comparison
             
             // Add empty cells for days before month starts
             for (let i = 0; i < firstDay; i++) {
@@ -250,20 +239,33 @@
                 dayElement.textContent = day;
                 
                 const dayDate = new Date(year, month, day);
+                dayDate.setHours(0, 0, 0, 0); // Reset time for accurate comparison
+                
+                // Disable past dates
+                if (dayDate < today) {
+                    dayElement.classList.add('disabled');
+                    dayElement.style.pointerEvents = 'none';
+                    dayElement.style.opacity = '0.4';
+                } else {
+                    // Add click handler only for future dates
+                    dayElement.onclick = () => selectEndDate(dayDate, dayElement);
+                }
                 
                 // Highlight today
-                if (dayDate.toDateString() === today.toDateString()) {
+                if (dayDate.getTime() === today.getTime()) {
                     dayElement.classList.add('today');
                 }
                 
-                // Add click handler
-                dayElement.onclick = () => selectDate(dayDate, dayElement);
+                // Highlight selected end date
+                if (selectedEndDate && dayDate.getTime() === selectedEndDate.getTime()) {
+                    dayElement.classList.add('selected');
+                }
                 
                 grid.appendChild(dayElement);
             }
         }
 
-        function selectDate(date, element) {
+        function selectEndDate(endDate, element) {
             // Remove previous selection
             document.querySelectorAll('.calendar-day.selected').forEach(el => {
                 el.classList.remove('selected');
@@ -271,23 +273,26 @@
             
             // Add selection to clicked date
             element.classList.add('selected');
-            selectedDate = date;
+            selectedEndDate = endDate;
             
-            // Load events for selected date
-            loadEventsForDate(date);
-        }
-
-        function loadEventsForDate(date) {
-            const eventsResults = document.getElementById('events-results');
-            if (!eventsResults) {
-                return;
+            // Clear date range filter when calendar is used
+            const dateRangeFilter = document.getElementById('date-range-filter');
+            if (dateRangeFilter) {
+                dateRangeFilter.value = '';
             }
             
-            const formattedDate = date.toISOString().split('T')[0];
-            htmx.ajax('GET', `/api/events/search?date=${formattedDate}`, {
-                target: '#events-results',
-                swap: 'innerHTML'
-            });
+            // Load events using centralized function
+            performEventSearch();
+        }
+
+        function loadEventsFromTodayToDefault() {
+            // Load events using centralized function (no dates = default behavior)
+            performEventSearch();
+        }
+
+        function loadEventsFromTodayToDate(endDate) {
+            // This function is now handled by selectEndDate and performEventSearch
+            performEventSearch();
         }
 
         function loadEventsForMonth() {
@@ -301,33 +306,217 @@
             const startDate = `${year}-${month.toString().padStart(2, '0')}-01`;
             const endDate = new Date(year, month, 0).toISOString().split('T')[0];
             
-            htmx.ajax('GET', `/api/events/search?start_date=${startDate}&end_date=${endDate}`, {
+            htmx.ajax('GET', `/api/events/search?date_start=${startDate}&date_end=${endDate}`, {
                 target: '#events-results',
                 swap: 'innerHTML'
             });
         }
 
+        // Centralized function to perform event searches with all current filter values
+        function performEventSearch(customDateStart = null, customDateEnd = null) {
+            const eventsResults = document.getElementById('events-results');
+            if (!eventsResults) {
+                return;
+            }
+            
+            const params = new URLSearchParams();
+            
+            // Handle date parameters
+            if (customDateStart && customDateEnd) {
+                params.set('date_start', customDateStart);
+                params.set('date_end', customDateEnd);
+            } else if (selectedEndDate) {
+                // Use calendar selection
+                const today = new Date();
+                const startDate = today.toISOString().split('T')[0];
+                const formattedEndDate = selectedEndDate.toISOString().split('T')[0];
+                params.set('date_start', startDate);
+                params.set('date_end', formattedEndDate);
+            } else {
+                // Check date range filter
+                const dateRangeFilter = document.getElementById('date-range-filter');
+                if (dateRangeFilter && dateRangeFilter.value) {
+                    const dateRange = calculateDateRange(dateRangeFilter.value);
+                    if (dateRange.start && dateRange.end) {
+                        params.set('date_start', dateRange.start);
+                        params.set('date_end', dateRange.end);
+                    }
+                }
+                // If no date filters, backend will use default (today + 3 months)
+            }
+            
+            // Include current filter values
+            const parkFilter = document.getElementById('park-filter');
+            const stateFilter = document.getElementById('state-filter');
+            const eventTypeFilter = document.getElementById('event-type-filter');
+            
+            if (parkFilter && parkFilter.value) {
+                params.set('park', parkFilter.value);
+            }
+            if (stateFilter && stateFilter.value) {
+                params.set('state', stateFilter.value);
+            }
+            if (eventTypeFilter && eventTypeFilter.value) {
+                params.set('event_type', eventTypeFilter.value);
+            }
+            
+            const queryString = params.toString();
+            const url = queryString ? `/api/events/search?${queryString}` : '/api/events/search';
+            
+            htmx.ajax('GET', url, {
+                target: '#events-results',
+                swap: 'innerHTML'
+            });
+        }
+
+        // Calculate date range based on dropdown selection
+        function calculateDateRange(rangeValue) {
+            const today = new Date();
+            let start, end;
+            
+            switch (rangeValue) {
+                case 'today':
+                    start = end = today.toISOString().split('T')[0];
+                    break;
+                case 'this-week':
+                    start = today.toISOString().split('T')[0];
+                    const endOfWeek = new Date(today);
+                    endOfWeek.setDate(today.getDate() + (6 - today.getDay()));
+                    end = endOfWeek.toISOString().split('T')[0];
+                    break;
+                case 'this-month':
+                    start = today.toISOString().split('T')[0];
+                    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                    end = endOfMonth.toISOString().split('T')[0];
+                    break;
+                case 'next-month':
+                    start = today.toISOString().split('T')[0];
+                    const endOfNextMonth = new Date(today.getFullYear(), today.getMonth() + 2, 0);
+                    end = endOfNextMonth.toISOString().split('T')[0];
+                    break;
+                default:
+                    return { start: null, end: null };
+            }
+            
+            return { start, end };
+        }
+
+        // Load more events function for pagination
+        function loadMoreEvents(page) {
+            const eventsResults = document.getElementById('events-results');
+            if (!eventsResults) {
+                return;
+            }
+            
+            const params = new URLSearchParams();
+            params.set('page', page.toString());
+            
+            // Handle date parameters (same logic as performEventSearch)
+            if (selectedEndDate) {
+                const today = new Date();
+                const startDate = today.toISOString().split('T')[0];
+                const formattedEndDate = selectedEndDate.toISOString().split('T')[0];
+                params.set('date_start', startDate);
+                params.set('date_end', formattedEndDate);
+            } else {
+                const dateRangeFilter = document.getElementById('date-range-filter');
+                if (dateRangeFilter && dateRangeFilter.value) {
+                    const dateRange = calculateDateRange(dateRangeFilter.value);
+                    if (dateRange.start && dateRange.end) {
+                        params.set('date_start', dateRange.start);
+                        params.set('date_end', dateRange.end);
+                    }
+                }
+            }
+            
+            // Include current filter values
+            const parkFilter = document.getElementById('park-filter');
+            const stateFilter = document.getElementById('state-filter');
+            const eventTypeFilter = document.getElementById('event-type-filter');
+            
+            if (parkFilter && parkFilter.value) {
+                params.set('park', parkFilter.value);
+            }
+            if (stateFilter && stateFilter.value) {
+                params.set('state', stateFilter.value);
+            }
+            if (eventTypeFilter && eventTypeFilter.value) {
+                params.set('event_type', eventTypeFilter.value);
+            }
+            
+            const url = `/api/events/search?${params.toString()}`;
+            
+            // Use HTMX to append to existing events grid
+            htmx.ajax('GET', url, {
+                target: '#events-results .events-grid',
+                swap: 'beforeend'
+            });
+        }
+
         function clearAllFilters() {
             // Reset all filter inputs - check if elements exist first
-            const eventSearch = document.getElementById('event-search');
             const parkFilter = document.getElementById('park-filter');
             const stateFilter = document.getElementById('state-filter');
             const eventTypeFilter = document.getElementById('event-type-filter');
             const dateRangeFilter = document.getElementById('date-range-filter');
-            const eventsResults = document.getElementById('events-results');
             
-            if (eventSearch) eventSearch.value = '';
             if (parkFilter) parkFilter.value = '';
             if (stateFilter) stateFilter.value = '';
             if (eventTypeFilter) eventTypeFilter.value = '';
             if (dateRangeFilter) dateRangeFilter.value = '';
             
-            // Trigger search with cleared filters only if events-results exists
-            if (eventsResults) {
-                htmx.ajax('GET', '/api/events/search', {
-                    target: '#events-results',
-                    swap: 'innerHTML'
-                });
+            // Reset calendar selection
+            selectedEndDate = null;
+            document.querySelectorAll('.calendar-day.selected').forEach(el => {
+                el.classList.remove('selected');
+            });
+            
+            // Trigger search with cleared filters
+            performEventSearch();
+        }
+
+        // Handle date range filter changes
+        function handleDateRangeChange(rangeValue) {
+            // Clear calendar selection when date range filter is used
+            selectedEndDate = null;
+            document.querySelectorAll('.calendar-day.selected').forEach(el => {
+                el.classList.remove('selected');
+            });
+            
+            // Update calendar display if needed
+            if (rangeValue === 'this-month' || rangeValue === 'next-month') {
+                // Update calendar to show relevant month
+                const today = new Date();
+                if (rangeValue === 'next-month') {
+                    currentDate = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+                } else {
+                    currentDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                }
+                updateCalendar();
+            }
+            
+            // Trigger search with new date range
+            performEventSearch();
+        }
+
+        // Add event listeners for filter controls
+        function setupFilterEventListeners() {
+            const parkFilter = document.getElementById('park-filter');
+            const stateFilter = document.getElementById('state-filter');
+            const eventTypeFilter = document.getElementById('event-type-filter');
+            const dateRangeFilter = document.getElementById('date-range-filter');
+            
+            if (parkFilter) {
+                parkFilter.addEventListener('change', () => performEventSearch());
+            }
+            if (stateFilter) {
+                stateFilter.addEventListener('change', () => performEventSearch());
+            }
+            if (eventTypeFilter) {
+                eventTypeFilter.addEventListener('change', () => performEventSearch());
+            }
+            if (dateRangeFilter) {
+                dateRangeFilter.addEventListener('change', (e) => handleDateRangeChange(e.target.value));
             }
         }
 
@@ -336,6 +525,7 @@
             // Small delay to ensure all HTMX requests have started
             setTimeout(() => {
                 initializeCalendar();
+                setupFilterEventListeners();
             }, 100);
         });
     </script>

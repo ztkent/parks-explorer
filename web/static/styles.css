@@ -4924,6 +4924,26 @@ html {
     opacity: 0.6;
 }
 
+.calendar-day.disabled {
+    background: var(--muted-background);
+    color: var(--muted-text);
+    cursor: not-allowed;
+    opacity: 0.4;
+}
+
+.calendar-help {
+    padding: 0.5rem 1rem;
+    background: var(--info-background);
+    border-left: 3px solid var(--text-tertiary);
+    margin: 0.5rem 0;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.calendar-help p {
+    margin: 0;
+}
+
 /* Events List Section */
 .events-list-section {
     background: var(--card-background);

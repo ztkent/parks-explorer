@@ -103,11 +103,7 @@
         {{if gt (atoi .EventsData.Total) (len .EventsData.Data)}}
         <div class="load-more-container">
             <button class="load-more-btn"
-                    hx-get="/api/events/search"
-                    hx-include=".filter-select, #event-search"
-                    hx-vals='{"page": "{{add (atoi .EventsData.PageNumber) 1}}"}'
-                    hx-target="#events-results .events-grid"
-                    hx-swap="beforeend">
+                    onclick="loadMoreEvents({{add (atoi .EventsData.PageNumber) 1}})">
                 Load More Events
             </button>
         </div>
