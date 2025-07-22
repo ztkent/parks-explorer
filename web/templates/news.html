@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>National Parks News - Parks Explorer</title>
+    
+    <!-- Favicon and App Icons -->
+    <link rel="icon" href="/static/assets/favicon.ico" sizes="any">
+    <link rel="icon" type="image/webp" sizes="16x16" href="/static/assets/favicon-16x16.webp">
+    <link rel="icon" type="image/webp" sizes="32x32" href="/static/assets/favicon-32x32.webp">
+    <link rel="icon" type="image/webp" sizes="48x48" href="/static/assets/favicon-48x48.webp">
+    <link rel="icon" type="image/webp" sizes="96x96" href="/static/assets/favicon-96x96.webp">
+    <link rel="icon" type="image/webp" sizes="144x144" href="/static/assets/favicon-144x144.webp">
+    
+    <!-- Fallback PNG icons for browsers that don't support WebP -->
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/assets/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/assets/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="/static/assets/favicon-96x96.png">
+    
+    <!-- Apple Touch Icon -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/assets/apple-touch-icon.webp">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/assets/apple-touch-icon.png">
+    
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/static/site.webmanifest">
+    
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#2d5016">
+    <meta name="msapplication-TileColor" content="#e2e2e2ff">
+    <meta name="msapplication-TileImage" content="/static/assets/favicon-144x144.webp">
+    
+    <link rel="stylesheet" href="/static/styles.css">
+    <script src="https://unpkg.com/htmx.org@2.0.3"></script>
+    <script>
+        // Trigger auth change event after page loads to refresh authentication status
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                document.body.dispatchEvent(new Event('authChange'));
+            }, 100);
+        });
+
+        // Add HTMX error handling
+        document.addEventListener('htmx:error', function(event) {
+            console.error('HTMX Error:', event.detail);
+        });
+
+        // Add HTMX before send event to debug requests
+        document.addEventListener('htmx:beforeSend', function(event) {
+            console.log('HTMX request to:', event.detail.xhr.responseURL || event.detail.pathInfo.requestPath);
+        });
+    </script>
+</head>
+<body>
+    <!-- Header loaded via HTMX -->
+    <div id="header-container"
+         hx-get="/api/templates/header"
+         hx-trigger="load once"
+         hx-headers='{"X-Current-Page": "news"}'
+         hx-swap="innerHTML">
+    </div>
+
+    <main class="news-page">
+        <!-- Hero Section -->
+        <section class="news-hero">
+            <div class="news-hero-content">
+                <h1 class="news-hero-title">National Parks News</h1>
+                <p class="news-hero-description">
+                    Stay informed with the latest news, alerts, and announcements from America's national parks. 
+                    Get updates on park conditions, new programs, conservation efforts, and important visitor information.
+                </p>
+            </div>
+        </section>
+
+        <!-- Filter Section -->
+        <section class="news-filters">
+            <div class="filters-container">
+                <!-- Filter Controls -->
+                <div class="filter-controls">
+                    <!-- Park Filter -->
+                    <div class="filter-group">
+                        <label for="park-filter">Park</label>
+                        <select id="park-filter" 
+                                name="park" 
+                                class="filter-select"
+                                hx-get="/api/news/search"
+                                hx-trigger="change"
+                                hx-target="#news-results"
+                                hx-include=".filter-select">
+                            <option value="">All Parks</option>
+                            {{range .Parks}}
+                            <option value="{{.ParkCode}}">{{.Name}}</option>
+                            {{end}}
+                        </select>
+                    </div>
+
+                    <!-- State Filter -->
+                    <div class="filter-group">
+                        <label for="state-filter">State</label>
+                        <select id="state-filter" 
+                                name="state" 
+                                class="filter-select"
+                                hx-get="/api/news/search"
+                                hx-trigger="change"
+                                hx-target="#news-results"
+                                hx-include=".filter-select">
+                            <option value="">All States</option>
+                            {{range .States}}
+                            <option value="{{.}}">{{.}}</option>
+                            {{end}}
+                        </select>
+                    </div>
+
+                    <!-- News Type Filter -->
+                    <div class="filter-group">
+                        <label for="news-type-filter">Content Type</label>
+                        <select id="news-type-filter" 
+                                name="news_type" 
+                                class="filter-select"
+                                hx-get="/api/news/search"
+                                hx-trigger="change"
+                                hx-target="#news-results"
+                                hx-include=".filter-select">
+                            <option value="">News Releases</option>
+                            <option value="articles">Articles</option>
+                            <option value="alerts">Alerts</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Results Section -->
+        <section class="news-results">
+            <div class="results-container">
+                <div id="news-results"
+                     hx-get="/api/news/search"
+                     hx-trigger="load once"
+                     hx-swap="innerHTML">
+                    <!-- News will be loaded here -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer loaded via HTMX -->
+    <div id="footer-container"
+         hx-get="/api/templates/footer"
+         hx-trigger="load once"
+         hx-swap="innerHTML">
+    </div>
+
+    <script src="/static/script.js"></script>
+    <script>
+        // Setup filter event listeners
+        function setupNewsFilterEventListeners() {
+            const parkFilter = document.getElementById('park-filter');
+            const stateFilter = document.getElementById('state-filter');
+            const newsTypeFilter = document.getElementById('news-type-filter');
+            
+            // Additional event listeners can be added here if needed
+        }
+
+        // Initialize news filters when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                setupNewsFilterEventListeners();
+            }, 100);
+        });
+    </script>
+</body>
+</html>

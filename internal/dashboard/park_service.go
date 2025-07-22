@@ -972,6 +972,46 @@ func (ps *ParkService) SearchThingsToDo(activityId, parkCode, stateCode, query s
 	return filteredResponse, nil
 }
 
+// SearchCampgrounds searches for campgrounds with filters
+func (ps *ParkService) SearchCampgrounds(query, parkCode, stateCode string, limit, start int) (*nps.CampgroundData, error) {
+	var parkCodes []string
+	var stateCodes []string
+
+	if parkCode != "" {
+		parkCodes = []string{parkCode}
+	}
+	if stateCode != "" {
+		stateCodes = []string{stateCode}
+	}
+
+	// Get campgrounds with optional filtering by park and state
+	return ps.npsApi.GetCampgrounds(parkCodes, stateCodes, query, limit, start, nil)
+}
+
+// SearchNews searches for news releases and articles with filters
+func (ps *ParkService) SearchNews(query, parkCode, stateCode, newsType string, limit, start int) (interface{}, error) {
+	var parkCodes []string
+	var stateCodes []string
+
+	if parkCode != "" {
+		parkCodes = []string{parkCode}
+	}
+	if stateCode != "" {
+		stateCodes = []string{stateCode}
+	}
+
+	// Based on newsType, return either news releases, articles, or alerts
+	switch newsType {
+	case "articles":
+		return ps.npsApi.GetArticles(parkCodes, stateCodes, query, limit, start)
+	case "alerts":
+		return ps.npsApi.GetAlerts(parkCodes, stateCodes, query, limit, start)
+	default:
+		// Default to news releases
+		return ps.npsApi.GetNewsReleases(parkCodes, stateCodes, query, limit, start, nil)
+	}
+}
+
 // createSlug creates a URL-friendly slug from text
 func createSlug(text string) string {
 	// Convert to lowercase and replace spaces/special chars with hyphens

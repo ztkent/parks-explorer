@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camping in National Parks - Parks Explorer</title>
+    
+    <!-- Favicon and App Icons -->
+    <link rel="icon" href="/static/assets/favicon.ico" sizes="any">
+    <link rel="icon" type="image/webp" sizes="16x16" href="/static/assets/favicon-16x16.webp">
+    <link rel="icon" type="image/webp" sizes="32x32" href="/static/assets/favicon-32x32.webp">
+    <link rel="icon" type="image/webp" sizes="48x48" href="/static/assets/favicon-48x48.webp">
+    <link rel="icon" type="image/webp" sizes="96x96" href="/static/assets/favicon-96x96.webp">
+    <link rel="icon" type="image/webp" sizes="144x144" href="/static/assets/favicon-144x144.webp">
+    
+    <!-- Fallback PNG icons for browsers that don't support WebP -->
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/assets/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/assets/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="/static/assets/favicon-96x96.png">
+    
+    <!-- Apple Touch Icon -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/assets/apple-touch-icon.webp">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/assets/apple-touch-icon.png">
+    
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/static/site.webmanifest">
+    
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#2d5016">
+    <meta name="msapplication-TileColor" content="#e2e2e2ff">
+    <meta name="msapplication-TileImage" content="/static/assets/favicon-144x144.webp">
+    
+    <link rel="stylesheet" href="/static/styles.css">
+    <script src="https://unpkg.com/htmx.org@2.0.3"></script>
+    <script>
+        // Trigger auth change event after page loads to refresh authentication status
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                document.body.dispatchEvent(new Event('authChange'));
+            }, 100);
+        });
+
+        // Add HTMX error handling
+        document.addEventListener('htmx:error', function(event) {
+            console.error('HTMX Error:', event.detail);
+        });
+
+        // Add HTMX before send event to debug requests
+        document.addEventListener('htmx:beforeSend', function(event) {
+            console.log('HTMX request to:', event.detail.xhr.responseURL || event.detail.pathInfo.requestPath);
+        });
+    </script>
+</head>
+<body>
+    <!-- Header loaded via HTMX -->
+    <div id="header-container"
+         hx-get="/api/templates/header"
+         hx-trigger="load once"
+         hx-headers='{"X-Current-Page": "camping"}'
+         hx-swap="innerHTML">
+    </div>
+
+    <main class="camping-page">
+        <!-- Hero Section -->
+        <section class="camping-hero">
+            <div class="camping-hero-content">
+                <h1 class="camping-hero-title">Camping in National Parks</h1>
+                <p class="camping-hero-description">
+                    Discover amazing campgrounds in national parks across the country. From backcountry sites 
+                    to RV-friendly facilities, find the perfect place to spend the night under the stars.
+                </p>
+            </div>
+        </section>
+
+        <!-- Filter Section -->
+        <section class="camping-filters">
+            <div class="filters-container">
+                <!-- Filter Controls -->
+                <div class="filter-controls">
+                    <!-- Park Filter -->
+                    <div class="filter-group">
+                        <label for="park-filter">Park</label>
+                        <select id="park-filter" 
+                                name="park" 
+                                class="filter-select"
+                                hx-get="/api/camping/search"
+                                hx-trigger="change"
+                                hx-target="#camping-results"
+                                hx-include=".filter-select">
+                            <option value="">All Parks</option>
+                            {{range .Parks}}
+                            <option value="{{.ParkCode}}">{{.Name}}</option>
+                            {{end}}
+                        </select>
+                    </div>
+
+                    <!-- State Filter -->
+                    <div class="filter-group">
+                        <label for="state-filter">State</label>
+                        <select id="state-filter" 
+                                name="state" 
+                                class="filter-select"
+                                hx-get="/api/camping/search"
+                                hx-trigger="change"
+                                hx-target="#camping-results"
+                                hx-include=".filter-select">
+                            <option value="">All States</option>
+                            {{range .States}}
+                            <option value="{{.}}">{{.}}</option>
+                            {{end}}
+                        </select>
+                    </div>
+
+                    <!-- Amenity Filter -->
+                    <div class="filter-group">
+                        <label for="amenity-filter">Amenities</label>
+                        <select id="amenity-filter" 
+                                name="amenity_type" 
+                                class="filter-select"
+                                hx-get="/api/camping/search"
+                                hx-trigger="change"
+                                hx-target="#camping-results"
+                                hx-include=".filter-select">
+                            <option value="">All Amenities</option>
+                            <option value="showers">Showers</option>
+                            <option value="dump_station">Dump Station</option>
+                            <option value="laundry">Laundry</option>
+                            <option value="camp_store">Camp Store</option>
+                            <option value="rv_hookups">RV Hookups</option>
+                            <option value="reservable">Reservable Sites</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Results Section -->
+        <section class="camping-results">
+            <div class="results-container">
+                <div id="camping-results"
+                     hx-get="/api/camping/search"
+                     hx-trigger="load once"
+                     hx-swap="innerHTML">
+                    <!-- Campgrounds will be loaded here -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer loaded via HTMX -->
+    <div id="footer-container"
+         hx-get="/api/templates/footer"
+         hx-trigger="load once"
+         hx-swap="innerHTML">
+    </div>
+
+    <script src="/static/script.js"></script>
+    <script>
+        // Setup filter event listeners
+        function setupCampingFilterEventListeners() {
+            const parkFilter = document.getElementById('park-filter');
+            const stateFilter = document.getElementById('state-filter');
+            const amenityFilter = document.getElementById('amenity-filter');
+            
+            // Additional event listeners can be added here if needed
+        }
+
+        // Initialize camping filters when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                setupCampingFilterEventListeners();
+            }, 100);
+        });
+    </script>
+</body>
+</html>

@@ -21,6 +21,159 @@ import (
 	"github.com/ztkent/nps-dashboard/internal/database"
 )
 
+// UnifiedNewsItem represents a normalized news item that can handle NewsRelease, Article, and Alert types
+type UnifiedNewsItem struct {
+	ID           string               `json:"id"`
+	Title        string               `json:"title"`
+	URL          string               `json:"url"`
+	Description  string               `json:"description"`
+	ReleaseDate  string               `json:"releaseDate,omitempty"`
+	Image        *UnifiedImageInfo    `json:"image,omitempty"`
+	RelatedParks []UnifiedRelatedPark `json:"relatedParks,omitempty"`
+	Category     string               `json:"category,omitempty"` // For alerts
+}
+
+// UnifiedImageInfo represents normalized image information
+type UnifiedImageInfo struct {
+	URL     string `json:"url"`
+	AltText string `json:"altText"`
+	Title   string `json:"title"`
+}
+
+// UnifiedRelatedPark represents normalized related park information
+type UnifiedRelatedPark struct {
+	Name        string `json:"name"`
+	ParkCode    string `json:"parkCode"`
+	States      string `json:"states"`
+	FullName    string `json:"fullName"`
+	URL         string `json:"url"`
+	Designation string `json:"designation"`
+}
+
+// UnifiedNewsData represents the normalized response structure
+type UnifiedNewsData struct {
+	Total string            `json:"total"`
+	Data  []UnifiedNewsItem `json:"data"`
+	Limit string            `json:"limit"`
+	Start string            `json:"start"`
+}
+
+// normalizeNewsReleaseData converts NewsReleaseResponse to UnifiedNewsData
+func normalizeNewsReleaseData(data *nps.NewsReleaseResponse) *UnifiedNewsData {
+	unified := &UnifiedNewsData{
+		Total: data.Total,
+		Limit: data.Limit,
+		Start: data.Start,
+		Data:  make([]UnifiedNewsItem, len(data.Data)),
+	}
+
+	for i, item := range data.Data {
+		unifiedItem := UnifiedNewsItem{
+			ID:          item.ID,
+			Title:       item.Title,
+			URL:         item.Url,
+			Description: item.Abstract,
+			ReleaseDate: item.ReleaseDate,
+		}
+
+		// Handle image
+		if item.Image.Url != "" {
+			unifiedItem.Image = &UnifiedImageInfo{
+				URL:     item.Image.Url,
+				AltText: item.Image.AltText,
+				Title:   item.Image.Title,
+			}
+		}
+
+		// Handle related parks
+		unifiedItem.RelatedParks = make([]UnifiedRelatedPark, len(item.RelatedParks))
+		for j, park := range item.RelatedParks {
+			unifiedItem.RelatedParks[j] = UnifiedRelatedPark{
+				Name:        park.Name,
+				ParkCode:    park.ParkCode,
+				States:      park.States,
+				FullName:    park.FullName,
+				URL:         park.Url,
+				Designation: park.Designation,
+			}
+		}
+
+		unified.Data[i] = unifiedItem
+	}
+
+	return unified
+}
+
+// normalizeArticleData converts ArticleData to UnifiedNewsData
+func normalizeArticleData(data *nps.ArticleData) *UnifiedNewsData {
+	unified := &UnifiedNewsData{
+		Total: data.Total,
+		Limit: data.Limit,
+		Start: data.Start,
+		Data:  make([]UnifiedNewsItem, len(data.Data)),
+	}
+
+	for i, item := range data.Data {
+		unifiedItem := UnifiedNewsItem{
+			ID:          item.ID,
+			Title:       item.Title,
+			URL:         item.URL,
+			Description: item.ListingDescription,
+		}
+
+		// Handle listing image
+		if item.ListingImage.URL != "" {
+			unifiedItem.Image = &UnifiedImageInfo{
+				URL:     item.ListingImage.URL,
+				AltText: item.ListingImage.AltText,
+				Title:   item.ListingImage.Title,
+			}
+		}
+
+		// Handle related parks
+		unifiedItem.RelatedParks = make([]UnifiedRelatedPark, len(item.RelatedParks))
+		for j, park := range item.RelatedParks {
+			unifiedItem.RelatedParks[j] = UnifiedRelatedPark{
+				Name:        park.Name,
+				ParkCode:    park.ParkCode,
+				States:      park.States,
+				FullName:    park.FullName,
+				URL:         park.URL,
+				Designation: park.Designation,
+			}
+		}
+
+		unified.Data[i] = unifiedItem
+	}
+
+	return unified
+}
+
+// normalizeAlertData converts AlertResponse to UnifiedNewsData
+func normalizeAlertData(data *nps.AlertResponse) *UnifiedNewsData {
+	unified := &UnifiedNewsData{
+		Total: data.Total,
+		Limit: data.Limit,
+		Start: data.Start,
+		Data:  make([]UnifiedNewsItem, len(data.Data)),
+	}
+
+	for i, item := range data.Data {
+		unifiedItem := UnifiedNewsItem{
+			ID:          item.ID,
+			Title:       item.Title,
+			URL:         item.URL,
+			Description: item.Description,
+			Category:    item.Category,
+		}
+
+		// Alerts don't have images or related parks in the current structure
+		unified.Data[i] = unifiedItem
+	}
+
+	return unified
+}
+
 // ParkPageData represents the data structure for the park page template
 type ParkPageData struct {
 	Name        string
@@ -1197,6 +1350,395 @@ func (dm *Dashboard) EventsSearchHandler(w http.ResponseWriter, r *http.Request)
 	if err := tmpl.Execute(w, data); err != nil {
 		log.Printf("Error executing events results template: %v", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
+	}
+}
+
+// CampingPageHandler returns the full Camping page
+func (dm *Dashboard) CampingPageHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html")
+
+	// Get available parks for filter dropdown
+	parks, err := dm.parkService.GetAllParks()
+	if err != nil {
+		log.Printf("Failed to get parks for Camping page: %v", err)
+		parks = []database.CachedPark{}
+	}
+
+	// Get unique states from parks
+	statesMap := make(map[string]bool)
+	for _, park := range parks {
+		states := strings.Split(park.States, ",")
+		for _, state := range states {
+			state = strings.TrimSpace(state)
+			if state != "" {
+				statesMap[state] = true
+			}
+		}
+	}
+
+	states := make([]string, 0, len(statesMap))
+	for state := range statesMap {
+		states = append(states, state)
+	}
+
+	// Sort states alphabetically
+	sort.Strings(states)
+
+	// Execute the template with parks and states data
+	data := map[string]interface{}{
+		"CurrentPage": "camping",
+		"Parks":       parks,
+		"States":      states,
+	}
+
+	// Load and parse the camping template
+	tmpl, err := template.ParseFiles("web/templates/camping.html")
+	if err != nil {
+		log.Printf("Error parsing camping template: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	if err := tmpl.Execute(w, data); err != nil {
+		log.Printf("Error executing camping template: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+	}
+}
+
+// CampingSearchHandler handles search and filtering for campgrounds
+func (dm *Dashboard) CampingSearchHandler(w http.ResponseWriter, r *http.Request) {
+	// Parse query parameters
+	query := r.URL.Query().Get("q")
+	parkCode := r.URL.Query().Get("park")
+	stateCode := r.URL.Query().Get("state")
+	amenityType := r.URL.Query().Get("amenity_type")
+
+	limitStr := r.URL.Query().Get("limit")
+	startStr := r.URL.Query().Get("start")
+
+	limit := 50
+	start := 0
+
+	if limitStr != "" {
+		if l, err := strconv.Atoi(limitStr); err == nil {
+			limit = l
+		}
+	}
+	if startStr != "" {
+		if s, err := strconv.Atoi(startStr); err == nil {
+			start = s
+		}
+	}
+
+	// Search campgrounds using the park service
+	campgroundsData, err := dm.parkService.SearchCampgrounds(query, parkCode, stateCode, limit, start)
+	if err != nil {
+		log.Printf("Error searching campgrounds: %v", err)
+		http.Error(w, "Error searching campgrounds", http.StatusInternalServerError)
+		return
+	}
+
+	// Filter by amenity type if specified
+	if amenityType != "" {
+		filteredData := []nps.Campground{}
+		for _, campground := range campgroundsData.Data {
+			if matchesCampgroundAmenity(campground, amenityType) {
+				filteredData = append(filteredData, campground)
+			}
+		}
+		campgroundsData.Data = filteredData
+		campgroundsData.Total = fmt.Sprintf("%d", len(filteredData))
+	}
+
+	// Create template data
+	data := struct {
+		CampgroundsData *nps.CampgroundData
+	}{
+		CampgroundsData: campgroundsData,
+	}
+
+	// Load and parse the camping results template
+	tmpl, err := template.New("camping-results.html").Funcs(template.FuncMap{
+		"unescapeHTML": func(s string) template.HTML {
+			return template.HTML(s)
+		},
+		"formatCampgroundFee": func(fees []struct {
+			Cost        string `json:"cost"`
+			Description string `json:"description"`
+			Title       string `json:"title"`
+		}) string {
+			if len(fees) == 0 {
+				return "Contact campground for fee information"
+			}
+			return fees[0].Cost
+		},
+		"formatCampgroundAmenities": func(amenities struct {
+			TrashRecyclingCollection   string   `json:"trashRecyclingCollection"`
+			Toilets                    []string `json:"toilets"`
+			InternetConnectivity       string   `json:"internetConnectivity"`
+			Showers                    []string `json:"showers"`
+			CellPhoneReception         string   `json:"cellPhoneReception"`
+			Laundry                    string   `json:"laundry"`
+			Amphitheater               string   `json:"amphitheater"`
+			DumpStation                string   `json:"dumpStation"`
+			CampStore                  string   `json:"campStore"`
+			StaffOrVolunteerHostOnsite string   `json:"staffOrVolunteerHostOnsite"`
+			PotableWater               []string `json:"potableWater"`
+			IceAvailableForSale        string   `json:"iceAvailableForSale"`
+			FirewoodForSale            string   `json:"firewoodForSale"`
+			FoodStorageLockers         string   `json:"foodStorageLockers"`
+		}) []string {
+			var result []string
+			if amenities.Toilets != nil && len(amenities.Toilets) > 0 {
+				result = append(result, "Toilets")
+			}
+			if amenities.Showers != nil && len(amenities.Showers) > 0 {
+				result = append(result, "Showers")
+			}
+			if amenities.DumpStation == "true" {
+				result = append(result, "Dump Station")
+			}
+			if amenities.CampStore == "true" {
+				result = append(result, "Camp Store")
+			}
+			if amenities.Laundry == "true" {
+				result = append(result, "Laundry")
+			}
+			if amenities.Amphitheater == "true" {
+				result = append(result, "Amphitheater")
+			}
+			return result
+		},
+		"fullImageURL": func(url string) string {
+			if strings.HasPrefix(url, "http") {
+				return url
+			}
+			if strings.HasPrefix(url, "/") {
+				return "https://www.nps.gov" + url
+			}
+			return url
+		},
+		"truncate": func(s string, length int) string {
+			if len(s) <= length {
+				return s
+			}
+			return s[:length] + "..."
+		},
+		"atoi": func(s string) int {
+			if i, err := strconv.Atoi(s); err == nil {
+				return i
+			}
+			return 0
+		},
+		"add": func(a, b int) int {
+			return a + b
+		},
+	}).ParseFiles("web/templates/partials/camping-results.html")
+
+	if err != nil {
+		log.Printf("Error parsing camping results template: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html")
+	if err := tmpl.Execute(w, data); err != nil {
+		log.Printf("Error executing camping results template: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+	}
+}
+
+// NewsPageHandler returns the full News page
+func (dm *Dashboard) NewsPageHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html")
+
+	// Get available parks for filter dropdown
+	parks, err := dm.parkService.GetAllParks()
+	if err != nil {
+		log.Printf("Failed to get parks for News page: %v", err)
+		parks = []database.CachedPark{}
+	}
+
+	// Get unique states from parks
+	statesMap := make(map[string]bool)
+	for _, park := range parks {
+		states := strings.Split(park.States, ",")
+		for _, state := range states {
+			state = strings.TrimSpace(state)
+			if state != "" {
+				statesMap[state] = true
+			}
+		}
+	}
+
+	states := make([]string, 0, len(statesMap))
+	for state := range statesMap {
+		states = append(states, state)
+	}
+
+	// Sort states alphabetically
+	sort.Strings(states)
+
+	// Execute the template with parks and states data
+	data := map[string]interface{}{
+		"CurrentPage": "news",
+		"Parks":       parks,
+		"States":      states,
+	}
+
+	// Load and parse the news template
+	tmpl, err := template.ParseFiles("web/templates/news.html")
+	if err != nil {
+		log.Printf("Error parsing news template: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	if err := tmpl.Execute(w, data); err != nil {
+		log.Printf("Error executing news template: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+	}
+}
+
+// NewsSearchHandler handles search and filtering for news
+func (dm *Dashboard) NewsSearchHandler(w http.ResponseWriter, r *http.Request) {
+	// Parse query parameters
+	query := r.URL.Query().Get("q")
+	parkCode := r.URL.Query().Get("park")
+	stateCode := r.URL.Query().Get("state")
+	newsType := r.URL.Query().Get("news_type")
+
+	limitStr := r.URL.Query().Get("limit")
+	startStr := r.URL.Query().Get("start")
+
+	limit := 50
+	start := 0
+
+	if limitStr != "" {
+		if l, err := strconv.Atoi(limitStr); err == nil {
+			limit = l
+		}
+	}
+	if startStr != "" {
+		if s, err := strconv.Atoi(startStr); err == nil {
+			start = s
+		}
+	}
+
+	// Search news using the park service
+	newsData, err := dm.parkService.SearchNews(query, parkCode, stateCode, newsType, limit, start)
+	if err != nil {
+		log.Printf("Error searching news: %v", err)
+		http.Error(w, "Error searching news", http.StatusInternalServerError)
+		return
+	}
+
+	// Normalize the different data types into a unified structure
+	var unifiedData *UnifiedNewsData
+	switch newsType {
+	case "articles":
+		if articleData, ok := newsData.(*nps.ArticleData); ok {
+			unifiedData = normalizeArticleData(articleData)
+		}
+	case "alerts":
+		if alertData, ok := newsData.(*nps.AlertResponse); ok {
+			unifiedData = normalizeAlertData(alertData)
+		}
+	default:
+		// Default to news releases
+		if newsReleaseData, ok := newsData.(*nps.NewsReleaseResponse); ok {
+			unifiedData = normalizeNewsReleaseData(newsReleaseData)
+		}
+	}
+
+	// Handle case where normalization failed
+	if unifiedData == nil {
+		log.Printf("Failed to normalize news data for type: %s", newsType)
+		unifiedData = &UnifiedNewsData{
+			Total: "0",
+			Data:  []UnifiedNewsItem{},
+			Limit: strconv.Itoa(limit),
+			Start: strconv.Itoa(start),
+		}
+	}
+
+	// Create template data
+	data := struct {
+		NewsData *UnifiedNewsData
+	}{
+		NewsData: unifiedData,
+	}
+
+	// Load and parse the news results template
+	tmpl, err := template.New("news-results.html").Funcs(template.FuncMap{
+		"unescapeHTML": func(s string) template.HTML {
+			return template.HTML(s)
+		},
+		"formatNewsDate": func(dateStr string) string {
+			if t, err := time.Parse("2006-01-02", dateStr); err == nil {
+				return t.Format("January 2, 2006")
+			}
+			if t, err := time.Parse("2006-01-02T15:04:05Z", dateStr); err == nil {
+				return t.Format("January 2, 2006")
+			}
+			return dateStr
+		},
+		"fullImageURL": func(url string) string {
+			if strings.HasPrefix(url, "http") {
+				return url
+			}
+			if strings.HasPrefix(url, "/") {
+				return "https://www.nps.gov" + url
+			}
+			return url
+		},
+		"truncate": func(s string, length int) string {
+			if len(s) <= length {
+				return s
+			}
+			return s[:length] + "..."
+		},
+		"atoi": func(s string) int {
+			if i, err := strconv.Atoi(s); err == nil {
+				return i
+			}
+			return 0
+		},
+		"add": func(a, b int) int {
+			return a + b
+		},
+	}).ParseFiles("web/templates/partials/news-results.html")
+
+	if err != nil {
+		log.Printf("Error parsing news results template: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html")
+	if err := tmpl.Execute(w, data); err != nil {
+		log.Printf("Error executing news results template: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+	}
+}
+
+// Helper function to match campground amenity types
+func matchesCampgroundAmenity(campground nps.Campground, amenityType string) bool {
+	switch amenityType {
+	case "showers":
+		return len(campground.Amenities.Showers) > 0
+	case "dump_station":
+		return campground.Amenities.DumpStation == "true"
+	case "laundry":
+		return campground.Amenities.Laundry == "true"
+	case "camp_store":
+		return campground.Amenities.CampStore == "true"
+	case "rv_hookups":
+		return campground.Campsites.ElectricalHookups != "0" && campground.Campsites.ElectricalHookups != ""
+	case "reservable":
+		return campground.NumberOfSitesReservable != "0" && campground.NumberOfSitesReservable != ""
+	default:
+		return true
 	}
 }
 

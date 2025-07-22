@@ -63,6 +63,8 @@ func DefineRoutes(r *chi.Mux, dashManager *dashboard.Dashboard, cache *replay.Ca
 	r.Get("/", dashManager.HomeHandler())
 	r.Get("/things-to-do", cache.MiddlewareFunc(dashManager.ThingsToDoPageHandler))
 	r.Get("/events", cache.MiddlewareFunc(dashManager.EventsPageHandler))
+	r.Get("/camping", cache.MiddlewareFunc(dashManager.CampingPageHandler))
+	r.Get("/news", cache.MiddlewareFunc(dashManager.NewsPageHandler))
 	r.Get("/parks/{slug}", cache.MiddlewareFunc(dashManager.ParkPageHandler))
 	r.Get("/static/*", dashManager.StaticFileHandler())
 
@@ -87,6 +89,12 @@ func DefineRoutes(r *chi.Mux, dashManager *dashboard.Dashboard, cache *replay.Ca
 		// Events routes
 		r.Get("/events/search", cache.MiddlewareFunc(dashManager.EventsSearchHandler))
 		r.Get("/events/{eventID}/details", cache.MiddlewareFunc(dashManager.EventDetailsHandler))
+
+		// Camping routes
+		r.Get("/camping/search", cache.MiddlewareFunc(dashManager.CampingSearchHandler))
+
+		// News routes
+		r.Get("/news/search", cache.MiddlewareFunc(dashManager.NewsSearchHandler))
 
 		// Park tab content routes
 		r.Get("/parks/{parkCode}/overview", cache.MiddlewareFunc(dashManager.ParkOverviewHandler))

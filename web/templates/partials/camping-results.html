@@ -1,0 +1,179 @@
+{{if .CampgroundsData.Data}}
+    <div class="camping-grid">
+        <div class="camping-grid-header">
+            <h2 class="results-title">Campgrounds ({{.CampgroundsData.Total}} found)</h2>
+            <p class="results-description">
+                Discover amazing camping opportunities in national parks across the country.
+            </p>
+        </div>
+        
+        <div class="campgrounds-list">
+            {{range .CampgroundsData.Data}}
+            <div class="campground-card">
+                {{if .Images}}
+                    {{range $index, $image := .Images}}
+                        {{if eq $index 0}}
+                        <div class="campground-image">
+                            <img src="{{fullImageURL $image.URL}}" 
+                                 alt="{{$image.AltText}}" 
+                                 title="{{$image.Title}}"
+                                 loading="lazy">
+                        </div>
+                        {{end}}
+                    {{end}}
+                {{else}}
+                <div class="campground-image campground-image-placeholder">
+                    <div class="placeholder-content">
+                        <svg viewBox="0 0 24 24" width="48" height="48" fill="currentColor">
+                            <path d="M14,6L10.25,11L13.1,14.8L11.5,16C9.81,13.75 7,10.85 7,8.5A5,5 0 0,1 12,3.5A5,5 0 0,1 17,8.5C17,10.85 14.19,13.75 12.5,16L10.9,14.8L13.75,11L10,6H14M17,1H7A2,2 0 0,0 5,3V21A2,2 0 0,0 7,23H17A2,2 0 0,0 19,21V3A2,2 0 0,0 17,1Z"/>
+                        </svg>
+                        <span>No Image Available</span>
+                    </div>
+                </div>
+                {{end}}
+
+                <div class="campground-content">
+                    <div class="campground-header">
+                        <h3 class="campground-name">{{.Name}}</h3>
+                        {{if .Fees}}
+                        <div class="campground-fee">{{formatCampgroundFee .Fees}}</div>
+                        {{end}}
+                    </div>
+
+                    {{if .Description}}
+                    <p class="campground-description">
+                        {{truncate .Description 200}}
+                    </p>
+                    {{end}}
+
+                    <div class="campground-details">
+                        {{if .Campsites.TotalSites}}
+                        <div class="detail-item">
+                            <strong>Total Sites:</strong> {{.Campsites.TotalSites}}
+                        </div>
+                        {{end}}
+
+                        {{if .NumberOfSitesReservable}}
+                            {{if ne .NumberOfSitesReservable "0"}}
+                            <div class="detail-item">
+                                <strong>Reservable Sites:</strong> {{.NumberOfSitesReservable}}
+                            </div>
+                            {{end}}
+                        {{end}}
+
+                        {{if .NumberOfSitesFirstComeFirstServe}}
+                            {{if ne .NumberOfSitesFirstComeFirstServe "0"}}
+                            <div class="detail-item">
+                                <strong>First-Come Sites:</strong> {{.NumberOfSitesFirstComeFirstServe}}
+                            </div>
+                            {{end}}
+                        {{end}}
+                    </div>
+
+                    <!-- Amenities -->
+                    {{$amenities := formatCampgroundAmenities .Amenities}}
+                    {{if $amenities}}
+                    <div class="campground-amenities">
+                        <strong>Available Amenities:</strong>
+                        <div class="amenities-list">
+                            {{range $amenities}}
+                            <span class="amenity-tag">{{.}}</span>
+                            {{end}}
+                        </div>
+                    </div>
+                    {{end}}
+
+                    <!-- Site Types -->
+                    {{if or .Campsites.TentOnly .Campsites.RvOnly .Campsites.ElectricalHookups}}
+                    <div class="campground-site-types">
+                        <strong>Site Types:</strong>
+                        <div class="site-types-list">
+                            {{if .Campsites.TentOnly}}
+                                {{if ne .Campsites.TentOnly "0"}}
+                                <span class="site-type-tag">Tent Only ({{.Campsites.TentOnly}})</span>
+                                {{end}}
+                            {{end}}
+                            {{if .Campsites.RvOnly}}
+                                {{if ne .Campsites.RvOnly "0"}}
+                                <span class="site-type-tag">RV Only ({{.Campsites.RvOnly}})</span>
+                                {{end}}
+                            {{end}}
+                            {{if .Campsites.ElectricalHookups}}
+                                {{if ne .Campsites.ElectricalHookups "0"}}
+                                <span class="site-type-tag">Electric Hookups ({{.Campsites.ElectricalHookups}})</span>
+                                {{end}}
+                            {{end}}
+                        </div>
+                    </div>
+                    {{end}}
+
+                    <div class="campground-actions">
+                        {{if .URL}}
+                        <a href="{{.URL}}" target="_blank" rel="noopener" class="campground-link primary-btn">
+                            View Details
+                        </a>
+                        {{end}}
+                        {{if .ReservationUrl}}
+                        <a href="{{.ReservationUrl}}" target="_blank" rel="noopener" class="campground-link secondary-btn">
+                            Make Reservation
+                        </a>
+                        {{end}}
+                        {{if .DirectionsUrl}}
+                        <a href="{{.DirectionsUrl}}" target="_blank" rel="noopener" class="campground-link tertiary-btn">
+                            Directions
+                        </a>
+                        {{end}}
+                    </div>
+                </div>
+            </div>
+            {{end}}
+        </div>
+
+        <!-- Load More Button (if there are more results) -->
+        {{if gt (atoi .CampgroundsData.Total) (add (atoi .CampgroundsData.Start) (len .CampgroundsData.Data))}}
+        <div class="load-more-section">
+            <button class="load-more-btn" onclick="loadMoreCampgrounds({{add (atoi .CampgroundsData.Start) (len .CampgroundsData.Data)}})">
+                Load More Campgrounds
+            </button>
+        </div>
+        {{end}}
+    </div>
+{{else}}
+    <div class="no-results">
+        <div class="no-results-icon">🏕️</div>
+        <h3 class="no-results-title">No campgrounds found</h3>
+        <p class="no-results-message">
+            We couldn't find any campgrounds matching your search criteria. Try adjusting your filters or search terms.
+        </p>
+    </div>
+{{end}}
+
+<script>
+function loadMoreCampgrounds(start) {
+    const params = new URLSearchParams();
+    params.set('start', start.toString());
+    
+    // Include current filter values
+    const parkFilter = document.getElementById('park-filter');
+    const stateFilter = document.getElementById('state-filter');
+    const amenityFilter = document.getElementById('amenity-filter');
+    
+    if (parkFilter && parkFilter.value) {
+        params.set('park', parkFilter.value);
+    }
+    if (stateFilter && stateFilter.value) {
+        params.set('state', stateFilter.value);
+    }
+    if (amenityFilter && amenityFilter.value) {
+        params.set('amenity_type', amenityFilter.value);
+    }
+    
+    const url = `/api/camping/search?${params.toString()}`;
+    
+    // Use HTMX to append to existing campgrounds list
+    htmx.ajax('GET', url, {
+        target: '.campgrounds-list',
+        swap: 'beforeend'
+    });
+}
+</script>
