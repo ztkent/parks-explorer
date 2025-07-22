@@ -1489,10 +1489,10 @@ func (dm *Dashboard) CampingSearchHandler(w http.ResponseWriter, r *http.Request
 			FoodStorageLockers         string   `json:"foodStorageLockers"`
 		}) []string {
 			var result []string
-			if amenities.Toilets != nil && len(amenities.Toilets) > 0 {
+			if len(amenities.Toilets) > 0 {
 				result = append(result, "Toilets")
 			}
-			if amenities.Showers != nil && len(amenities.Showers) > 0 {
+			if len(amenities.Showers) > 0 {
 				result = append(result, "Showers")
 			}
 			if amenities.DumpStation == "true" {
