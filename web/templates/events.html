@@ -132,8 +132,15 @@
                             <option value="this-week">This Week</option>
                             <option value="this-month">This Month</option>
                             <option value="next-month">Next Month</option>
-                            <option value="custom">Custom Range</option>
                         </select>
+                    </div>
+                </div>
+
+                <!-- Date Range Display -->
+                <div class="current-date-range" id="current-date-range">
+                    <div class="date-range-info">
+                        <span class="date-range-label">Showing events:</span>
+                        <span class="date-range-value" id="date-range-display">Today to 3 months from now</span>
                     </div>
                 </div>
             </div>
@@ -196,6 +203,7 @@
             }
             updateCalendar();
             loadEventsFromTodayToDefault();
+            updateDateRangeDisplay();
         }
 
         function navigateMonth(direction) {
@@ -303,6 +311,62 @@
             
             // Load events using centralized function
             performEventSearch();
+            
+            // Update date range display
+            updateDateRangeDisplay();
+        }
+
+        // Update the displayed date range based on current selections
+        function updateDateRangeDisplay() {
+            const dateRangeDisplay = document.getElementById('date-range-display');
+            if (!dateRangeDisplay) {
+                return;
+            }
+            
+            const today = new Date();
+            const dateRangeFilter = document.getElementById('date-range-filter');
+            let displayText = 'Today to 3 months from now'; // Default text
+            
+            if (selectedEndDate) {
+                // Calendar selection takes precedence
+                const startFormatted = formatDisplayDate(today);
+                const endFormatted = formatDisplayDate(selectedEndDate);
+                displayText = `${startFormatted} to ${endFormatted}`;
+            } else if (dateRangeFilter && dateRangeFilter.value) {
+                // Use dropdown selection
+                switch (dateRangeFilter.value) {
+                    case 'today':
+                        displayText = 'Today only';
+                        break;
+                    case 'this-week':
+                        displayText = 'This week';
+                        break;
+                    case 'this-month':
+                        displayText = 'This month';
+                        break;
+                    case 'next-month':
+                        displayText = 'Today to end of next month';
+                        break;
+                    case 'custom':
+                        displayText = 'Custom date range';
+                        break;
+                    default:
+                        displayText = 'Today to 3 months from now';
+                }
+            }
+            
+            dateRangeDisplay.textContent = displayText;
+        }
+
+        // Format date for display in the date range
+        function formatDisplayDate(date) {
+            const options = { 
+                weekday: 'short', 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+            };
+            return date.toLocaleDateString('en-US', options);
         }
 
         function loadEventsFromTodayToDefault() {
@@ -493,6 +557,9 @@
             
             // Trigger search with cleared filters
             performEventSearch();
+            
+            // Update date range display
+            updateDateRangeDisplay();
         }
 
         // Handle date range filter changes
@@ -517,6 +584,9 @@
             
             // Trigger search with new date range
             performEventSearch();
+            
+            // Update date range display
+            updateDateRangeDisplay();
         }
 
         // Add event listeners for filter controls
@@ -546,6 +616,8 @@
             setTimeout(() => {
                 initializeCalendar();
                 setupFilterEventListeners();
+                // Also initialize the date range display in case calendar isn't ready yet
+                setTimeout(updateDateRangeDisplay, 200);
             }, 100);
         });
     </script>

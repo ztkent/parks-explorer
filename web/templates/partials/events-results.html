@@ -1,14 +1,5 @@
 <div class="events-container">
     {{if and .EventsData .EventsData.Data (gt (len .EventsData.Data) 0)}}
-        <!-- Results Header -->
-        <div class="results-header">
-            <h2>Found {{.EventsData.Total}} Events</h2>
-            <div class="results-info">
-                Showing {{len .EventsData.Data}} events
-                {{if .DateRange}}for {{.DateRange}}{{end}}
-            </div>
-        </div>
-
         <!-- Events Grid -->
         <div class="events-grid">
             {{range .EventsData.Data}}
@@ -187,9 +178,6 @@
                 <div class="empty-state-icon">📅</div>
                 <h2>No Events Found</h2>
                 <p>Try adjusting your search criteria or date range to find more events.</p>
-                <button class="clear-filters-btn" onclick="clearAllFilters()">
-                    Clear All Filters
-                </button>
             </div>
         </div>
     {{end}}

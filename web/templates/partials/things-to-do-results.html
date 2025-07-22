@@ -1,13 +1,5 @@
 <div class="activities-container">
     {{if and .ThingsToDoData .ThingsToDoData.Data (gt (len .ThingsToDoData.Data) 0)}}
-        <!-- Results Header -->
-        <div class="results-header">
-            <h2>Found {{.ThingsToDoData.Total}} Activities</h2>
-            <div class="results-info">
-                Showing {{len .ThingsToDoData.Data}} activities
-            </div>
-        </div>
-
         <!-- Activity Grid -->
         <div class="activities-grid">
             {{range .ThingsToDoData.Data}}
@@ -27,7 +19,7 @@
                     {{if .ShortDescription}}
                     <p class="activity-description">{{.ShortDescription | unescapeHTML}}</p>
                     {{else if .LongDescription}}
-                    <p class="activity-description">{{.LongDescription | truncate 200 | unescapeHTML}}</p>
+                    <p class="activity-description">{{.LongDescription | unescapeHTML | truncate 200}}</p>
                     {{end}}
 
                     <div class="activity-meta">
@@ -125,9 +117,6 @@
             <div class="empty-state-content">
                 <h2>No Activities Found</h2>
                 <p>Try adjusting your search criteria or clear your filters to see more activities.</p>
-                <button class="clear-filters-btn" onclick="clearAllFilters()">
-                    Clear All Filters
-                </button>
             </div>
         </div>
     {{end}}

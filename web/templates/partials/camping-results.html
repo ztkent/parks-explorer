@@ -1,12 +1,5 @@
 {{if .CampgroundsData.Data}}
     <div class="camping-grid">
-        <div class="camping-grid-header">
-            <h2 class="results-title">Campgrounds ({{.CampgroundsData.Total}} found)</h2>
-            <p class="results-description">
-                Discover amazing camping opportunities in national parks across the country.
-            </p>
-        </div>
-        
         <div class="campgrounds-list">
             {{range .CampgroundsData.Data}}
             <div class="campground-card">
