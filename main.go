@@ -86,12 +86,12 @@ func DefineRoutes(r *chi.Mux, dashManager *dashboard.Dashboard, cache *replay.Ca
 	r.Get("/camping", cache.MiddlewareFunc(dashManager.CampingPageHandler))
 	r.Get("/news", cache.MiddlewareFunc(dashManager.NewsPageHandler))
 	r.Get("/parks/{slug}", cache.MiddlewareFunc(dashManager.ParkPageHandler))
-	
+
 	// Serve specific files from static directory at top level
 	r.Get("/robots.txt", dashManager.TopLevelStaticFileHandler("robots.txt"))
 	r.Get("/site.webmanifest", dashManager.TopLevelStaticFileHandler("site.webmanifest"))
 	r.Get("/sitemap.xml", dashManager.TopLevelStaticFileHandler("sitemap.xml"))
-	
+
 	r.Get("/static/*", dashManager.StaticFileHandler())
 
 	// API routes
