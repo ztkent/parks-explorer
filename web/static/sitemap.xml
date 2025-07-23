@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+                            http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+    <!-- Main Homepage -->
+    <url>
+        <loc>https://parksexplorer.us/</loc>
+        <lastmod>2025-07-23T00:00:00+00:00</lastmod>
+        <changefreq>daily</changefreq>
+        <priority>1.0</priority>
+    </url>
+    
+    <!-- Main Section Pages -->
+    <url>
+        <loc>https://parksexplorer.us/things-to-do</loc>
+        <lastmod>2025-07-23T00:00:00+00:00</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.9</priority>
+    </url>
+    
+    <url>
+        <loc>https://parksexplorer.us/events</loc>
+        <lastmod>2025-07-23T00:00:00+00:00</lastmod>
+        <changefreq>daily</changefreq>
+        <priority>0.9</priority>
+    </url>
+    
+    <url>
+        <loc>https://parksexplorer.us/camping</loc>
+        <lastmod>2025-07-23T00:00:00+00:00</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.9</priority>
+    </url>
+    
+    <url>
+        <loc>https://parksexplorer.us/news</loc>
+        <lastmod>2025-07-23T00:00:00+00:00</lastmod>
+        <changefreq>daily</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <!-- API Endpoints for Search and Discovery -->
+    <url>
+        <loc>https://parksexplorer.us/api/parks/featured</loc>
+        <lastmod>2025-07-23T00:00:00+00:00</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    
+    <url>
+        <loc>https://parksexplorer.us/api/parks/search</loc>
+        <lastmod>2025-07-23T00:00:00+00:00</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    
+    <!-- Static Assets -->
+    <url>
+        <loc>https://parksexplorer.us/static/robots.txt</loc>
+        <lastmod>2025-07-23T00:00:00+00:00</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.1</priority>
+    </url>
+</urlset>

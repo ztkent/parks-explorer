@@ -211,6 +211,31 @@ func (dm *Dashboard) StaticFileHandler() http.HandlerFunc {
 	}
 }
 
+// TopLevelStaticFileHandler serves specific static files at the top level
+func (dm *Dashboard) TopLevelStaticFileHandler(filename string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		fullPath := filepath.Join("web/static", filename)
+
+		// Check if file exists
+		if _, err := os.Stat(fullPath); os.IsNotExist(err) {
+			http.NotFound(w, r)
+			return
+		}
+
+		// Set appropriate content type based on file extension
+		switch filepath.Ext(filename) {
+		case ".xml":
+			w.Header().Set("Content-Type", "application/xml")
+		case ".txt":
+			w.Header().Set("Content-Type", "text/plain")
+		case ".webmanifest":
+			w.Header().Set("Content-Type", "application/manifest+json")
+		}
+
+		http.ServeFile(w, r, fullPath)
+	}
+}
+
 // LiveParkCamsHandler returns a list of live park cameras.
 type ParkCam struct {
 	Title string `json:"title"`
