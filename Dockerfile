@@ -8,8 +8,8 @@ COPY . .
 RUN go build -o main
 RUN mkdir -p /app/data
 
-ARG APP_PORT=8080
-ENV APP_PORT=$APP_PORT
+ARG SERVER_PORT=8080
+ENV SERVER_PORT=$SERVER_PORT
 EXPOSE 8086
 
 CMD ["./main"]
