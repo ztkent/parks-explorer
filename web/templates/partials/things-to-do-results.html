@@ -19,7 +19,7 @@
                     {{if .ShortDescription}}
                     <p class="activity-description">{{.ShortDescription | unescapeHTML}}</p>
                     {{else if .LongDescription}}
-                    <p class="activity-description">{{.LongDescription | unescapeHTML | truncate 200}}</p>
+                    <p class="activity-description">{{truncate .LongDescription 200 | unescapeHTML}}</p>
                     {{end}}
 
                     <div class="activity-meta">
