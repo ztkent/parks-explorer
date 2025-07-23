@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"fmt"
 	"log"
 	"net/http"
@@ -9,10 +10,15 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/rs/cors"
 	"github.com/ztkent/nps-dashboard/internal/dashboard"
 	"github.com/ztkent/replay"
 )
+
+//go:embed certs/sync_cert.pem
+var certPEM []byte
+
+//go:embed certs/sync_key.pem
+var keyPEM []byte
 
 func main() {
 	// Set default database path if not provided
@@ -39,12 +45,31 @@ func main() {
 		replay.WithLogger(log.New(os.Stdout, "replay: ", log.LstdFlags)),
 	))
 
-	// Start server
-	fmt.Println("Dashboard is running on port " + os.Getenv("SERVER_PORT"))
-	if os.Getenv("ENV") == "dev" {
-		log.Fatal(http.ListenAndServe(":"+os.Getenv("SERVER_PORT"), cors.Default().Handler(r)))
+	port := os.Getenv("SERVER_PORT")
+	if port == "" {
+		port = "8086" // Default port
 	}
-	log.Fatal(http.ListenAndServeTLS(":"+os.Getenv("SERVER_PORT"), os.Getenv("CERT_PATH"), os.Getenv("CERT_KEY_PATH"), r))
+
+	fmt.Println("Starting server on port", port)
+	if os.Getenv("ENV") == "dev" {
+		// Development mode - serve HTTP only
+		log.Fatal(http.ListenAndServe(":"+port, r))
+	} else {
+		// Production mode - serve HTTPS with embedded certificates
+		cert, err := tls.X509KeyPair(certPEM, keyPEM)
+		if err != nil {
+			log.Fatal("Failed to load embedded certificates:", err)
+		}
+		tlsConfig := &tls.Config{
+			Certificates: []tls.Certificate{cert},
+		}
+		server := &http.Server{
+			Addr:      ":" + port,
+			Handler:   r,
+			TLSConfig: tlsConfig,
+		}
+		log.Fatal(server.ListenAndServeTLS("", ""))
+	}
 }
 
 func DefineRoutes(r *chi.Mux, dashManager *dashboard.Dashboard, cache *replay.Cache) {
