@@ -30,7 +30,7 @@ Provides detailed park information, activities, events, camping options, and rea
 parks-explorer/
 ├── main.go                   
 ├── internal/
-│   ├── dashboard/            # Core dashboard logic and HTTP handlers
+│   ├── dashboard/           # Core dashboard logic and HTTP handlers
 │   │   ├── auth.go          # Google OAuth 2.0 authentication
 │   │   ├── dashboard.go     # Dashboard initialization and configuration
 │   │   ├── park_service.go  # Park data management and caching
