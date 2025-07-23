@@ -32,12 +32,18 @@
     
     <link rel="stylesheet" href="/static/styles.css">
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="/static/analytics.js"></script>
     <script>
         // Trigger auth change event after page loads to refresh authentication status
         document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => {
                 document.body.dispatchEvent(new Event('authChange'));
             }, 100);
+            
+            // Track park page view
+            if (window.analytics) {
+                analytics.trackParkView('{{.Name}}', '{{.Code}}');
+            }
         });
     </script>
 </head>

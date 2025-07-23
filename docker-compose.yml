@@ -1,0 +1,22 @@
+version: '3.9'
+networks:
+  kent_network:
+    name: kent_network
+services:
+  parks:
+    build:
+      context: .
+    expose:
+      - 8086
+    environment:
+      - APP_PORT=8086
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - GOOGLE_REDIRECT_URI=https://parksexplorer.us/auth/google/callback
+    volumes:
+      - ./data:/app/data
+    profiles:
+      - parks
+    networks:
+      - kent_network

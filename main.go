@@ -69,6 +69,9 @@ func DefineRoutes(r *chi.Mux, dashManager *dashboard.Dashboard, cache *replay.Ca
 		r.Get("/user-info", dashManager.UserInfoHandler)
 		r.Get("/avatar", dashManager.AvatarProxyHandler)
 
+		// Analytics routes
+		r.Get("/analytics/config", dashManager.AnalyticsConfigHandler)
+
 		// Image proxy route for secure image serving
 		r.Get("/image-proxy", cache.MiddlewareFunc(dashManager.ImageProxyHandler))
 
