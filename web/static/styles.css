@@ -141,123 +141,6 @@ body {
     color: var(--text-primary);
 }
 
-/* ==========================================================================
-   Unified Card Components
-   ========================================================================== */
-
-.card-base {
-    background: var(--bg-primary);
-    border-radius: 16px;
-    padding: 1.5rem;
-    box-shadow: 0 4px 16px var(--shadow-light);
-    border: 1px solid var(--border-primary);
-    transition: all 0.3s ease;
-    display: flex;
-    flex-direction: column;
-}
-
-.card-base:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 24px var(--shadow-medium);
-    border-color: var(--border-hover);
-}
-
-.card-with-image {
-    background: var(--bg-primary);
-    border-radius: 16px;
-    overflow: hidden;
-    box-shadow: 0 4px 16px var(--shadow-light);
-    border: 1px solid var(--border-primary);
-    transition: all 0.3s ease;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-}
-
-.card-with-image:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 24px var(--shadow-medium);
-    border-color: var(--border-hover);
-}
-
-.card-image {
-    width: 100%;
-    height: 250px;
-    background-size: cover;
-    background-position: center;
-    background-color: var(--bg-tertiary);
-    position: relative;
-    overflow: hidden;
-    flex-shrink: 0;
-}
-
-.card-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.card-image-placeholder {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: var(--bg-tertiary);
-    color: var(--text-tertiary);
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.card-content {
-    padding: 1.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    flex: 1;
-}
-
-.card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 1rem;
-    margin-bottom: 1rem;
-}
-
-.card-title {
-    font-size: 1.3rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin: 0;
-    line-height: 1.4;
-    flex: 1;
-}
-
-.card-title a {
-    color: inherit;
-    text-decoration: none;
-    transition: color 0.2s ease;
-}
-
-.card-title a:hover {
-    color: var(--primary-color);
-}
-
-.card-description {
-    color: var(--text-secondary);
-    line-height: 1.6;
-    margin: 0;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-    hyphens: auto;
-}
-
-.card-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    margin: 1rem 0;
-}
-
 .meta-item {
     display: flex;
     align-items: center;
@@ -269,13 +152,6 @@ body {
 .meta-icon {
     color: var(--primary-color);
     flex-shrink: 0;
-}
-
-.card-actions {
-    display: flex;
-    gap: 1rem;
-    margin-top: auto;
-    flex-wrap: wrap;
 }
 
 /* ==========================================================================
