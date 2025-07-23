@@ -2,11 +2,14 @@ package main
 
 import (
 	"crypto/tls"
+	_ "embed"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"time"
+
+	_ "embed"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -14,10 +17,10 @@ import (
 	"github.com/ztkent/replay"
 )
 
-//go:embed certs/sync_cert.pem
+//go:embed certs/parks_cert.pem
 var certPEM []byte
 
-//go:embed certs/sync_key.pem
+//go:embed certs/parks_key.pem
 var keyPEM []byte
 
 func main() {

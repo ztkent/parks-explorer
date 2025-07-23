@@ -3,3 +3,5 @@ ref
 .DS_Store
 data/dashboard.db
 nps-dashboard
+certs/parks_key.pem
+certs/parks_cert.pem
