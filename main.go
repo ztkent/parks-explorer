@@ -9,7 +9,6 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/go-chi/httprate"
 	"github.com/rs/cors"
 	"github.com/ztkent/nps-dashboard/internal/dashboard"
 	"github.com/ztkent/replay"
@@ -49,13 +48,6 @@ func main() {
 }
 
 func DefineRoutes(r *chi.Mux, dashManager *dashboard.Dashboard, cache *replay.Cache) {
-	// Apply a rate limiter to all routes
-	r.Use(httprate.Limit(
-		50,             // requests
-		60*time.Second, // per durations
-		httprate.WithKeyFuncs(httprate.KeyByIP, httprate.KeyByEndpoint),
-	))
-
 	// Apply visitor tracking middleware
 	r.Use(dashManager.TagVistorsMiddleware)
 
@@ -76,6 +68,9 @@ func DefineRoutes(r *chi.Mux, dashManager *dashboard.Dashboard, cache *replay.Ca
 		r.Get("/auth/logout", dashManager.LogoutHandler)
 		r.Get("/user-info", dashManager.UserInfoHandler)
 		r.Get("/avatar", dashManager.AvatarProxyHandler)
+
+		// Image proxy route for secure image serving
+		r.Get("/image-proxy", cache.MiddlewareFunc(dashManager.ImageProxyHandler))
 
 		// HTMX routes
 		r.Get("/auth-status", dashManager.AuthStatusHandler)

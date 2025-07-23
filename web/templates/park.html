@@ -52,7 +52,7 @@
 
     <main class="park-detail-page">
         <!-- Hero Section -->
-        <section class="park-hero" style="background-image: url('{{.ImageURL}}');">
+        <section class="park-hero" style="background-image: url('{{if .ImageURL}}/api/image-proxy?url={{.ImageURL}}{{end}}');">
             <div class="park-hero-content">
                 <h1 class="park-hero-title">Activities at {{.Name}}</h1>
                 <p class="park-hero-description">{{.Description}}</p>

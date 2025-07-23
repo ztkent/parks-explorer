@@ -43,12 +43,6 @@
         // Add HTMX error handling
         document.addEventListener('htmx:error', function(event) {
             console.error('HTMX Error:', event.detail);
-            // Optionally show user-friendly error message
-        });
-
-        // Add HTMX before send event to debug requests
-        document.addEventListener('htmx:beforeSend', function(event) {
-            console.log('HTMX request to:', event.detail.xhr.responseURL || event.detail.pathInfo.requestPath);
         });
     </script>
 </head>

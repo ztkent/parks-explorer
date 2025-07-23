@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"sort"
@@ -310,7 +311,126 @@ func (dm *Dashboard) AvatarProxyHandler(w http.ResponseWriter, r *http.Request) 
 	io.Copy(w, resp.Body)
 }
 
-// AuthStatusHandler returns HTML for the authentication status
+// ImageProxyHandler serves images through the server to prevent direct external access
+func (dm *Dashboard) ImageProxyHandler(w http.ResponseWriter, r *http.Request) {
+	imageURL := r.URL.Query().Get("url")
+	if imageURL == "" {
+		http.Error(w, "Missing image URL parameter", http.StatusBadRequest)
+		return
+	}
+
+	// Validate that this is an acceptable image source
+	if !dm.isValidImageSource(imageURL) {
+		log.Printf("Blocked potentially unsafe image URL: %s", imageURL)
+		http.Error(w, "Invalid image source", http.StatusForbidden)
+		return
+	}
+
+	// Create HTTP client with timeout for security
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+	}
+
+	// Fetch the image from the external source
+	resp, err := client.Get(imageURL)
+	if err != nil {
+		log.Printf("Failed to fetch image from %s: %v", imageURL, err)
+		http.Error(w, "Failed to fetch image", http.StatusInternalServerError)
+		return
+	}
+	defer resp.Body.Close()
+
+	// Validate response status
+	if resp.StatusCode != http.StatusOK {
+		log.Printf("Image fetch returned status %d for URL: %s", resp.StatusCode, imageURL)
+		http.Error(w, "Image not found", http.StatusNotFound)
+		return
+	}
+
+	// Validate content type is an image
+	contentType := resp.Header.Get("Content-Type")
+	if !dm.isValidImageContentType(contentType) {
+		log.Printf("Invalid content type %s for URL: %s", contentType, imageURL)
+		http.Error(w, "Invalid content type", http.StatusUnsupportedMediaType)
+		return
+	}
+
+	// Set security headers
+	w.Header().Set("Content-Type", contentType)
+	w.Header().Set("Cache-Control", "public, max-age=3600") // Cache for 1 hour
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+
+	// Copy the image data
+	_, err = io.Copy(w, resp.Body)
+	if err != nil {
+		log.Printf("Failed to copy image data for URL %s: %v", imageURL, err)
+	}
+}
+
+// isValidImageSource validates that the image URL is from an acceptable source
+func (dm *Dashboard) isValidImageSource(imageURL string) bool {
+	// Allow common image hosting services and NPS domains
+	allowedDomains := []string{
+		"www.nps.gov",
+		"nps.gov",
+		"images.unsplash.com",
+		"via.placeholder.com",
+		// Add other trusted domains as needed
+	}
+
+	for _, domain := range allowedDomains {
+		if strings.Contains(imageURL, domain) {
+			return true
+		}
+	}
+
+	// Log potentially suspicious URLs for monitoring
+	log.Printf("Image URL from non-whitelisted domain: %s", imageURL)
+	return false
+}
+
+// isValidImageContentType validates that the content type is a supported image format
+func (dm *Dashboard) isValidImageContentType(contentType string) bool {
+	validTypes := []string{
+		"image/jpeg",
+		"image/jpg",
+		"image/png",
+		"image/gif",
+		"image/webp",
+		"image/svg+xml",
+	}
+
+	for _, validType := range validTypes {
+		if strings.Contains(strings.ToLower(contentType), validType) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// proxyImageURL converts a direct image URL to a proxied one for security
+func proxyImageURL(imageURL string) string {
+	if imageURL == "" {
+		return ""
+	}
+	
+	// For local/relative URLs, make them absolute NPS URLs first
+	if strings.HasPrefix(imageURL, "/") {
+		imageURL = "https://www.nps.gov" + imageURL
+	}
+	
+	// Don't proxy URLs that are already absolute local URLs
+	if !strings.HasPrefix(imageURL, "http") {
+		return imageURL
+	}
+	
+	// URL encode the image URL parameter to handle special characters
+	encodedURL := url.QueryEscape(imageURL)
+	
+	// Return the proxied URL
+	return "/api/image-proxy?url=" + encodedURL
+}// AuthStatusHandler returns HTML for the authentication status
 func (dm *Dashboard) AuthStatusHandler(w http.ResponseWriter, r *http.Request) {
 	user, err := dm.GetCurrentUser(r)
 	w.Header().Set("Content-Type", "text/html")
@@ -375,7 +495,8 @@ func (dm *Dashboard) FeaturedParksHandler(w http.ResponseWriter, r *http.Request
 		// Build the image HTML
 		imageHTML := `<div class="park-image"></div>`
 		if imageUrl != "" {
-			imageHTML = fmt.Sprintf(`<div class="park-image" style="background-image: url('%s');" title="%s"></div>`, imageUrl, imageAlt)
+			proxiedImageURL := proxyImageURL(imageUrl)
+			imageHTML = fmt.Sprintf(`<div class="park-image" style="background-image: url('%s');" title="%s"></div>`, proxiedImageURL, imageAlt)
 		}
 
 		html.WriteString(fmt.Sprintf(`
@@ -440,7 +561,8 @@ func (dm *Dashboard) ParkSearchHandler(w http.ResponseWriter, r *http.Request) {
 		// Build the image HTML
 		imageHTML := `<div class="park-image"></div>`
 		if imageUrl != "" {
-			imageHTML = fmt.Sprintf(`<div class="park-image" style="background-image: url('%s');" title="%s"></div>`, imageUrl, imageAlt)
+			proxiedImageURL := proxyImageURL(imageUrl)
+			imageHTML = fmt.Sprintf(`<div class="park-image" style="background-image: url('%s');" title="%s"></div>`, proxiedImageURL, imageAlt)
 		}
 
 		html.WriteString(fmt.Sprintf(`
@@ -642,7 +764,8 @@ func (dm *Dashboard) ParksHandler(w http.ResponseWriter, r *http.Request) {
 		// Build the image HTML
 		imageHTML := `<div class="park-image"></div>`
 		if imageUrl != "" {
-			imageHTML = fmt.Sprintf(`<div class="park-image" style="background-image: url('%s');" title="%s"></div>`, imageUrl, imageAlt)
+			proxiedImageURL := proxyImageURL(imageUrl)
+			imageHTML = fmt.Sprintf(`<div class="park-image" style="background-image: url('%s');" title="%s"></div>`, proxiedImageURL, imageAlt)
 		}
 
 		html.WriteString(fmt.Sprintf(`
@@ -881,6 +1004,9 @@ func (dm *Dashboard) ParkNewsHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl, err := template.New("park-news.html").Funcs(template.FuncMap{
 		"unescapeHTML": func(s string) template.HTML {
 			return template.HTML(s)
+		},
+		"fullImageURL": func(url string) string {
+			return proxyImageURL(url)
 		},
 	}).ParseFiles("web/templates/partials/park-news.html")
 	if err != nil {
@@ -1320,13 +1446,7 @@ func (dm *Dashboard) EventsSearchHandler(w http.ResponseWriter, r *http.Request)
 			return dateStr
 		},
 		"fullImageURL": func(url string) string {
-			if strings.HasPrefix(url, "http") {
-				return url
-			}
-			if strings.HasPrefix(url, "/") {
-				return "https://www.nps.gov" + url
-			}
-			return url
+			return proxyImageURL(url)
 		},
 		"lower": strings.ToLower,
 		"atoi": func(s string) int {
@@ -1510,13 +1630,7 @@ func (dm *Dashboard) CampingSearchHandler(w http.ResponseWriter, r *http.Request
 			return result
 		},
 		"fullImageURL": func(url string) string {
-			if strings.HasPrefix(url, "http") {
-				return url
-			}
-			if strings.HasPrefix(url, "/") {
-				return "https://www.nps.gov" + url
-			}
-			return url
+			return proxyImageURL(url)
 		},
 		"truncate": func(s string, length int) string {
 			if len(s) <= length {
@@ -1684,13 +1798,7 @@ func (dm *Dashboard) NewsSearchHandler(w http.ResponseWriter, r *http.Request) {
 			return dateStr
 		},
 		"fullImageURL": func(url string) string {
-			if strings.HasPrefix(url, "http") {
-				return url
-			}
-			if strings.HasPrefix(url, "/") {
-				return "https://www.nps.gov" + url
-			}
-			return url
+			return proxyImageURL(url)
 		},
 		"truncate": func(s string, length int) string {
 			if len(s) <= length {
@@ -1798,13 +1906,7 @@ func (dm *Dashboard) EventDetailsHandler(w http.ResponseWriter, r *http.Request)
 			return dateStr
 		},
 		"fullImageURL": func(url string) string {
-			if strings.HasPrefix(url, "http") {
-				return url
-			}
-			if strings.HasPrefix(url, "/") {
-				return "https://www.nps.gov" + url
-			}
-			return url
+			return proxyImageURL(url)
 		},
 		"formatDateTime": func(dateStr string) string {
 			if t, err := time.Parse("2006-01-02T15:04:05Z", dateStr); err == nil {

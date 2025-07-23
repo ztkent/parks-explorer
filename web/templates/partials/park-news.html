@@ -31,7 +31,7 @@
                 {{if .Image}}
                 {{if .Image.Url}}
                 <div class="news-image">
-                    <img src="{{.Image.Url}}" 
+                    <img src="{{fullImageURL .Image.Url}}" 
                          alt="{{.Image.AltText}}" 
                          loading="lazy">
                 </div>
@@ -80,7 +80,7 @@
             <div class="article-card">
                 {{if .ListingImage}}
                     {{if .ListingImage.URL}}
-                    <img src="{{.ListingImage.URL}}" alt="{{.ListingImage.AltText}}" class="article-image" />
+                    <img src="{{fullImageURL .ListingImage.URL}}" alt="{{.ListingImage.AltText}}" class="article-image" />
                     {{end}}
                 {{end}}
                 <div class="article-content">

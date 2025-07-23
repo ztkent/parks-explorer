@@ -10,7 +10,7 @@
                         </div>
                         {{if .Images}}
                             {{range .Images}}
-                                <img src="{{.URL}}" alt="{{.AltText}}" class="webcam-image" />
+                                <img src="{{fullImageURL .URL}}" alt="{{.AltText}}" class="webcam-image" />
                             {{end}}
                         {{end}}
                         {{if .Description}}
@@ -40,7 +40,7 @@
                     {{if $gallery.Images}}
                         {{range $index, $image := $gallery.Images}}
                             {{if lt $index 50}}
-                                <img src="{{$image.Url}}" alt="{{$image.AltText}}" class="gallery-preview-image" />
+                                <img src="{{fullImageURL $image.Url}}" alt="{{$image.AltText}}" class="gallery-preview-image" />
                             {{end}}
                         {{end}}
                     {{end}}
@@ -148,7 +148,7 @@
             {{range .Audio.Data}}
             <div class="audio-card">
                 {{if .SplashImage.Url}}
-                <img src="{{.SplashImage.Url}}" alt="{{.Title}}" class="audio-cover" />
+                <img src="{{fullImageURL .SplashImage.Url}}" alt="{{.Title}}" class="audio-cover" />
                 {{end}}
                 <div class="audio-content">
                     <h3>{{.Title}}</h3>
