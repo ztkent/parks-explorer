@@ -5,3 +5,5 @@ data/dashboard.db
 nps-dashboard
 certs/parks_key.pem
 certs/parks_cert.pem
+nps.code-workspace
+.vscode/launch.json
