@@ -66,15 +66,6 @@
             </article>
             {{end}}
         </div>
-
-        <!-- Load More Button (if there are more results) -->
-        {{if gt (atoi .NewsData.Total) (add (atoi .NewsData.Start) (len .NewsData.Data))}}
-        <div class="load-more-section">
-            <button class="load-more-btn" onclick="loadMoreNews({{add (atoi .NewsData.Start) (len .NewsData.Data)}})">
-                Load More Articles
-            </button>
-        </div>
-        {{end}}
     </div>
     {{else}}
     <div class="no-results">

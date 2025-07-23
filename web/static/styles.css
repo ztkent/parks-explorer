@@ -1543,7 +1543,7 @@ body {
     padding: 0.1rem .25rem;
     border-radius: 20px;
     font-size: 0.75rem;
-    font-weight: 250;
+    font-weight: 500;
     transition: transform 0.2s, box-shadow 0.2s;
     cursor: pointer;
     border: 1px solid transparent;
@@ -1964,8 +1964,8 @@ body {
 .news-list,
 .articles-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-    gap: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
     margin-bottom: 2rem;
 }
 
@@ -1981,29 +1981,33 @@ body {
     flex-direction: column;
     height: 100%;
     position: relative;
+    padding: 1.5rem;
+    gap: 1rem;
 }
 
 .news-card:hover,
 .article-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 12px 32px var(--shadow-medium);
+    box-shadow: 0 8px 24px var(--shadow-medium);
+    border-color: var(--border-hover);
 }
 
-/* Ensure image is always at the top */
+/* Ensure image is always at the top for park news cards */
 .news-card .news-image,
 .article-card .article-image {
     order: -1;
-    border-radius: 0;
-    margin: 0;
+    border-radius: 8px;
+    margin: 0 -1.5rem 0 -1.5rem;
+    width: calc(100% + 3rem);
 }
 
-/* Improved content padding and structure */
+/* Improved content padding and structure for main news page */
 .news-content,
 .article-content {
-    padding: 2rem;
+    padding: 1.5rem;
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
+    gap: 1rem;
     flex: 1;
     min-height: 0;
 }
@@ -2016,7 +2020,7 @@ body {
     margin-bottom: 0;
     flex-direction: column;
     align-items: flex-start;
-    gap: 1rem;
+    gap: 0.75rem;
 }
 
 /* Fix title and link styling */
@@ -2024,7 +2028,7 @@ body {
 .article-content h3,
 .news-title,
 .news-title h3 {
-    font-size: 1.3rem;
+    font-size: 1.25rem;
     font-weight: 600;
     color: var(--text-primary);
     margin: 0;
@@ -2053,10 +2057,11 @@ body {
     background: var(--bg-tertiary);
     color: var(--text-secondary);
     border: 1px solid var(--border-primary);
-    font-size: 0.85rem;
-    padding: 0.4rem 1rem;
-    border-radius: 20px;
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: 12px;
     display: inline-block;
+    font-weight: 500;
 }
 
 .news-abstract,
@@ -2068,24 +2073,28 @@ body {
     word-wrap: break-word;
     overflow-wrap: break-word;
     hyphens: auto;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     flex: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 /* News meta information with better spacing */
 .news-meta {
     display: flex;
     flex-wrap: wrap;
-    gap: 1rem;
+    gap: 0.75rem;
     align-items: center;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0;
 }
 
 .news-date {
     color: var(--text-secondary);
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     background: var(--bg-tertiary);
-    padding: 0.4rem 1rem;
+    padding: 0.4rem 0.8rem;
     border-radius: 12px;
     border: 1px solid var(--border-primary);
     font-weight: 500;
@@ -2094,9 +2103,9 @@ body {
 .news-category {
     background: var(--secondary-color);
     color: white;
-    padding: 0.4rem 1rem;
+    padding: 0.3rem 0.8rem;
     border-radius: 12px;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -2105,7 +2114,7 @@ body {
 .news-image,
 .article-image {
     width: 100%;
-    height: 280px;
+    height: 250px;
     background-size: cover;
     background-position: center;
     background-color: var(--bg-tertiary);
@@ -2114,6 +2123,22 @@ body {
     flex-shrink: 0;
     border-radius: 0;
     margin: 0;
+}
+
+/* Fallback for news articles without images */
+.news-image:not([style*="background-image"]),
+.article-image:not([style*="background-image"]) {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.news-image:not([style*="background-image"])::after,
+.article-image:not([style*="background-image"])::after {
+    content: '📰';
+    font-size: 3rem;
+    opacity: 0.8;
 }
 
 .news-image img,
@@ -2141,8 +2166,34 @@ body {
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
+    padding: 0.75rem 1.25rem;
     border-radius: 8px;
+    background: var(--primary-color);
+    color: var(--text-inverse);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+    margin-top: auto;
+}
+
+.read-more:hover,
+.read-article:hover,
+.news-actions .news-link:hover,
+.primary-btn:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px var(--shadow-medium);
+    color: var(--text-inverse);
+    text-decoration: none;
+}
+
+.news-actions {
+    margin-top: auto;
+    padding-top: 0.5rem;
+}
     font-weight: 500;
     text-align: center;
     text-decoration: none;
@@ -2170,8 +2221,7 @@ body {
 
 .news-actions {
     margin-top: auto;
-    padding-top: 1.5rem;
-    border-top: 1px solid var(--border-primary);
+    padding-top: 0.5rem;
 }
 
 .read-more::after,
@@ -2473,8 +2523,8 @@ body {
     background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), 
                 url('https://images.unsplash.com/photo-1624049321569-f483adecb8fa?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');
     background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
+    background-position: bottom;
+    background-repeat: no-repeat;
     height: 500px;
     display: flex;
     flex-direction: column;
@@ -5617,8 +5667,8 @@ html {
     background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), 
                 url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');
     background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
+    background-position: bottom;
+    background-repeat: no-repeat;
     height: 500px;
     display: flex;
     flex-direction: column;
@@ -6238,12 +6288,16 @@ html {
 }
 
 .camping-hero {
-    background: linear-gradient(135deg, #2d5016 0%, #5a7c65 100%);
+    background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), 
+                url('https://images.unsplash.com/photo-1568112505330-f5fa78411f1d?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');
     color: white;
     padding: 4rem 0;
     text-align: center;
     position: relative;
     height: 500px;
+    background-size: cover;
+    background-position: bottom;
+    background-repeat: no-repeat;
 }
 
 .camping-hero::before {
@@ -6459,12 +6513,16 @@ html {
 }
 
 .news-hero {
-    background: linear-gradient(135deg, var(--secondary-color) 0%, var(--secondary-dark) 100%);
+    background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), 
+                url('https://images.unsplash.com/photo-1565030784130-0e0ef4b06b7e?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');
     color: white;
     padding: 4rem 0;
     text-align: center;
     position: relative;
     height: 500px;
+    background-size: cover;
+    background-position: bottom;
+    background-repeat: no-repeat;
 }
 
 .news-hero::before {
@@ -6507,6 +6565,9 @@ html {
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 2rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
 }
 
 .news-related-parks {
@@ -6612,12 +6673,14 @@ html {
     
     .news-grid {
         padding: 0 1rem;
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
     }
     
     .news-content,
     .article-content {
-        padding: 1.5rem;
-        gap: 1rem;
+        padding: 1.25rem;
+        gap: 0.875rem;
     }
     
     .news-related-parks {
@@ -6633,17 +6696,18 @@ html {
     }
     
     .news-content {
-        padding: 1.25rem;
-        gap: 1rem;
+        padding: 1rem;
+        gap: 0.75rem;
     }
     
     .news-list {
-        gap: 1.5rem;
+        gap: 1.25rem;
         padding: 0 0.75rem;
     }
     
     .news-grid {
         padding: 0 0.75rem;
+        gap: 1.25rem;
     }
     
     .news-hero-title {

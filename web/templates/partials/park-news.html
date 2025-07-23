@@ -28,23 +28,44 @@
         <div class="news-list">
             {{range .NewsReleases.Data}}
             <article class="news-card">
-                <div class="news-header">
-                    <h3><a href="{{.Url}}" target="_blank">{{.Title}}</a></h3>
-                    {{if .ReleaseDate}}
-                    <span class="release-date">{{.ReleaseDate}}</span>
-                    {{end}}
-                </div>
-                {{if .Abstract}}
-                <p class="news-abstract">{{.Abstract}}</p>
-                {{end}}
                 {{if .Image}}
                 {{if .Image.Url}}
-                <img src="{{.Image.Url}}" alt="{{.Image.AltText}}" class="news-image" />
+                <div class="news-image">
+                    <img src="{{.Image.Url}}" 
+                         alt="{{.Image.AltText}}" 
+                         loading="lazy">
+                </div>
                 {{end}}
                 {{end}}
-                {{if .Url}}
-                <a href="{{.Url}}" target="_blank" class="read-more">Read Full Article</a>
-                {{end}}
+
+                <div class="news-content">
+                    <div class="news-header">
+                        <h3 class="news-title">
+                            {{if .Url}}
+                            <a href="{{.Url}}" target="_blank" rel="noopener">{{.Title}}</a>
+                            {{else}}
+                            {{.Title}}
+                            {{end}}
+                        </h3>
+                        <div class="news-meta">
+                            {{if .ReleaseDate}}
+                            <span class="news-date">{{.ReleaseDate}}</span>
+                            {{end}}
+                        </div>
+                    </div>
+
+                    {{if .Abstract}}
+                    <p class="news-description">{{.Abstract}}</p>
+                    {{end}}
+
+                    <div class="news-actions">
+                        {{if .Url}}
+                        <a href="{{.Url}}" target="_blank" rel="noopener" class="news-link primary-btn">
+                            Read Full Article
+                        </a>
+                        {{end}}
+                    </div>
+                </div>
             </article>
             {{end}}
         </div>
