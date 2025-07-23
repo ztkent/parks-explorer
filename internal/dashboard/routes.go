@@ -414,23 +414,23 @@ func proxyImageURL(imageURL string) string {
 	if imageURL == "" {
 		return ""
 	}
-	
+
 	// For local/relative URLs, make them absolute NPS URLs first
 	if strings.HasPrefix(imageURL, "/") {
 		imageURL = "https://www.nps.gov" + imageURL
 	}
-	
+
 	// Don't proxy URLs that are already absolute local URLs
 	if !strings.HasPrefix(imageURL, "http") {
 		return imageURL
 	}
-	
+
 	// URL encode the image URL parameter to handle special characters
 	encodedURL := url.QueryEscape(imageURL)
-	
+
 	// Return the proxied URL
 	return "/api/image-proxy?url=" + encodedURL
-}// AuthStatusHandler returns HTML for the authentication status
+} // AuthStatusHandler returns HTML for the authentication status
 func (dm *Dashboard) AuthStatusHandler(w http.ResponseWriter, r *http.Request) {
 	user, err := dm.GetCurrentUser(r)
 	w.Header().Set("Content-Type", "text/html")
@@ -838,7 +838,20 @@ func (dm *Dashboard) ParkOverviewHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	// Parse and execute the overview template
-	tmpl, err := template.ParseFiles("web/templates/partials/park-overview.html")
+	tmpl, err := template.New("park-overview.html").Funcs(template.FuncMap{
+		"unescapeHTML": func(s string) template.HTML {
+			return template.HTML(s)
+		},
+		"formatEventDate": func(dateStr string) string {
+			if t, err := time.Parse("2006-01-02", dateStr); err == nil {
+				return t.Format("January 2, 2006")
+			}
+			if t, err := time.Parse("2006-01-02T15:04:05Z", dateStr); err == nil {
+				return t.Format("January 2, 2006")
+			}
+			return dateStr
+		},
+	}).ParseFiles("web/templates/partials/park-overview.html")
 	if err != nil {
 		log.Printf("Failed to load overview template: %v", err)
 		http.Error(w, fmt.Sprintf("Failed to load overview template: %v", err), http.StatusInternalServerError)
@@ -962,6 +975,9 @@ func (dm *Dashboard) ParkMediaHandler(w http.ResponseWriter, r *http.Request) {
 		},
 		"sub": func(a, b int) int {
 			return a - b
+		},
+		"fullImageURL": func(url string) string {
+			return proxyImageURL(url)
 		},
 	}).ParseFiles("web/templates/partials/park-media.html")
 	if err != nil {
@@ -1891,8 +1907,8 @@ func (dm *Dashboard) EventDetailsHandler(w http.ResponseWriter, r *http.Request)
 		"Event": targetEvent,
 	}
 
-	// Create template with helper functions
-	tmpl := template.New("event-details").Funcs(template.FuncMap{
+	// Parse and execute the event details template
+	tmpl, err := template.New("event-details.html").Funcs(template.FuncMap{
 		"unescapeHTML": func(s string) template.HTML {
 			return template.HTML(s)
 		},
@@ -1917,161 +1933,17 @@ func (dm *Dashboard) EventDetailsHandler(w http.ResponseWriter, r *http.Request)
 			}
 			return dateStr
 		},
-	})
-
-	// Inline template for event details modal
-	templateHTML := `
-	<div class="event-detail-content">
-		<h3>{{.Event.Title}}</h3>
-		
-		{{if .Event.Images}}
-		<div class="event-detail-images">
-			{{range .Event.Images}}
-			<div class="event-detail-image">
-				<img src="{{fullImageURL .Url}}" alt="{{.AltText}}" title="{{.Title}}">
-				{{if .Caption}}<p class="image-caption">{{.Caption}} {{if .Credit}}({{.Credit}}){{end}}</p>{{end}}
-			</div>
-			{{end}}
-		</div>
-		{{end}}
-
-		{{if .Event.Description}}
-		<div class="event-detail-description">
-			{{.Event.Description | unescapeHTML}}
-		</div>
-		{{end}}
-
-		<div class="event-detail-info">
-			{{if .Event.ParkFullName}}
-			<div class="detail-row">
-				<strong>Location:</strong> {{.Event.ParkFullName}}
-				{{if .Event.Location}} - {{.Event.Location}}{{end}}
-			</div>
-			{{end}}
-
-			{{if .Event.DateStart}}
-			<div class="detail-row">
-				<strong>Date:</strong>
-				{{if .Event.DateEnd}}
-					{{if eq .Event.DateStart .Event.DateEnd}}
-						{{.Event.DateStart | formatEventDate}}
-					{{else}}
-						{{.Event.DateStart | formatEventDate}} - {{.Event.DateEnd | formatEventDate}}
-					{{end}}
-				{{else}}
-					{{.Event.DateStart | formatEventDate}}
-				{{end}}
-			</div>
-			{{end}}
-
-			{{if .Event.Times}}
-			<div class="detail-row">
-				<strong>Times:</strong>
-				<ul class="event-times-list">
-				{{range .Event.Times}}
-					<li>{{.TimeStart}}{{if .TimeEnd}} - {{.TimeEnd}}{{end}}</li>
-				{{end}}
-				</ul>
-			</div>
-			{{end}}
-
-			{{if .Event.Category}}
-			<div class="detail-row">
-				<strong>Category:</strong> {{.Event.Category}}
-			</div>
-			{{end}}
-
-			{{if .Event.Types}}
-			<div class="detail-row">
-				<strong>Event Types:</strong> {{range $index, $type := .Event.Types}}{{if $index}}, {{end}}{{$type}}{{end}}
-			</div>
-			{{end}}
-
-			<div class="detail-row">
-				<strong>Cost:</strong> {{if eq .Event.IsFree "true"}}Free{{else}}Fee Required{{end}}
-			</div>
-
-			{{if .Event.FeeInfo}}
-			<div class="detail-row">
-				<strong>Fee Information:</strong> {{.Event.FeeInfo}}
-			</div>
-			{{end}}
-
-			{{if eq .Event.IsRegresRequired "true"}}
-			<div class="detail-row">
-				<strong>Registration:</strong> Required
-			</div>
-			{{end}}
-
-			{{if .Event.RegresInfo}}
-			<div class="detail-row">
-				<strong>Registration Info:</strong> {{.Event.RegresInfo}}
-			</div>
-			{{end}}
-
-			{{if .Event.RegresUrl}}
-			<div class="detail-row">
-				<strong>Registration:</strong> <a href="{{.Event.RegresUrl}}" target="_blank" rel="noopener">Register Here</a>
-			</div>
-			{{end}}
-
-			{{if .Event.ContactName}}
-			<div class="detail-row">
-				<strong>Contact:</strong> {{.Event.ContactName}}
-				{{if .Event.ContactTelephoneNumber}} - {{.Event.ContactTelephoneNumber}}{{end}}
-				{{if .Event.ContactEmailAddress}} - {{.Event.ContactEmailAddress}}{{end}}
-			</div>
-			{{end}}
-
-			{{if eq .Event.IsRecurring "true"}}
-			<div class="detail-row">
-				<strong>Recurring:</strong> Yes
-				{{if .Event.RecurrenceDateStart}} ({{.Event.RecurrenceDateStart | formatEventDate}}{{if .Event.RecurrenceDateEnd}} - {{.Event.RecurrenceDateEnd | formatEventDate}}{{end}}){{end}}
-			</div>
-			{{end}}
-
-			{{if .Event.Tags}}
-			<div class="detail-row">
-				<strong>Tags:</strong>
-				<div class="event-detail-tags">
-					{{range .Event.Tags}}
-					<span class="event-detail-tag">{{.}}</span>
-					{{end}}
-				</div>
-			</div>
-			{{end}}
-
-			{{if .Event.InfoUrl}}
-			<div class="detail-row">
-				<strong>More Information:</strong> <a href="{{.Event.InfoUrl}}" target="_blank" rel="noopener">Event Details</a>
-			</div>
-			{{end}}
-
-			{{if .Event.Dates}}
-			<div class="detail-row">
-				<strong>Additional Dates:</strong>
-				<div class="event-additional-dates">
-					{{range .Event.Dates}}
-					<span class="additional-date">{{. | formatEventDate}}</span>
-					{{end}}
-				</div>
-			</div>
-			{{end}}
-		</div>
-	</div>
-	`
-
-	tmpl, err = tmpl.Parse(templateHTML)
+	}).ParseFiles("web/templates/partials/event-details.html")
 	if err != nil {
-		log.Printf("Error parsing event details template: %v", err)
-		http.Error(w, "Error rendering event details", http.StatusInternalServerError)
+		log.Printf("Failed to load event details template: %v", err)
+		http.Error(w, fmt.Sprintf("Failed to load event details template: %v", err), http.StatusInternalServerError)
 		return
 	}
 
 	err = tmpl.Execute(w, data)
 	if err != nil {
-		log.Printf("Error executing event details template: %v", err)
-		http.Error(w, "Error rendering event details", http.StatusInternalServerError)
+		log.Printf("Failed to render event details for event %s: %v", eventID, err)
+		http.Error(w, fmt.Sprintf("Failed to render event details: %v", err), http.StatusInternalServerError)
 		return
 	}
 }

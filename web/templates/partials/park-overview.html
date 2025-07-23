@@ -42,7 +42,7 @@
                             {{end}}
                             <div class="thing-details">
                                 {{if .DurationDescription}}
-                                    <span class="duration">Duration: {{.DurationDescription}}</span>
+                                    <span class="duration">Duration: {{.DurationDescription | unescapeHTML}}</span>
                                 {{end}}
                                 {{if eq .DoFeesApply "Yes"}}
                                     <span class="fee">Fee required</span>
@@ -74,10 +74,23 @@
                     <div class="event-card">
                         <div class="event-date">
                             {{if .DateStart}}
-                                <span class="event-start-date">{{.DateStart}}</span>
-                            {{end}}
-                            {{if .DateEnd}}
-                                <span class="event-end-date">to {{.DateEnd}}</span>
+                                {{if .DateEnd}}
+                                    {{if eq .DateStart .DateEnd}}
+                                        <span class="event-single-date">{{.DateStart | formatEventDate}}</span>
+                                    {{else}}
+                                        <span class="event-date-range">
+                                            <span class="event-start-date">{{.DateStart | formatEventDate}}</span>
+                                            <span class="event-date-separator">–</span>
+                                            <span class="event-end-date">{{.DateEnd | formatEventDate}}</span>
+                                        </span>
+                                    {{end}}
+                                {{else}}
+                                    <span class="event-single-date">{{.DateStart | formatEventDate}}</span>
+                                {{end}}
+                            {{else if .DateEnd}}
+                                <span class="event-single-date">{{.DateEnd | formatEventDate}}</span>
+                            {{else}}
+                                <span class="event-no-date">Date TBA</span>
                             {{end}}
                         </div>
                         <h4>{{if .Title}}{{.Title}}{{else}}Event{{end}}</h4>

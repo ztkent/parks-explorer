@@ -31,10 +31,10 @@ func main() {
 	// Define routes
 	DefineRoutes(r, dashManager, replay.NewCache(
 		replay.WithMaxSize(100),
-		replay.WithMaxMemory(1024*1024*1024),
+		replay.WithMaxMemory(1024*1024*1024*100),
 		replay.WithEvictionPolicy("LRU"),
-		replay.WithTTL(5*time.Minute),
-		replay.WithMaxTTL(30*time.Minute),
+		replay.WithTTL(6*time.Hour),
+		replay.WithMaxTTL(24*time.Hour),
 		replay.WithCacheFilters([]string{"URL", "Method"}),
 		replay.WithLogger(log.New(os.Stdout, "replay: ", log.LstdFlags)),
 	))
