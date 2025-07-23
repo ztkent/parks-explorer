@@ -2,7 +2,7 @@ package dashboard
 
 import (
 	"github.com/ztkent/go-nps"
-	"github.com/ztkent/nps-dashboard/internal/database"
+	"github.com/ztkent/parks-explorer/internal/database"
 )
 
 type Dashboard struct {

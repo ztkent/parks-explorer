@@ -1,4 +1,4 @@
-module github.com/ztkent/nps-dashboard
+module github.com/ztkent/parks-explorer
 
 go 1.24
 

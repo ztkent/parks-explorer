@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/ztkent/go-nps"
-	"github.com/ztkent/nps-dashboard/internal/database"
+	"github.com/ztkent/parks-explorer/internal/database"
 )
 
 // GetFeaturedParks returns the first 12 parks for the featured section

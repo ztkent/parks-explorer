@@ -19,7 +19,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/ztkent/go-nps"
-	"github.com/ztkent/nps-dashboard/internal/database"
+	"github.com/ztkent/parks-explorer/internal/database"
 )
 
 // UnifiedNewsItem represents a normalized news item that can handle NewsRelease, Article, and Alert types

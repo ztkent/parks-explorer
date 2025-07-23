@@ -2,7 +2,7 @@
 ref
 .DS_Store
 data/dashboard.db
-nps-dashboard
+parks-explorer
 certs/parks_key.pem
 certs/parks_cert.pem
 nps.code-workspace

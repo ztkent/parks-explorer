@@ -27,7 +27,7 @@ Provides detailed park information, activities, events, camping options, and rea
 ## Architecture
 
 ```
-nps-dashboard/
+parks-explorer/
 ├── main.go                   
 ├── internal/
 │   ├── dashboard/            # Core dashboard logic and HTTP handlers
@@ -78,8 +78,8 @@ nps-dashboard/
 
 1. **Clone the repository**:
 ```bash
-git clone https://github.com/ztkent/nps-dashboard.git
-cd nps-dashboard
+git clone https://github.com/ztkent/parks-explorer.git
+cd parks-explorer
 ```
 
 2. **Configure environment variables**:
