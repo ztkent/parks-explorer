@@ -13,7 +13,7 @@ services:
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
       - NPS_API_KEY=${NPS_API_KEY}
-      - GOOGLE_REDIRECT_URI=https://parksexplorer.us/auth/google/callback
+      - GOOGLE_REDIRECT_URI=https://parksexplorer.us/api/auth/google/callback
     volumes:
       - ./data:/app/data
     profiles:

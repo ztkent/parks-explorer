@@ -92,7 +92,7 @@ func DefineRoutes(r *chi.Mux, dashManager *dashboard.Dashboard, cache *replay.Ca
 	r.Route("/api", func(r chi.Router) {
 		// Auth routes
 		r.Get("/auth/google", dashManager.GoogleLoginHandler)
-		r.Get("/auth/callback", dashManager.GoogleCallbackHandler)
+		r.Get("/auth/google/callback", dashManager.GoogleCallbackHandler)
 		r.Get("/auth/logout", dashManager.LogoutHandler)
 		r.Get("/user-info", dashManager.UserInfoHandler)
 		r.Get("/avatar", dashManager.AvatarProxyHandler)
