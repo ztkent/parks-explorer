@@ -10,19 +10,16 @@
 ## Overview
 
 Insights into our National Park Service, via the [National Park Service API](https://www.nps.gov/subjects/developer/index.htm).  
-Provides detailed park information, activities, events, camping options, and real-time updates with intelligent caching and user-friendly navigation.
-
+Provides detailed park information, activities, events, camping options, and real-time updates.
 
 ## Features
 
 - **Complete Park Database**: Access to all 400+ National Park Service sites including parks, monuments, battlefields, and historic sites
-- **Interactive Exploration**: Browse parks by state, activity type, or search functionality with responsive design
-- **Comprehensive Park Data**: Detailed information including activities, camping, events, news, visitor centers, and amenities
+- **Interactive Exploration**: Browse parks by state, activity type, or search functionality
+- **Comprehensive Park Data**: Including activities, camping, events, news, visitor centers, and amenities
 - **Real-Time Updates**: Live park alerts, weather conditions, and webcam feeds
-- **Smart Caching**: Intelligent response caching with configurable TTL for optimal performance
 - **Google OAuth Authentication**: Secure user authentication with personalized tracking
-- **Mobile-First Design**: Responsive interface optimized for all device sizes
-- **Image Proxy Service**: Secure image serving with optimization and caching
+- **Image Proxy Service**: Secure image serving with caching
 
 ## Architecture
 
@@ -32,20 +29,9 @@ parks-explorer/
 ├── internal/
 │   ├── dashboard/           # Core dashboard logic and HTTP handlers
 │   │   ├── auth.go          # Google OAuth 2.0 authentication
-│   │   ├── dashboard.go     # Dashboard initialization and configuration
-│   │   ├── park_service.go  # Park data management and caching
-│   │   ├── routes.go        # HTTP route handlers and middleware
-│   │   ├── analytics.go     # User analytics and tracking
-│   │   └── tracking.go      # Visitor tracking middleware
 │   └── database/            # Database layer and schema management
-│       ├── database.go      # SQLite connection and operations
-│       ├── parks.go         # Park-specific database operations
-│       └── schema.sql       # Complete database schema
 ├── web/
 │   ├── static/              # Frontend assets and resources
-│   │   ├── index.html       # Main application interface
-│   │   ├── styles.css       # Custom CSS with responsive design
-│   │   ├── script.js        # Vanilla JavaScript with HTMX
 │   │   └── assets/          # Images, favicons, and media files
 │   └── templates/           # HTML template partials
 └── data/                    # SQLite database storage
@@ -55,15 +41,14 @@ parks-explorer/
 
 ### Backend
 - **Language**: Go 1.24
-- **Framework**: Chi router with comprehensive middleware
-- **Database**: SQLite with optimized indexing and caching
+- **Framework**: Chi router with middleware
+- **Database**: SQLite with indexing and caching
 - **Authentication**: Google OAuth 2.0 with secure session management
 - **API Integration**: National Park Service API via [go-nps](https://github.com/ztkent/go-nps) package
 - **Caching**: In-memory caching with [replay](https://github.com/ztkent/replay) library
 
 ### Frontend
-- **Framework**: Vanilla JavaScript with HTMX for dynamic content loading
-- **Styling**: Custom CSS with CSS variables and responsive design
+- **Framework**: HTML/CSS/JavaScript with HTMX
 - **Components**: Modular HTML templates with server-side rendering
 
 ## Quick Start
