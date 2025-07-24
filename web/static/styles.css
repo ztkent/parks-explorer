@@ -906,6 +906,10 @@ body {
     color: var(--text-primary);
 }
 
+[data-theme="dark"] .hero-search-input {
+    color: var(--text-inverse);
+}
+
 .hero-search-input:focus {
     border-color: rgba(255, 255, 255, 0.8);
     box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.2), 0 8px 32px rgba(0, 0, 0, 0.15);
